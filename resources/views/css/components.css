@@ -1,0 +1,262 @@
+.ui-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ui-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
+}
+
+.ui-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.ui-btn:focus-visible,
+.input-field-group input:focus-visible,
+.input-field-group select:focus-visible {
+    outline: 3px solid rgba(14, 165, 233, 0.25);
+    outline-offset: 2px;
+}
+
+.btn-lime-green { 
+    background: #ccff00; 
+    color: #0f172a; 
+}
+.btn-lime-green:hover { background: #bdf000; }
+.btn-navy-blue { 
+    background: #0f172a; 
+    color: white; 
+}
+.btn-navy-blue:hover { background: #1e293b; }
+
+.input-field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    outline: none;
+}
+
+.input-field-group {
+    margin-bottom: 12px;
+    min-width: 0;
+}
+
+.input-field-group label {
+    display: block;
+    font-size: 10.5px;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.input-field-group input, 
+.input-field-group select {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.input-field-group textarea { display:block; width:100%; padding:11px 12px; border:1px solid #e2e8f0; border-radius:10px; font:inherit; font-size:14px; resize:vertical; outline:none; }
+.input-field-group textarea:focus { border-color:#38bdf8; box-shadow:0 0 0 3px rgba(14,165,233,.12); }
+
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select > select {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.custom-select-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+    font-size: 16px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.custom-select-toggle::after {
+    content: "⌄";
+    color: #64748b;
+    font-size: 18px;
+    line-height: 12px;
+    transform: translateY(-2px);
+}
+
+.custom-select.open .custom-select-toggle,
+.custom-select-toggle:focus-visible {
+    border-color: #38bdf8;
+    outline: 3px solid rgba(14, 165, 233, 0.22);
+    outline-offset: 1px;
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: none;
+    max-height: 190px;
+    overflow-y: auto;
+    padding: 5px;
+    margin: 0;
+    list-style: none;
+    border: 1px solid #dbe4ee;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.custom-select.open .custom-select-options { display: block; }
+
+.custom-select-option {
+    padding: 11px 10px;
+    border-radius: 7px;
+    color: #0f172a;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.custom-select-option:hover,
+.custom-select-option.selected {
+    background: #e0f2fe;
+}
+
+.input-field-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 38px;
+    cursor: pointer;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.input-field-group select option {
+    background: #fff;
+    color: #0f172a;
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .input-field-group input,
+    .input-field-group select {
+        width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .input-field-group select {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        /* Let mobile browsers render their select menu normally. */
+        appearance: auto;
+        -webkit-appearance: menulist;
+        background-image: none;
+        padding-right: 12px;
+    }
+
+    .input-field-group select option {
+        font-size: 16px;
+    }
+}
+
+.photo-input {
+    padding: 8px !important;
+    cursor: pointer;
+}
+
+.photo-input::file-selector-button {
+    border: 0;
+    border-radius: 8px;
+    padding: 7px 10px;
+    margin-right: 8px;
+    background: #e2e8f0;
+    color: #0f172a;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.photo-preview {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.photo-preview.visible { display: flex; }
+.photo-preview img {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+.photo-preview span {
+    min-width: 0;
+    overflow: hidden;
+    color: #475569;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.input-field-group input:hover,
+.input-field-group select:hover {
+    border-color: #94a3b8;
+}
+
+.badge-group { 
+    display: flex; 
+    gap: 6px; 
+    margin-bottom: 16px; 
+}
+.ui-badge { 
+    padding: 6px 12px; 
+    border-radius: 20px; 
+    font-size: 12px; 
+    font-weight: 700; 
+}
+.badge-navy { background: #0f172a; color: white; }
+.badge-lime { background: #ccff00; color: #0f172a; }
