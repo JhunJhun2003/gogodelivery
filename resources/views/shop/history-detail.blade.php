@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
     <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
-  <script src="/js/sidebar.js?v=1787684056" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
+  <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="shop" class="app-bg history-screen">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
@@ -55,22 +55,5 @@
         </div>
       </section>
     </main>
-    <script>
-      const nav = document.createElement("div");
-      nav.className = "slide-sidebar";
-      nav.innerHTML =
-        '<a class="sidebar-row" href="/shop/orders"><strong>Orders</strong><span>Active orders</span></a><a class="sidebar-row active-row" href="/shop/history"><strong>History</strong><span>All orders</span></a>';
-      const overlay = document.createElement("div");
-      overlay.className = "sidebar-overlay";
-      document.body.append(nav, overlay);
-      document.querySelector(".hamburger-icon-btn").onclick = () => {
-        nav.classList.add("open");
-        overlay.classList.add("visible");
-      };
-      overlay.onclick = () => {
-        nav.classList.remove("open");
-        overlay.classList.remove("visible");
-      };
-    </script>
   </body>
 </html>

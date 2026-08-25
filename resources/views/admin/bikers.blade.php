@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
     <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
-  <script src="/js/sidebar.js?v=1787684056" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
+  <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
