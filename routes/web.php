@@ -1,13 +1,37 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('auth.login');
+    return redirect()->route('login');
 });
 
-Route::get('/login', function () {
-    return view('auth.login');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/shops', function () {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        return view('admin.shops');
+    })->name('shops');
+
+    Route::get('/users', fn () => view('admin.users'))->name('users');
+    Route::get('/bikers', fn () => view('admin.bikers'))->name('bikers');
+    Route::get('/history', fn () => view('admin.history'))->name('history');
+    Route::get('/way-check', fn () => view('admin.way-check'))->name('way-check');
+});
+
+Route::middleware('auth')->prefix('shop')->name('shop.')->group(function () {
+    Route::get('/orders', fn () => view('shop.orders'))->name('orders');
+    Route::get('/history', fn () => view('shop.history'))->name('history');
+});
+
+Route::middleware('auth')->prefix('bikers')->name('bikers.')->group(function () {
+    Route::get('/ways', fn () => view('bikers.ways'))->name('ways');
+    Route::get('/history', fn () => view('bikers.history'))->name('history');
 });
 
 Route::get('/css/{file}', function (string $file) {
