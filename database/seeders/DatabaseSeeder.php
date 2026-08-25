@@ -24,5 +24,25 @@ class DatabaseSeeder extends Seeder
                 'role' => User::ROLE_ADMIN,
             ]
         );
+
+        User::updateOrCreate(
+            ['username' => 'shop1'],
+            [
+                'name' => 'Shop Owner',
+                'email' => 'shop@gogodelivery.test',
+                'password' => 'shop123',
+                'role' => User::ROLE_SHOP,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['username' => 'biker1'],
+            [
+                'name' => 'Biker Rider',
+                'email' => 'biker@gogodelivery.test',
+                'password' => 'biker123',
+                'role' => User::ROLE_BIKER,
+            ]
+        );
     }
 }

@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DELI | Login</title>
+    <link rel="icon" href="/assets/logo-nobg.png?v=1787685826" />
+    
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
     <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
@@ -32,14 +34,14 @@
         <form action="{{ route('login.attempt') }}" method="POST">
           @csrf
           <div class="input-field">
-            <input type="text" name="username" value="{{ old('username') }}" placeholder="Username" autocomplete="username" required />
+            <input type="text" name="username" value="{{ old('username') }}" placeholder="Username or email" autocomplete="username" required />
           </div>
           <div class="input-field">
             <input type="password" name="password" placeholder="Password" autocomplete="current-password" required />
           </div>
           <button type="submit" class="ui-btn btn-lime-green">Enter workspace</button>
         </form>
-        <p class="bottom-hint">Default: admin / admin123</p>
+        <p class="bottom-hint">Default: admin / admin123 (or use email)</p>
       </div>
     </div>
   </body>

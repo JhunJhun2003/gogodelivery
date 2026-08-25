@@ -1,10 +1,20 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    if (!auth()->check()) {
+        return redirect()->route('login');
+    }
+
+    return match (auth()->user()->role) {
+        User::ROLE_ADMIN  => redirect()->route('admin.shops'),
+        User::ROLE_SHOP   => redirect()->route('shop.orders'),
+        User::ROLE_BIKER  => redirect()->route('bikers.ways'),
+        default           => redirect()->route('login'),
+    };
 });
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

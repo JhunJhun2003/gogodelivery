@@ -29,10 +29,13 @@
     nav.classList.remove("open");
     overlay.classList.remove("visible");
   };
-  if (button)
-    button.onclick = () => {
-      nav.classList.add("open");
-      overlay.classList.add("visible");
-    };
+  if (button) {
+    button.addEventListener("click", (e) => {
+      e.stopPropagation();
+      nav.classList.toggle("open");
+      overlay.classList.toggle("visible");
+    });
+  }
   overlay.onclick = close;
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 })();

@@ -7,6 +7,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Deli - Way Check</title>
+    <link rel="icon" href="/assets/logo-nobg.png?v=1787685826" />
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
     <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
@@ -95,9 +96,6 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const openMenuBtn = document.getElementById("openMenuBtn");
-        const appSidebar = document.getElementById("appSidebar");
-        const appOverlay = document.getElementById("appOverlay");
         const wayPhoto = document.getElementById("wayPhoto");
         const photoPreview = document.getElementById("photoPreview");
         const photoPreviewImage = document.getElementById("photoPreviewImage");
@@ -164,23 +162,6 @@
               .forEach((wrapper) => wrapper.classList.remove("open"));
           }
         });
-
-        if (openMenuBtn && appSidebar && appOverlay) {
-          openMenuBtn.addEventListener("click", () => {
-            const isOpen = appSidebar.classList.toggle("open");
-            appOverlay.classList.toggle("visible", isOpen);
-            openMenuBtn.setAttribute("aria-expanded", String(isOpen));
-          });
-          const closeMenu = () => {
-            appSidebar.classList.remove("open");
-            appOverlay.classList.remove("visible");
-            openMenuBtn.setAttribute("aria-expanded", "false");
-          };
-          appOverlay.addEventListener("click", closeMenu);
-          document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") closeMenu();
-          });
-        }
 
         if (wayPhoto && photoPreview && photoPreviewImage && photoPreviewName) {
           wayPhoto.addEventListener("change", () => {

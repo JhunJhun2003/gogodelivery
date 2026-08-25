@@ -22,7 +22,9 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials)) {
+        $field = filter_var($credentials['username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        if (! Auth::attempt([$field => $credentials['username'], 'password' => $credentials['password']])) {
             return back()->withErrors(['username' => 'The username or password is incorrect.'])->withInput(['username']);
         }
 
