@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Deli - Shop Orders</title>
-    <link rel="stylesheet" href="../css/global.css" />
-    <link rel="stylesheet" href="../css/components.css" />
-    <link rel="stylesheet" href="../css/screens.css" />
-  <script src="../js/sidebar.js" defer></script><script src="../js/history-controls.js" defer></script></head>
+    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/screens.css" />
+  <script src="/js/sidebar.js" defer></script><script src="/js/history-controls.js" defer></script></head>
   <body class="app-bg">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>

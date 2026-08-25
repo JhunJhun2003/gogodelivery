@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../css/global.css" />
-    <link rel="stylesheet" href="../css/components.css" />
-    <link rel="stylesheet" href="../css/screens.css" />
-    <title>Document</title>
-  <script src="../js/sidebar.js" defer></script><script src="../js/history-controls.js" defer></script></head>
+    <title>DELI — Delivery Control</title>
+    <link rel="stylesheet" href="{{ url('css/global.css') }}" />
+    <link rel="stylesheet" href="{{ url('css/components.css') }}" />
+    <link rel="stylesheet" href="{{ url('css/screens.css') }}" />
+  <script src="{{ url('js/sidebar.js') }}" defer></script><script src="{{ url('js/history-controls.js') }}" defer></script></head>
   <body class="login-bg">
     <div class="login-wrapper">
       <div class="logo-area">

@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Deli - Order Detail</title>
-    <link rel="stylesheet" href="../css/global.css" />
-    <link rel="stylesheet" href="../css/components.css" />
-    <link rel="stylesheet" href="../css/screens.css" />
-  <script src="../js/sidebar.js" defer></script><script src="../js/history-controls.js" defer></script></head>
+    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/screens.css" />
+  <script src="/js/sidebar.js" defer></script><script src="/js/history-controls.js" defer></script></head>
   <body class="app-bg history-screen">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
@@ -30,7 +30,7 @@
         </div>
         <div class="detail-layout">
           <div class="detail-photo">
-            <img src="../assets/logo.jpg" alt="Order photo" />
+            <img src="/assets/logo.jpg" alt="Order photo" />
           </div>
           <div class="detail-grid">
             <div><span>Customer name</span><strong>Nyi Nyi Thant</strong></div>

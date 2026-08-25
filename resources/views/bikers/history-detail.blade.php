@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Deli - Way History Detail</title>
-    <link rel="stylesheet" href="../css/global.css" />
-    <link rel="stylesheet" href="../css/components.css" />
-    <link rel="stylesheet" href="../css/screens.css" />
-  <script src="../js/sidebar.js" defer></script><script src="../js/history-controls.js" defer></script></head>
+    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/screens.css" />
+  <script src="/js/sidebar.js" defer></script><script src="/js/history-controls.js" defer></script></head>
   <body class="app-bg history-screen">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
@@ -20,7 +20,7 @@
       <section class="ui-card-white history-detail-card">
         <div class="history-card-heading"><div><span class="section-tag">23-08-2026</span><h2>Aye Aye</h2></div><span class="status-pill status-delivered">Delivered</span></div>
         <div class="detail-layout">
-          <div class="detail-photo"><img src="../assets/logo.jpg" alt="Package photo" /></div>
+          <div class="detail-photo"><img src="/assets/logo.jpg" alt="Package photo" /></div>
           <div class="detail-grid">
             <div><span>Customer name</span><strong>Aye Aye</strong></div>
             <div><span>Online shop</span><strong>Shopify Store</strong></div>
