@@ -156,6 +156,9 @@
 .sidebar-row.active-row:hover { background: #1e293b; }
 .sidebar-row strong { font-size: 15px; }
 .sidebar-row span { font-size: 11px; opacity: 0.7; }
+.sidebar-logout { margin: 10px 0 0; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+.sidebar-logout .sidebar-row { width: 100%; border: 0; background: transparent; text-align: left; font: inherit; }
+.sidebar-logout .sidebar-row:hover { color: #b42318; }
 
 .sidebar-overlay {
     position: fixed;

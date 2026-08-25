@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Deli - Order Detail</title>
-    <link rel="stylesheet" href="/css/global.css" />
-    <link rel="stylesheet" href="/css/components.css" />
-    <link rel="stylesheet" href="/css/screens.css" />
-  <script src="/js/sidebar.js" defer></script><script src="/js/history-controls.js" defer></script></head>
-  <body class="app-bg history-screen">
+    <link rel="stylesheet" href="/css/global.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/components.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
+  <script src="/js/sidebar.js?v=1787684056" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
+  <body data-role="shop" class="app-bg history-screen">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
@@ -17,7 +17,7 @@
       </div>
     </header>
     <main class="workspace-body">
-      <a class="back-link" href="./history.html">← Back to history</a
+      <a class="back-link" href="/shop/history">← Back to history</a
       ><span class="section-tag">ORDER · 02</span>
       <h1 class="main-heading">Order detail</h1>
       <section class="ui-card-white history-detail-card">
@@ -30,7 +30,7 @@
         </div>
         <div class="detail-layout">
           <div class="detail-photo">
-            <img src="/assets/logo.jpg" alt="Order photo" />
+            <img src="/assets/logo.jpg?v=1787684056" alt="Order photo" />
           </div>
           <div class="detail-grid">
             <div><span>Customer name</span><strong>Nyi Nyi Thant</strong></div>
@@ -58,7 +58,7 @@
       const nav = document.createElement("div");
       nav.className = "slide-sidebar";
       nav.innerHTML =
-        '<a class="sidebar-row" href="./orders.html"><strong>Orders</strong><span>Active orders</span></a><a class="sidebar-row active-row" href="./history.html"><strong>History</strong><span>All orders</span></a>';
+        '<a class="sidebar-row" href="/shop/orders"><strong>Orders</strong><span>Active orders</span></a><a class="sidebar-row active-row" href="/shop/history"><strong>History</strong><span>All orders</span></a>';
       const overlay = document.createElement("div");
       overlay.className = "sidebar-overlay";
       document.body.append(nav, overlay);

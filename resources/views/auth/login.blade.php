@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DELI | Login</title>
-    <link rel="stylesheet" href="/css/global.css" />
-    <link rel="stylesheet" href="/css/components.css" />
-    <link rel="stylesheet" href="/css/screens.css" />
-    <script src="/js/sidebar.js" defer></script>
-    <script src="/js/history-controls.js" defer></script>
+    <link rel="stylesheet" href="/css/global.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/components.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
+    <script src="/js/sidebar.js?v=1787684056" defer></script>
+    <script src="/js/history-controls.js?v=1787684056" defer></script>
   </head>
   <body class="login-bg">
     <div class="login-wrapper">

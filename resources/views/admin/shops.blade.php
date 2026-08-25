@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Deli - Online Shops</title>
-    <link rel="stylesheet" href="/css/global.css" />
-    <link rel="stylesheet" href="/css/components.css" />
-    <link rel="stylesheet" href="/css/screens.css" />
-  <script src="/js/sidebar.js" defer></script><script src="/js/history-controls.js" defer></script></head>
-  <body class="app-bg">
+    <link rel="stylesheet" href="/css/global.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/components.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
+  <script src="/js/sidebar.js?v=1787684056" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
+  <body data-role="admin" class="app-bg">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
@@ -23,20 +23,6 @@
         </button>
       </div>
     </header>
-    <div class="slide-sidebar" id="appSidebar">
-      <a class="sidebar-row active-row" href="./shops.html"
-        ><strong>Shops</strong><span>Partners</span></a
-      ><a class="sidebar-row" href="./bikers.html"
-        ><strong>Bikers</strong><span>Fleet</span></a
-      ><a class="sidebar-row" href="./way-check.html"
-        ><strong>Way Check</strong><span>Today</span></a
-      ><a class="sidebar-row" href="./history.html"
-        ><strong>History</strong><span>Records</span></a
-      ><a class="sidebar-row" href="./users.html"
-        ><strong>Users</strong><span>Access</span></a
-      >
-    </div>
-    <div class="sidebar-overlay" id="appOverlay"></div>
     <main class="workspace-body shops-page">
       <span class="section-tag">OPERATIONS</span>
       <h1 class="main-heading">Online Shop List</h1>
@@ -193,14 +179,6 @@
         photoPreviewImage.src = URL.createObjectURL(f);
         photoPreviewName.textContent = f.name;
         photoPreview.classList.add("visible");
-      };
-      openMenuBtn.onclick = () => {
-        appSidebar.classList.add("open");
-        appOverlay.classList.add("visible");
-      };
-      appOverlay.onclick = () => {
-        appSidebar.classList.remove("open");
-        appOverlay.classList.remove("visible");
       };
       const nativeDate = document.querySelector('input[name="date"]');
       const dateWrap = document.createElement("div");
