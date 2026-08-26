@@ -35,56 +35,61 @@
             Add
           </button>
         </div>
-        <p class="unassigned-count">10 unassigned orders today</p>
+        <p class="unassigned-count">{{ $unassignedWays->count() }} unassigned ways today</p>
         <div class="biker-list">
-          <button class="biker-row selected" data-biker="Ko Ko" type="button">
-            <span class="biker-avatar avatar-lime">🏍</span
-            ><span class="shop-copy"
-              ><strong>Ko Ko</strong><small>6 assigned today</small></span
-            ><span class="biker-actions"
-              ><span>⚙</span><b class="assign-trigger">+</b></span
-            ></button
-          ><button class="biker-row" data-biker="KoAye" type="button">
-            <span class="biker-avatar">🏍</span
-            ><span class="shop-copy"
-              ><strong>KoAye</strong><small>0 assigned today</small></span
-            ><span class="biker-actions"
-              ><span>⚙</span><b class="assign-trigger">+</b></span
-            ></button
-          ><button class="biker-row" data-biker="Kolay" type="button">
-            <span class="biker-avatar">🏍</span
-            ><span class="shop-copy"
-              ><strong>Kolay</strong><small>0 assigned today</small></span
-            ><span class="biker-actions"
-              ><span>⚙</span><b class="assign-trigger">+</b></span
-            ></button
-          ><button class="biker-row" data-biker="moemoe" type="button">
-            <span class="biker-avatar">🏍</span
-            ><span class="shop-copy"
-              ><strong>moemoe</strong><small>0 assigned today</small></span
-            ><span class="biker-actions"
-              ><span>⚙</span><b class="assign-trigger">+</b></span
-            >
-          </button>
+          @forelse ($bikers as $biker)
+            <button class="biker-row{{ $loop->first ? ' selected' : '' }}" data-biker="{{ $biker->name }}" data-biker-id="{{ $biker->id }}" type="button">
+              <span class="biker-avatar{{ $loop->first ? ' avatar-lime' : '' }}">🏍</span>
+              <span class="shop-copy"><strong>{{ $biker->name }}</strong><small>0 assigned today</small></span>
+              <span class="biker-actions"><span class="edit-biker-btn" role="button" tabindex="0" data-id="{{ $biker->id }}" data-name="{{ $biker->name }}" aria-label="Edit {{ $biker->name }}">⚙</span><b class="assign-trigger">+</b></span>
+            </button>
+          @empty
+            <p class="shop-orders-empty">No bikers found.</p>
+          @endforelse
         </div>
-        <section class="ui-card-white nested-form" id="bikerForm" hidden>
+        <section class="ui-card-white nested-form" id="bikerForm" @if (!$errors->getBag('biker')->any()) hidden @endif>
           <h2>Create biker</h2>
-          <div class="input-field-group">
-            <label>NAME</label><input placeholder="Full name" />
-          </div>
-          <div class="input-field-group">
-            <label>PHONE</label><input type="tel" placeholder="09..." />
-          </div>
-          <button class="ui-btn btn-navy-blue" type="button">Save biker</button>
+          @if (session('biker_status'))
+            <p role="status">{{ session('biker_status') }}</p>
+          @endif
+          @if ($errors->getBag('biker')->any())
+            <div role="alert">
+              @foreach ($errors->getBag('biker')->all() as $error)
+                <p>{{ $error }}</p>
+              @endforeach
+            </div>
+          @endif
+          <form method="POST" action="{{ route('admin.bikers.create') }}">
+            @csrf
+            <div class="input-field-group">
+              <label for="bikerName">NAME</label><input id="bikerName" name="name" value="{{ old('name') }}" placeholder="Full name" required />
+            </div>
+            <button class="ui-btn btn-navy-blue" type="submit">Save biker</button>
+          </form>
         </section>
-      </section>
-      <section class="ui-card-white assigned-card" id="assignedView">
+        <div class="modal-backdrop" id="editBikerBackdrop" hidden>
+          <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="editBikerTitle">
+            <h2 id="editBikerTitle">Edit biker</h2>
+            <form id="editBikerForm" method="POST">
+              @csrf
+              @method('PUT')
+              <div class="input-field-group">
+                <label for="editBikerName">NAME</label><input id="editBikerName" name="name" required />
+              </div>
+              <div class="modal-actions">
+                <button class="back-button" id="cancelEditBiker" type="button">Cancel</button>
+                <button class="ui-btn btn-navy-blue" type="submit">Save changes</button>
+              </div>
+            </form>
+          </section>
+        </div>
+        <br>
         <div class="detail-section-heading">
           <div>
-            <h2 id="assignedTitle">Biker Name — Ko Ko</h2>
+            <h2 id="assignedTitle">Biker Name — {{ $bikers->first()?->name ?? 'No biker selected' }}</h2>
             <p>Assigned deliveries today · click + to add more</p>
           </div>
-          <button class="table-action" type="button">Edit biker</button>
+          
         </div>
         <input
           class="shop-search"
@@ -92,36 +97,26 @@
           placeholder="Search assigned orders (#, name, address, phone)..."
         />
         <div class="delivery-list">
-          <article class="delivery-card" data-status="active">
-            <div class="delivery-main">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>#l4adu · Jejey / Bahan</strong>
-                <p>ABC Store / 1234567 / 60,000 / 5,000 deli</p>
-                <small>ADDRESS · Bahan</small>
-              </div>
-            </div>
-            <div class="delivery-actions">
-              <button class="status-btn onway" type="button">onway</button
-              ><button class="status-btn fail" type="button">fail</button
-              ><button class="info-btn" type="button">Info</button>
-            </div>
-          </article>
-          <article class="delivery-card" data-status="active">
-            <div class="delivery-main">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>#jo6a4h · မောင် / ကျောက်တံတား</strong>
-                <p>M Store / 09665690997 / 26,500 / 3,500 deli</p>
-                <small>ADDRESS · Downtown</small>
-              </div>
-            </div>
-            <div class="delivery-actions">
-              <button class="status-btn onway" type="button">onway</button
-              ><button class="status-btn fail" type="button">fail</button
-              ><button class="info-btn" type="button">Info</button>
-            </div>
-          </article>
+          @foreach ($bikers as $biker)
+            @foreach ($assignedWays->get($biker->id, collect()) as $way)
+              <article class="delivery-card" data-biker-id="{{ $biker->id }}" data-status="{{ $way->status }}">
+                <div class="delivery-main">
+                  <div class="order-photo">{{ $way->item_image ? 'ITEM' : 'ITEM' }}</div>
+                  <div>
+                    <strong>#{{ $way->id }} · {{ $way->recipient_name }}</strong>
+                    <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>
+                    <small>ADDRESS · {{ $way->address }}</small>
+                  </div>
+                </div>
+                <div class="delivery-actions">
+                  <button class="status-btn onway" type="button">onway</button>
+                  <button class="status-btn fail" type="button">fail</button>
+                  <button class="info-btn" type="button">Info</button>
+                </div>
+              </article>
+            @endforeach
+          @endforeach
+          <p class="shop-orders-empty" id="assignedEmpty" hidden>No ways assigned to this biker today.</p>
         </div>
       </section>
       <section class="assign-view" id="assignView" hidden>
@@ -150,40 +145,22 @@
           </div>
         </section>
         <div id="orderList">
-          <article class="ui-card-white order-card">
-            <label
-              ><input class="order-check" type="checkbox" />
-              <strong>Order #91axcn</strong></label
-            >
-            <div class="order-content">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>Cho Aung Tin</strong>
-                <p>M Store / 0977483047 / 26,000 / 3,000 deli</p>
-                <small>Status: PENDING</small>
+          @forelse ($unassignedWays as $way)
+            <article class="ui-card-white order-card" data-way-id="{{ $way->id }}">
+              <label><input class="order-check" type="checkbox" /><strong>Way #{{ $way->id }}</strong></label>
+              <div class="order-content">
+                <div class="order-photo">{{ $way->item_image ? 'ITEM' : 'ITEM' }}</div>
+                <div>
+                  <strong>{{ $way->recipient_name }}</strong>
+                  <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>
+                  <small>Status: {{ strtoupper($way->status) }}</small>
+                </div>
               </div>
-            </div>
-            <label class="order-address"
-              >ADDRESS<input value="ကျားမြို့တွင်" readonly
-            /></label>
-          </article>
-          <article class="ui-card-white order-card">
-            <label
-              ><input class="order-check" type="checkbox" />
-              <strong>Order #ovzbgx</strong></label
-            >
-            <div class="order-content">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>Nyi Nyi Thant</strong>
-                <p>M Store / 09257191532 / 25,000 / 3,000 deli</p>
-                <small>Status: PENDING</small>
-              </div>
-            </div>
-            <label class="order-address"
-              >ADDRESS<input value="အလုံ" readonly
-            /></label>
-          </article>
+              <label class="order-address">ADDRESS<input value="{{ $way->address }}" readonly /></label>
+            </article>
+          @empty
+            <p class="shop-orders-empty">No unassigned ways today.</p>
+          @endforelse
         </div>
         <div class="assign-footer">
           <span>Select orders to assign</span
@@ -198,6 +175,14 @@
         assignedView = document.getElementById("assignedView"),
         assignView = document.getElementById("assignView"),
         assignTitle = document.getElementById("assignTitle");
+      let selectedBikerId = null;
+        const assignedCards = [...document.querySelectorAll(".delivery-card[data-biker-id]")];
+        const assignedEmpty = document.getElementById("assignedEmpty");
+        function showAssignedWays(bikerId) {
+          const visibleCards = assignedCards.filter((card) => card.dataset.bikerId === bikerId);
+          assignedCards.forEach((card) => (card.hidden = card.dataset.bikerId !== bikerId));
+          assignedEmpty.hidden = visibleCards.length > 0;
+        }
       bikerRows.forEach(
         (row) =>
           (row.onclick = () => {
@@ -205,14 +190,45 @@
             row.classList.add("selected");
             document.getElementById("assignedTitle").textContent =
               "Biker Name — " + row.dataset.biker;
+              showAssignedWays(row.dataset.bikerId);
           }),
       );
+        if (bikerRows[0]) showAssignedWays(bikerRows[0].dataset.bikerId);
+      const editBikerBackdrop = document.getElementById("editBikerBackdrop");
+      const editBikerForm = document.getElementById("editBikerForm");
+      const editBikerName = document.getElementById("editBikerName");
+      function openEditBiker(button) {
+        editBikerForm.action = "/admin/bikers/" + button.dataset.id;
+        editBikerName.value = button.dataset.name;
+        editBikerBackdrop.hidden = false;
+        editBikerName.focus();
+      }
+      document.querySelectorAll(".edit-biker-btn").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openEditBiker(button);
+        });
+        button.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+            openEditBiker(button);
+          }
+        });
+      });
+      document.getElementById("cancelEditBiker").onclick = () =>
+        (editBikerBackdrop.hidden = true);
+      editBikerBackdrop.onclick = (event) => {
+        if (event.target === editBikerBackdrop) editBikerBackdrop.hidden = true;
+      };
       document.querySelectorAll(".assign-trigger").forEach(
         (button, i) =>
           (button.onclick = (e) => {
             e.stopPropagation();
             const name = bikerRows[i].dataset.biker;
+            selectedBikerId = bikerRows[i].dataset.bikerId;
             assignTitle.textContent = name;
+            assignBtn.dataset.bikerId = selectedBikerId;
             assignedView.hidden = true;
             assignView.hidden = false;
           }),
@@ -246,11 +262,26 @@
             (x) => (x.hidden = !x.textContent.toLowerCase().includes(q)),
           );
       };
-      assignBtn.onclick = () => {
-        checks
+      assignBtn.onclick = async () => {
+        const selectedWays = checks
           .filter((x) => x.checked)
-          .forEach((x) => x.closest(".order-card").remove());
-        updateCount();
+          .map((x) => x.closest(".order-card").dataset.wayId);
+        if (!selectedBikerId || !selectedWays.length) return;
+
+        const token = document.querySelector('input[name="_token"]').value;
+        const response = await fetch(
+          "/admin/bikers/" + selectedBikerId + "/ways",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": token,
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ way_ids: selectedWays }),
+          },
+        );
+        if (response.ok) window.location.reload();
       };
     </script>
   </body>
