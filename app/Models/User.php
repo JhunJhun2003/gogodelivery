@@ -31,6 +31,11 @@ class User extends Authenticatable
         return $this->role === self::ROLE_ADMIN;
     }
 
+    public function ways()
+    {
+        return $this->hasMany(Way::class, 'shop_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

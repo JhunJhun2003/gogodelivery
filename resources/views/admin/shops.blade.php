@@ -49,51 +49,95 @@
           placeholder="Search shops..."
         />
         <div class="shop-list" id="shopList">
-          <button class="shop-row selected" type="button" data-shop="ABC Store">
-            <span class="shop-avatar avatar-lime">A</span
-            ><span class="shop-copy"
-              ><strong>ABC Store</strong><small>3 way(s) today</small></span
-            ><span class="shop-row-actions"
-              ><span>⚙</span><b>+</b></span
-            ></button
-          ><button class="shop-row" type="button" data-shop="City Mart">
-            <span class="shop-avatar">C</span
-            ><span class="shop-copy"
-              ><strong>City Mart</strong><small>2 way(s) today</small></span
-            ><span class="shop-row-actions"
-              ><span>⚙</span><b>+</b></span
-            ></button
-          ><button class="shop-row" type="button" data-shop="Fresh Kitchen">
-            <span class="shop-avatar">F</span
-            ><span class="shop-copy"
-              ><strong>Fresh Kitchen</strong><small>09-10000002</small></span
-            ><span class="shop-row-actions"
-              ><span>⚙</span><b>+</b></span
-            ></button
-          ><button class="shop-row" type="button" data-shop="M Store">
-            <span class="shop-avatar">M</span
-            ><span class="shop-copy"
-              ><strong>M Store</strong><small>11 way(s) today</small></span
-            ><span class="shop-row-actions"><span>⚙</span><b>+</b></span>
-          </button>
+          @forelse ($shops as $shop)
+            <button class="shop-row{{ $loop->first ? ' selected' : '' }}" type="button" data-shop="{{ $shop->name }}" data-shop-id="{{ $shop->id }}">
+              <span class="shop-avatar{{ $loop->first ? ' avatar-lime' : '' }}">{{ strtoupper(substr($shop->name, 0, 1)) }}</span>
+              <span class="shop-copy"><strong>{{ $shop->name }}</strong><small>{{ $shop->username }} · {{ $shop->email }}</small></span>
+              <span class="shop-row-actions"><span class="edit-shop-btn" role="button" tabindex="0" data-id="{{ $shop->id }}" data-name="{{ $shop->name }}" data-username="{{ $shop->username }}" data-email="{{ $shop->email }}" aria-label="Edit {{ $shop->name }}">⚙</span><b class="add-way-btn" role="button" tabindex="0" aria-label="Create way for {{ $shop->name }}">+</b></span>
+            </button>
+          @empty
+            <p class="shop-orders-empty">No shop accounts found.</p>
+          @endforelse
         </div>
-        <section class="ui-card-white nested-form" id="shopForm" hidden>
+        <section class="ui-card-white nested-form" id="shopForm" @if (!$errors->getBag('shop')->any() && !session('shop_status')) hidden @endif>
           <h2>Create shop</h2>
-          <div class="input-field-group">
-            <label>NAME</label><input placeholder="Shop name" />
-          </div>
-          <div class="input-field-group">
-            <label>EMAIL</label><input type="email" placeholder="Email" />
-          </div>
-          <button class="ui-btn btn-navy-blue" type="button">Save shop</button>
+          @if (session('shop_status'))
+            <p role="status">{{ session('shop_status') }}</p>
+          @endif
+          @if ($errors->getBag('shop')->any())
+            <div role="alert">
+              @foreach ($errors->getBag('shop')->all() as $error)
+                <p>{{ $error }}</p>
+              @endforeach
+            </div>
+          @endif
+          <form method="POST" action="{{ route('admin.shops.create') }}">
+            @csrf
+            <div class="input-field-group">
+              <label for="shopName">NAME</label><input id="shopName" name="name" value="{{ old('name') }}" placeholder="Shop name" required />
+            </div>
+            <div class="input-field-group">
+              <label for="shopUsername">USERNAME</label><input id="shopUsername" name="username" value="{{ old('username') }}" placeholder="Login username" required />
+            </div>
+            <div class="input-field-group">
+              <label for="shopEmail">EMAIL</label><input id="shopEmail" name="email" type="email" value="{{ old('email') }}" placeholder="Email" required />
+            </div>
+            <div class="input-field-group">
+              <label for="shopPassword">PASSWORD</label><input id="shopPassword" name="password" type="password" placeholder="Password" required />
+            </div>
+            <div class="input-field-group">
+              <label for="shopPasswordConfirmation">CONFIRM PASSWORD</label><input id="shopPasswordConfirmation" name="password_confirmation" type="password" placeholder="Confirm password" required />
+            </div>
+            <button class="ui-btn btn-navy-blue" type="submit">Save shop</button>
+          </form>
         </section>
       </section>
-      <section class="ui-card-white form-card shop-order-card">
-        <h2 id="orderHeading">Online Shop · ABC Store</h2>
+      <div class="modal-backdrop" id="editShopBackdrop" hidden>
+        <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="editShopTitle">
+          <h2 id="editShopTitle">Edit shop</h2>
+          <form id="editShopForm" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="input-field-group">
+              <label for="editShopName">NAME</label><input id="editShopName" name="name" required />
+            </div>
+            <div class="input-field-group">
+              <label for="editShopUsername">USERNAME</label><input id="editShopUsername" name="username" required />
+            </div>
+            <div class="input-field-group">
+              <label for="editShopEmail">EMAIL</label><input id="editShopEmail" name="email" type="email" required />
+            </div>
+            <div class="input-field-group">
+              <label for="editShopPassword">PASSWORD</label><input id="editShopPassword" name="password" type="password" placeholder="Leave blank to keep current" />
+            </div>
+            <div class="input-field-group">
+              <label for="editShopPasswordConfirmation">CONFIRM PASSWORD</label><input id="editShopPasswordConfirmation" name="password_confirmation" type="password" />
+            </div>
+            <div class="modal-actions">
+              <button class="back-button" id="cancelEditShop" type="button">Cancel</button>
+              <button class="ui-btn btn-navy-blue" type="submit">Save changes</button>
+            </div>
+          </form>
+        </section>
+      </div>
+      
+      <section class="ui-card-white form-card shop-order-card" id="wayCard" @if (!$errors->getBag('way')->any() && !session('way_status')) hidden @endif>
+        <h2 id="orderHeading">Online Shop · {{ $shops->first()?->name ?? 'No shop selected' }}</h2>
         <p class="selected-shop-hint">
           Create a delivery for the selected shop.
         </p>
-        <form>
+        @if ($errors->hasBag('way') && $errors->getBag('way')->any())
+          <div role="alert">
+            @foreach ($errors->getBag('way')->all() as $error)
+              <p>{{ $error }}</p>
+            @endforeach
+          </div>
+        @endif
+        @if (session('way_status'))
+          <p role="status">{{ session('way_status') }}</p>
+        @endif
+        <form id="wayForm" method="POST" enctype="multipart/form-data">
+          @csrf
           <div class="input-field-group">
             <label for="itemImage">ITEM IMAGE</label
             ><input
@@ -111,11 +155,11 @@
           </div>
           <div class="input-field-group">
             <label>AMOUNT</label
-            ><input name="amount" type="number" min="0" value="0" />
+            ><input name="amount" type="number" min="0" placeholder="0" />
           </div>
           <div class="input-field-group">
             <label>DELIVERY FEES</label
-            ><input name="delivery_fees" type="number" min="0" value="0" />
+            ><input name="delivery_fees" type="number" min="0" placeholder="0" />
           </div>
           <div class="input-field-group">
             <label>RECIPIENT NAME</label
@@ -150,7 +194,7 @@
             ></textarea>
           </div>
           <button class="ui-btn btn-navy-blue" type="submit">
-            Add delivery
+            Add way
           </button>
         </form>
       </section>
@@ -163,8 +207,46 @@
             rows.forEach((x) => x.classList.remove("selected"));
             r.classList.add("selected");
             orderHeading.textContent = "Online Shop · " + r.dataset.shop;
+            wayForm.action = "/admin/shops/" + r.dataset.shopId + "/ways";
           }),
       );
+      const editShopBackdrop = document.getElementById("editShopBackdrop");
+      const editShopForm = document.getElementById("editShopForm");
+      const editShopName = document.getElementById("editShopName");
+      const editShopUsername = document.getElementById("editShopUsername");
+      const editShopEmail = document.getElementById("editShopEmail");
+      const editShopPassword = document.getElementById("editShopPassword");
+      const editShopPasswordConfirmation = document.getElementById(
+        "editShopPasswordConfirmation",
+      );
+      function openEditShop(button) {
+        editShopForm.action = "/admin/shops/" + button.dataset.id;
+        editShopName.value = button.dataset.name;
+        editShopUsername.value = button.dataset.username;
+        editShopEmail.value = button.dataset.email;
+        editShopPassword.value = "";
+        editShopPasswordConfirmation.value = "";
+        editShopBackdrop.hidden = false;
+        editShopName.focus();
+      }
+      document.querySelectorAll(".edit-shop-btn").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openEditShop(button);
+        });
+        button.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+            openEditShop(button);
+          }
+        });
+      });
+      document.getElementById("cancelEditShop").onclick = () =>
+        (editShopBackdrop.hidden = true);
+      editShopBackdrop.onclick = (event) => {
+        if (event.target === editShopBackdrop) editShopBackdrop.hidden = true;
+      };
       shopSearch.oninput = () => {
         const q = shopSearch.value.toLowerCase();
         rows.forEach(
@@ -174,6 +256,34 @@
       addShopBtn.onclick = () => {
         shopForm.hidden = !shopForm.hidden;
       };
+      const wayForm = document.getElementById("wayForm");
+      const wayCard = document.querySelector(".shop-order-card");
+      function selectShop(row) {
+        rows.forEach((shopRow) => shopRow.classList.remove("selected"));
+        row.classList.add("selected");
+        orderHeading.textContent = "Online Shop · " + row.dataset.shop;
+      }
+      function openWayForm(button) {
+        const row = button.closest(".shop-row");
+        selectShop(row);
+        wayForm.action = "/admin/shops/" + row.dataset.shopId + "/ways";
+        wayCard.hidden = false;
+        wayCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        wayCard.querySelector("input[name=recipient_name]").focus();
+      }
+      document.querySelectorAll(".add-way-btn").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openWayForm(button);
+        });
+        button.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+            openWayForm(button);
+          }
+        });
+      });
       itemImage.onchange = (e) => {
         const f = e.target.files[0];
         if (!f) return;
@@ -247,16 +357,16 @@
     </script>
   </body>
 </html>
+@php
+  $orderData = $shops->mapWithKeys(fn ($shop) => [
+    $shop->name => $shop->ways->map(fn ($way) => [
+      '#' . $way->id,
+      $way->recipient_name . ' · ' . $way->amount . ' · ' . strtoupper($way->status),
+    ])->values(),
+  ]);
+@endphp
 <script>
-  const orderData = {
-    "ABC Store": [
-      ["#91axcn", "Cho Aung Tin · 26,000 · Pending"],
-      ["#ovzbgx", "Nyi Nyi Thant · 25,000 · Pending"],
-    ],
-    "City Mart": [["#95buxg", "Mya Mya · 103,500 · Delivered"]],
-    "Fresh Kitchen": [],
-    "M Store": [["#kdsI6b", "Kyaw gyi · 15,000 · On way"]],
-  };
+  const orderData = @json($orderData);
   const orderCard = document.createElement("section");
   orderCard.className = "ui-card-white shop-orders-card";
   orderCard.innerHTML =
@@ -285,5 +395,5 @@
     .forEach((row) =>
       row.addEventListener("click", () => renderShopOrders(row.dataset.shop)),
     );
-  renderShopOrders("ABC Store");
+  renderShopOrders(@json($shops->first()?->name));
 </script>

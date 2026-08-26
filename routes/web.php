@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\WayController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -22,7 +23,10 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/shops', fn () => view('admin.shops'))->name('shops');
+    Route::get('/shops', [AuthController::class, 'showShops'])->name('shops');
+    Route::post('/shops', [AuthController::class, 'createShop'])->name('shops.create');
+    Route::put('/shops/{shop}', [AuthController::class, 'updateShop'])->name('shops.update');
+    Route::post('/shops/{shop}/ways', [WayController::class, 'store'])->name('shops.ways.store');
     Route::get('/users', fn () => view('admin.users'))->name('users');
     Route::get('/bikers', fn () => view('admin.bikers'))->name('bikers');
     Route::get('/history', fn () => view('admin.history'))->name('history');
