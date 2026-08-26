@@ -16,12 +16,10 @@ class BikerController extends Controller
             'bikers' => Biker::query()->orderBy('name')->get(),
             'unassignedWays' => Way::query()
                 ->whereNull('biker_id')
-                ->whereDate('date', today())
                 ->orderBy('id')
                 ->get(),
             'assignedWays' => Way::query()
                 ->whereNotNull('biker_id')
-                ->whereDate('date', today())
                 ->get()
                 ->groupBy('biker_id'),
         ]);
@@ -37,7 +35,6 @@ class BikerController extends Controller
         Way::query()
             ->whereIn('id', $data['way_ids'])
             ->whereNull('biker_id')
-            ->whereDate('date', today())
             ->update(['biker_id' => $biker->id]);
 
         return redirect()->route('admin.bikers')->with('biker_status', 'Ways assigned successfully.');

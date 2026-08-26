@@ -7,7 +7,7 @@
     <link rel="icon" href="/assets/logo-nobg.png?v=1787685826" />
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
-    <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/screens.css?v=1787687001" />
   <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg">
     <header class="top-app-bar">
@@ -40,7 +40,7 @@
           @forelse ($bikers as $biker)
             <button class="biker-row{{ $loop->first ? ' selected' : '' }}" data-biker="{{ $biker->name }}" data-biker-id="{{ $biker->id }}" type="button">
               <span class="biker-avatar{{ $loop->first ? ' avatar-lime' : '' }}">🏍</span>
-              <span class="shop-copy"><strong>{{ $biker->name }}</strong><small>0 assigned today</small></span>
+              <span class="shop-copy"><strong>{{ $biker->name }}</strong><small>{{ $assignedWays->get($biker->id, collect())->count() }} assigned</small></span>
               <span class="biker-actions"><span class="edit-biker-btn" role="button" tabindex="0" data-id="{{ $biker->id }}" data-name="{{ $biker->name }}" aria-label="Edit {{ $biker->name }}">⚙</span><b class="assign-trigger">+</b></span>
             </button>
           @empty
@@ -84,6 +84,7 @@
           </section>
         </div>
         <br>
+        <div id="assignedView">
         <div class="detail-section-heading">
           <div>
             <h2 id="assignedTitle">Biker Name — {{ $bikers->first()?->name ?? 'No biker selected' }}</h2>
@@ -101,7 +102,7 @@
             @foreach ($assignedWays->get($biker->id, collect()) as $way)
               <article class="delivery-card" data-biker-id="{{ $biker->id }}" data-status="{{ $way->status }}">
                 <div class="delivery-main">
-                  <div class="order-photo">{{ $way->item_image ? 'ITEM' : 'ITEM' }}</div>
+                  <div class="order-photo">@if($way->item_image)<img src="/{{ $way->item_image }}" alt="Item" />@else ITEM @endif</div>
                   <div>
                     <strong>#{{ $way->id }} · {{ $way->recipient_name }}</strong>
                     <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>
@@ -117,6 +118,7 @@
             @endforeach
           @endforeach
           <p class="shop-orders-empty" id="assignedEmpty" hidden>No ways assigned to this biker today.</p>
+        </div>
         </div>
       </section>
       <section class="assign-view" id="assignView" hidden>
@@ -149,7 +151,7 @@
             <article class="ui-card-white order-card" data-way-id="{{ $way->id }}">
               <label><input class="order-check" type="checkbox" /><strong>Way #{{ $way->id }}</strong></label>
               <div class="order-content">
-                <div class="order-photo">{{ $way->item_image ? 'ITEM' : 'ITEM' }}</div>
+                <div class="order-photo">@if($way->item_image)<img src="/{{ $way->item_image }}" alt="Item" />@else ITEM @endif</div>
                 <div>
                   <strong>{{ $way->recipient_name }}</strong>
                   <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>
@@ -159,7 +161,7 @@
               <label class="order-address">ADDRESS<input value="{{ $way->address }}" readonly /></label>
             </article>
           @empty
-            <p class="shop-orders-empty">No unassigned ways today.</p>
+            <p class="shop-orders-empty">No unassigned ways to assign to this biker today.</p>
           @endforelse
         </div>
         <div class="assign-footer">

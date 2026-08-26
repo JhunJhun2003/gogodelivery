@@ -30,7 +30,32 @@ class WayController extends Controller
             $directory = public_path('order_image');
             File::ensureDirectoryExists($directory);
             $filename = $image->hashName();
-            $image->move($directory, $filename);
+            $path = $directory . '/' . $filename;
+
+            $source = match ($image->getClientMimeType()) {
+                'image/jpeg' => imagecreatefromjpeg($image->getRealPath()),
+                'image/png' => imagecreatefrompng($image->getRealPath()),
+                'image/webp' => imagecreatefromwebp($image->getRealPath()),
+                default => imagecreatefromjpeg($image->getRealPath()),
+            };
+
+            $maxWidth = 800;
+            $maxHeight = 800;
+            $width = imagesx($source);
+            $height = imagesy($source);
+
+            if ($width > $maxWidth || $height > $maxHeight) {
+                $ratio = min($maxWidth / $width, $maxHeight / $height);
+                $newWidth = (int) ($width * $ratio);
+                $newHeight = (int) ($height * $ratio);
+                $resized = imagecreatetruecolor($newWidth, $newHeight);
+                imagecopyresampled($resized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                imagedestroy($source);
+                $source = $resized;
+            }
+
+            imagejpeg($source, $path, 85);
+            imagedestroy($source);
             $data['item_image'] = 'order_image/' . $filename;
         }
 
