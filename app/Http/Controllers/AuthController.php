@@ -21,7 +21,7 @@ class AuthController extends Controller
         return view('admin.shops', [
             'shops' => User::query()
                 ->where('role', User::ROLE_SHOP)
-                ->with(['ways' => fn ($query) => $query->whereDate('date', today())])
+                ->with('ways')
                 ->orderBy('name')
                 ->get(),
         ]);

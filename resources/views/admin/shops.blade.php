@@ -92,6 +92,35 @@
           </form>
         </section>
       </section>
+      @php
+        $selectedShop = $shops->first();
+        $wayData = $shops->mapWithKeys(fn ($shop) => [
+          $shop->id => $shop->ways->map(fn ($way) => [
+            'id' => $way->id,
+            'recipient' => $way->recipient_name,
+            'amount' => $way->amount,
+            'status' => $way->status,
+          ])->values(),
+        ]);
+      @endphp
+      <section class="ui-card-white shop-orders-card" id="shopOrdersCard">
+        <div class="shop-orders-heading">
+          <h2 id="shopOrdersTitle">Orders · {{ $selectedShop->name ?? '—' }}</h2>
+          <span class="ui-badge badge-navy" id="shopOrderCount">{{ $selectedShop->ways->count() ?? 0 }} ways</span>
+        </div>
+        <div id="shopOrders">
+          @if ($selectedShop && $selectedShop->ways->count())
+            @foreach ($selectedShop->ways as $way)
+              <div class="shop-order-row">
+                <strong>#{{ $way->id }}</strong>
+                <span>{{ $way->recipient_name }} · {{ $way->amount }} · {{ strtoupper($way->status) }}</span>
+              </div>
+            @endforeach
+          @else
+            <div class="shop-orders-empty">No ways for this shop today.</div>
+          @endif
+        </div>
+      </section>
       <div class="modal-backdrop" id="editShopBackdrop" hidden>
         <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="editShopTitle">
           <h2 id="editShopTitle">Edit shop</h2>
@@ -122,7 +151,10 @@
       </div>
       
       <section class="ui-card-white form-card shop-order-card" id="wayCard" @if (!$errors->getBag('way')->any() && !session('way_status')) hidden @endif>
-        <h2 id="orderHeading">Online Shop · {{ $shops->first()?->name ?? 'No shop selected' }}</h2>
+        <div class="section-card-heading">
+          <h2 id="orderHeading">Online Shop · {{ $shops->first()?->name ?? 'No shop selected' }}</h2>
+          <button class="back-button" id="closeWayForm" type="button" aria-label="Close create way form">X</button>
+        </div>
         <p class="selected-shop-hint">
           Create a delivery for the selected shop.
         </p>
@@ -183,7 +215,7 @@
             />
           </div>
           <div class="input-field-group">
-            <label>DATE</label><input name="date" type="date" />
+            <label>DATE</label><input name="date" type="date" value="{{ old('date', today()->format('Y-m-d')) }}" required />
           </div>
           <div class="input-field-group">
             <label>REMARK</label
@@ -258,6 +290,9 @@
       };
       const wayForm = document.getElementById("wayForm");
       const wayCard = document.querySelector(".shop-order-card");
+      document.getElementById("closeWayForm").onclick = () => {
+        wayCard.hidden = true;
+      };
       function selectShop(row) {
         rows.forEach((shopRow) => shopRow.classList.remove("selected"));
         row.classList.add("selected");
@@ -357,43 +392,21 @@
     </script>
   </body>
 </html>
-@php
-  $orderData = $shops->mapWithKeys(fn ($shop) => [
-    $shop->name => $shop->ways->map(fn ($way) => [
-      '#' . $way->id,
-      $way->recipient_name . ' · ' . $way->amount . ' · ' . strtoupper($way->status),
-    ])->values(),
-  ]);
-@endphp
 <script>
-  const orderData = @json($orderData);
-  const orderCard = document.createElement("section");
-  orderCard.className = "ui-card-white shop-orders-card";
-  orderCard.innerHTML =
-    '<div class="shop-orders-heading"><h2 id="shopOrdersTitle">Orders · ABC Store</h2><span class="ui-badge badge-navy" id="shopOrderCount">2 orders</span></div><div id="shopOrders"></div>';
-  document.querySelector(".shop-order-card").after(orderCard);
-  function renderShopOrders(name) {
-    const orders = orderData[name] || [];
+  const wayData = @json($wayData);
+  function renderShopOrders(shopId, name) {
+    const ways = wayData[shopId] || [];
     document.getElementById("shopOrdersTitle").textContent = "Orders · " + name;
-    document.getElementById("shopOrderCount").textContent =
-      orders.length + " orders";
-    document.getElementById("shopOrders").innerHTML = orders.length
-      ? orders
-          .map(
-            (order) =>
-              '<div class="shop-order-row"><strong>' +
-              order[0] +
-              "</strong><span>" +
-              order[1] +
-              "</span></div>",
-          )
-          .join("")
-      : '<div class="shop-orders-empty">No orders for this shop today.</div>';
+    document.getElementById("shopOrderCount").textContent = ways.length + " ways";
+    document.getElementById("shopOrders").innerHTML = ways.length
+      ? ways.map(w =>
+          '<div class="shop-order-row"><strong>#' + w.id + '</strong><span>' + w.recipient + ' · ' + w.amount + ' · ' + w.status.toUpperCase() + '</span></div>'
+        ).join("")
+      : '<div class="shop-orders-empty">No ways for this shop today.</div>';
   }
-  document
-    .querySelectorAll(".shop-row")
-    .forEach((row) =>
-      row.addEventListener("click", () => renderShopOrders(row.dataset.shop)),
-    );
-  renderShopOrders(@json($shops->first()?->name));
+  document.querySelectorAll(".shop-row").forEach((row) => {
+    row.addEventListener("click", () => {
+      renderShopOrders(row.dataset.shopId, row.dataset.shop);
+    });
+  });
 </script>
