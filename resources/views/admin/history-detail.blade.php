@@ -18,32 +18,36 @@
       </div>
     </header>
     <main class="workspace-body">
-      <a class="back-link" href="/admin/history">← Back to history</a
-      ><span class="section-tag">ORDER · 01</span>
+      <a class="back-link" href="{{ route('admin.history') }}">← Back to history</a
+      ><span class="section-tag">ORDER · {{ $way->id }}</span>
       <h1 class="main-heading">History detail</h1>
       <section class="ui-card-white history-detail-card">
         <div class="history-card-heading">
           <div>
-            <span class="section-tag">23-08-2026</span>
-            <h2>Aye Aye</h2>
+            <span class="section-tag">{{ $way->date->format('d-m-Y') }}</span>
+            <h2>{{ $way->recipient_name }}</h2>
           </div>
-          <span class="status-pill status-delivered">Delivered</span>
+          <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
         </div>
         <div class="detail-layout">
           <div class="detail-photo">
-            <img src="./assets/logo.jpg" alt="Package photo" />
+            @if ($way->item_image)
+              <img src="/{{ $way->item_image }}" alt="Package photo" />
+            @else
+              No photo
+            @endif
           </div>
           <div class="detail-grid">
-            <div><span>Customer name</span><strong>Aye Aye</strong></div>
-            <div><span>Online shop</span><strong>Shopify Store</strong></div>
-            <div><span>Biker</span><strong>Ko Min</strong></div>
-            <div><span>Status</span><strong>Delivered</strong></div>
+            <div><span>Customer name</span><strong>{{ $way->recipient_name }}</strong></div>
+            <div><span>Online shop</span><strong>{{ $way->shop?->name ?? 'N/A' }}</strong></div>
+            <div><span>Biker</span><strong>{{ $way->biker?->name ?? 'Unassigned' }}</strong></div>
+            <div><span>Status</span><strong>{{ ucfirst($way->status) }}</strong></div>
             <div>
-              <span>Customer phone</span><strong>09 777 123 456</strong>
+              <span>Customer phone</span><strong>{{ $way->phone_number }}</strong>
             </div>
-            <div><span>Amount</span><strong>25,000 MMK</strong></div>
+            <div><span>Amount</span><strong>{{ number_format($way->amount, 2) }} MMK</strong></div>
             <div class="detail-wide">
-              <span>Customer address</span><strong>No. 12, Insein Road</strong>
+              <span>Customer address</span><strong>{{ $way->address }}</strong>
             </div>
           </div>
         </div>

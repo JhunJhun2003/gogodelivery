@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +12,11 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class Way extends Model
 {
+    public function shop()
+    {
+        return $this->belongsTo(User::class, 'shop_id');
+    }
+
     public function biker()
     {
         return $this->belongsTo(Biker::class);

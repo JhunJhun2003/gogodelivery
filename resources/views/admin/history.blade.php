@@ -20,81 +20,76 @@
     <main class="workspace-body">
       <span class="section-tag">OPERATIONS</span>
       <h1 class="main-heading">History</h1>
-      <section class="ui-card-white history-filter-card">
+      <form class="ui-card-white history-filter-card" method="GET" action="{{ route('admin.history') }}">
         <h2>Filter orders</h2>
         <div class="history-form-grid">
           <div class="input-field-group full-field">
             <label>SEARCH</label
-            ><input id="historySearch" type="search" placeholder="Search..." />
+            ><input name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search..." />
           </div>
           <div class="input-field-group">
             <label>ONLINE SHOP</label
-            ><select>
-              <option>Select</option>
-              <option>ABC Store</option>
-              <option>M Store</option>
-              <option>City Mart</option>
+            ><select name="shop_id">
+              <option value="">Select</option>
+              @foreach ($shops as $shop)
+                <option value="{{ $shop->id }}" @selected(($filters['shop_id'] ?? '') == $shop->id)>{{ $shop->name }}</option>
+              @endforeach
             </select>
           </div>
           <div class="input-field-group">
             <label>BIKER</label
-            ><select>
-              <option>Choose</option>
-              <option>Ko Ko</option>
-              <option>KoAye</option>
-              <option>Kolay</option>
+            ><select name="biker_id">
+              <option value="">Choose</option>
+              @foreach ($bikers as $biker)
+                <option value="{{ $biker->id }}" @selected(($filters['biker_id'] ?? '') == $biker->id)>{{ $biker->name }}</option>
+              @endforeach
             </select>
           </div>
           <div class="input-field-group">
             <label>STATUS</label
-            ><select>
-              <option>Select</option>
-              <option>Pending</option>
-              <option>On way</option>
-              <option>Delivered</option>
-              <option>Failed</option>
+            ><select name="status">
+              <option value="">Select</option>
+              @foreach (['pending' => 'Pending', 'onway' => 'On way', 'delivered' => 'Delivered', 'failed' => 'Failed'] as $value => $label)
+                <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
+              @endforeach
             </select>
           </div>
           <div class="input-field-group">
             <label>CUST. NAME</label
-            ><input type="text" placeholder="cust. name..." />
+            ><input name="customer_name" type="text" value="{{ $filters['customer_name'] ?? '' }}" placeholder="cust. name..." />
           </div>
           <div class="input-field-group">
             <label>CUST. PHONE</label
-            ><input type="tel" placeholder="cust. ph..." />
+            ><input name="customer_phone" type="tel" value="{{ $filters['customer_phone'] ?? '' }}" placeholder="cust. ph..." />
           </div>
           <div class="input-field-group">
             <label>MIN AMT.</label
-            ><input type="number" min="0" placeholder="Min Amt" />
+            ><input name="min_amount" type="number" min="0" value="{{ $filters['min_amount'] ?? '' }}" placeholder="Min Amt" />
           </div>
           <div class="input-field-group">
             <label>MAX AMT.</label
-            ><input type="number" min="0" placeholder="Max Amt" />
+            ><input name="max_amount" type="number" min="0" value="{{ $filters['max_amount'] ?? '' }}" placeholder="Max Amt" />
           </div>
           <div class="input-field-group full-field">
             <label>DATE</label>
             <div class="custom-date-picker">
-              <input id="historyDate" type="date" /><button
+              <input id="historyDate" name="date" type="date" value="{{ $filters['date'] ?? '' }}" /><button
                 class="custom-date-trigger"
                 type="button"
               >
-                dd/mm/yy
+                {{ isset($filters['date']) ? \Carbon\Carbon::parse($filters['date'])->format('d/m/y') : 'dd/mm/yy' }}
               </button>
               <div class="custom-calendar"></div>
             </div>
           </div>
         </div>
-        <button
-          class="ui-btn btn-navy-blue history-save"
-          id="saveFilter"
-          type="button"
-        >
+        <button class="ui-btn btn-navy-blue history-save" type="submit">
           Search
         </button>
-      </section>
+      </form>
       <div class="badge-group history-badges">
-        <span class="ui-badge badge-navy">24-08-2026</span
-        ><span class="ui-badge badge-lime">Total Way · 21</span>
+        <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span
+        ><span class="ui-badge badge-lime">Total Ways · {{ $totalWays }}</span>
       </div>
       <section class="ui-card-white history-list-card">
         <div class="history-card-heading">
@@ -102,7 +97,7 @@
             <span class="section-tag">ORDERS</span>
             <h2>All orders</h2>
           </div>
-          <span class="ui-badge badge-navy" id="resultCount">3 orders</span>
+          <span class="ui-badge badge-navy">{{ $ways->count() }} orders</span>
         </div>
         <div class="history-table-wrap">
           <table class="workspace-table history-table">
@@ -115,34 +110,18 @@
                 <th>ACTION</th>
               </tr>
             </thead>
-            <tbody id="historyRows">
-              <tr>
-                <td>01</td>
-                <td>ABC Store</td>
-                <td>24-08-2026</td>
-                <td>Yes</td>
-                <td>
-                  <a class="table-action" href="./history-detail.html">View</a>
-                </td>
-              </tr>
-              <tr>
-                <td>02</td>
-                <td>M Store</td>
-                <td>23-08-2026</td>
-                <td>Yes</td>
-                <td>
-                  <a class="table-action" href="./history-detail.html">View</a>
-                </td>
-              </tr>
-              <tr>
-                <td>03</td>
-                <td>City Mart</td>
-                <td>21-08-2026</td>
-                <td>No</td>
-                <td>
-                  <a class="table-action" href="./history-detail.html">View</a>
-                </td>
-              </tr>
+            <tbody>
+              @forelse ($ways as $index => $way)
+                <tr>
+                  <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                  <td>{{ $way->shop?->name ?? 'N/A' }}</td>
+                  <td>{{ $way->date->format('d-m-Y') }}</td>
+                  <td>{{ $way->item_image ? 'Yes' : 'No' }}</td>
+                  <td><a class="table-action" href="{{ route('admin.history.detail', $way) }}">View</a></td>
+                </tr>
+              @empty
+                <tr><td class="no-data-msg" colspan="5">No orders found.</td></tr>
+              @endforelse
             </tbody>
           </table>
         </div>
@@ -202,20 +181,6 @@
         if (!datePicker.contains(e.target)) datePicker.classList.remove("open");
       });
       drawCalendar();
-      document.getElementById("historySearch").oninput = (e) => {
-        const q = e.target.value.toLowerCase();
-        document
-          .querySelectorAll("#historyRows tr")
-          .forEach(
-            (row) => (row.hidden = !row.textContent.toLowerCase().includes(q)),
-          );
-      };
-      document.getElementById("saveFilter").onclick = () => {
-        document.getElementById("resultCount").textContent =
-          [...document.querySelectorAll("#historyRows tr")].filter(
-            (row) => !row.hidden,
-          ).length + " orders";
-      };
     </script>
   </body>
 </html>

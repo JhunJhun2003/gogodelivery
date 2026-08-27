@@ -12,6 +12,57 @@ use Illuminate\View\View;
 
 class WayController extends Controller
 {
+    public function history(Request $request): View
+    {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'shop_id' => ['nullable', 'exists:users,id'],
+            'biker_id' => ['nullable', 'exists:bikers,id'],
+            'status' => ['nullable', 'string', 'max:30'],
+            'customer_name' => ['nullable', 'string', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:30'],
+            'min_amount' => ['nullable', 'numeric', 'min:0'],
+            'max_amount' => ['nullable', 'numeric', 'gte:min_amount'],
+            'date' => ['nullable', 'date'],
+        ]);
+
+        $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
+
+        if ($search = $filters['search'] ?? null) {
+            $waysQuery->where(function ($query) use ($search) {
+                $query->where('recipient_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('remark', 'like', "%{$search}%");
+            });
+        }
+
+        $waysQuery
+            ->when($filters['shop_id'] ?? null, fn ($query, $shopId) => $query->where('shop_id', $shopId))
+            ->when($filters['biker_id'] ?? null, fn ($query, $bikerId) => $query->where('biker_id', $bikerId))
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['customer_name'] ?? null, fn ($query, $name) => $query->where('recipient_name', 'like', "%{$name}%"))
+            ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
+            ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
+            ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+
+        return view('admin.history', [
+            'ways' => $waysQuery->get(),
+            'shops' => User::query()->where('role', User::ROLE_SHOP)->orderBy('name')->get(),
+            'bikers' => Biker::query()->orderBy('name')->get(),
+            'filters' => $filters,
+            'totalWays' => Way::query()->whereDate('date', today())->count(),
+        ]);
+    }
+
+    public function historyDetail(Way $way): View
+    {
+        $way->load(['shop', 'biker']);
+
+        return view('admin.history-detail', compact('way'));
+    }
+
     public function check(): View
     {
         $today = today();
