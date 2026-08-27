@@ -13,12 +13,12 @@
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
-        <span class="user-role">Shop · ABC Store</span
+        <span class="user-role">Shop · {{ $shop->name }}</span
         ><button class="hamburger-icon-btn" type="button">☰</button>
       </div>
     </header>
     <main class="workspace-body">
-      <span class="section-tag">ABC STORE</span>
+      <span class="section-tag">{{ strtoupper($shop->name) }}</span>
       <h1 class="main-heading">Active orders</h1>
       <p class="page-intro">
         Orders you have made that are still being processed.
@@ -26,53 +26,42 @@
       <section class="ui-card-white shop-orders-card">
         <div class="shop-orders-heading">
           <h2>Current orders</h2>
-          <span class="ui-badge badge-lime" id="orderCount">2 active</span>
+          <span class="ui-badge badge-lime" id="orderCount">{{ $orders->count() }} active</span>
         </div>
-        <input
-          class="shop-search"
-          id="orderSearch"
-          type="search"
-          placeholder="Search order, customer, address..."
-        />
+        <form method="GET" action="{{ route('shop.orders') }}">
+          <input
+            class="shop-search"
+            id="orderSearch"
+            type="search"
+            name="search"
+            value="{{ $search }}"
+            placeholder="Search order, customer, address..."
+            aria-label="Search orders"
+          />
+        </form>
         <div id="orderList">
-          <article class="ui-card-white order-card shop-order-card">
-            <label><strong>Order #91axcn</strong></label>
-            <div class="order-content">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>Cho Aung Tin</strong>
-                <p>0977483047 / 26,000 / 3,000 deli</p>
-                <small>Status: PENDING · Biker: Not assigned</small>
+          @forelse ($orders as $order)
+            <article class="ui-card-white order-card shop-order-card">
+              <label><strong>Order #{{ $order->id }}</strong></label>
+              <div class="order-content">
+                <div class="order-photo">
+                  @if ($order->item_image)
+                    <img src="/{{ $order->item_image }}" alt="Order item" />
+                  @else
+                    ITEM
+                  @endif
+                </div>
+                <div>
+                  <strong>{{ $order->recipient_name }}</strong>
+                  <p>{{ $order->phone_number }} / {{ number_format($order->amount, 0) }} / {{ number_format($order->delivery_fees, 0) }} deli</p>
+                  <small>Status: {{ strtoupper($order->status) }} · Biker: {{ $order->biker?->name ?? 'Not assigned' }}</small>
+                </div>
               </div>
-            </div>
-            <label class="order-address"
-              >ADDRESS<input value="ကျားမြို့တွင်" readonly
-            /></label>
-            <div class="delivery-actions">
-              <a class="info-btn" href="./history-detail.html?order=91axcn"
-                >View details</a
-              >
-            </div>
-          </article>
-          <article class="ui-card-white order-card shop-order-card">
-            <label><strong>Order #ovzbgx</strong></label>
-            <div class="order-content">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>Nyi Nyi Thant</strong>
-                <p>09257191532 / 25,000 / 3,000 deli</p>
-                <small>Status: ON WAY · Biker: Ko Ko</small>
-              </div>
-            </div>
-            <label class="order-address"
-              >ADDRESS<input value="အလုံ" readonly
-            /></label>
-            <div class="delivery-actions">
-              <a class="info-btn" href="./history-detail.html?order=ovzbgx"
-                >View details</a
-              >
-            </div>
-          </article>
+              <label class="order-address">ADDRESS<input value="{{ $order->address }}" readonly /></label>
+            </article>
+          @empty
+            <p class="shop-orders-empty">No active orders.</p>
+          @endforelse
         </div>
       </section>
     </main>
@@ -80,13 +69,23 @@
       const search = document.getElementById("orderSearch"),
         rows = [...document.querySelectorAll(".order-card")];
       search.oninput = () => {
-        const q = search.value.toLowerCase();
+        const q = search.value.trim().toLowerCase();
         rows.forEach(
-          (row) => (row.hidden = !row.textContent.toLowerCase().includes(q)),
+            (row) => {
+              const values = [...row.querySelectorAll("input")]
+                .map((input) => input.value)
+                .join(" ");
+              row.hidden = !(row.textContent + " " + values)
+                .toLowerCase()
+                .includes(q);
+            },
         );
         document.getElementById("orderCount").textContent =
           rows.filter((row) => !row.hidden).length + " active";
       };
+      search.form.addEventListener("submit", () => {
+        search.value = search.value.trim();
+      });
     </script>
   </body>
 </html>

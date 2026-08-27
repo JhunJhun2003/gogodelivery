@@ -7,11 +7,38 @@ use App\Models\User;
 use App\Models\Way;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
 class WayController extends Controller
 {
+    public function shopOrders(Request $request): View
+    {
+        $search = $request->string('search')->trim()->toString();
+        $shop = Auth::user();
+        $ordersQuery = Way::query()
+            ->where('shop_id', $shop->id)
+            ->whereNotIn('status', ['delivered', 'failed'])
+            ->with('biker')
+            ->latest('date')
+            ->latest('id');
+
+        if ($search !== '') {
+            $ordersQuery->where(function ($query) use ($search) {
+                $query->where('recipient_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
+            });
+        }
+
+        return view('shop.orders', [
+            'shop' => $shop,
+            'orders' => $ordersQuery->get(),
+            'search' => $search,
+        ]);
+    }
+
     public function history(Request $request): View
     {
         $filters = $request->validate([

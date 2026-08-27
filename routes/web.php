@@ -42,7 +42,7 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
 });
 
 Route::middleware('auth', 'role:shop')->prefix('shop')->name('shop.')->group(function () {
-    Route::get('/orders', fn () => view('shop.orders'))->name('orders');
+    Route::get('/orders', [WayController::class, 'shopOrders'])->name('orders');
     Route::get('/history', fn () => view('shop.history'))->name('history');
 });
 
