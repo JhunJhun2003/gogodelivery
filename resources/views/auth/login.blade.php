@@ -41,7 +41,7 @@
           </div>
           <button type="submit" class="ui-btn btn-lime-green">Enter workspace</button>
         </form>
-        <p class="bottom-hint">Default: admin / admin123 (or use email)</p>
+        
       </div>
     </div>
   </body>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Biker;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,34 @@ class AuthController extends Controller
                 ->orderBy('name')
                 ->get(),
         ]);
+    }
+
+    public function showUsers(): View
+    {
+        return view('admin.users', [
+            'bikers' => Biker::query()->orderBy('name')->get(),
+            'users' => User::query()
+                ->where('role', User::ROLE_BIKER)
+                ->with('biker')
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
+    public function createUser(Request $request): RedirectResponse
+    {
+        $data = $request->validateWithBag('user', [
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:users,username'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_BIKER])],
+            'biker_id' => ['nullable', 'required_if:role,biker', 'exists:bikers,id'],
+        ]);
+
+        User::create($data);
+
+        return redirect()->route('admin.users')->with('user_status', 'User created successfully.');
     }
 
     public function login(Request $request): RedirectResponse

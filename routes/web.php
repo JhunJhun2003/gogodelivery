@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BikerController;
 use App\Http\Controllers\WayController;
+use App\Models\Biker;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -28,7 +29,8 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
     Route::post('/shops', [AuthController::class, 'createShop'])->name('shops.create');
     Route::put('/shops/{shop}', [AuthController::class, 'updateShop'])->name('shops.update');
     Route::post('/shops/{shop}/ways', [WayController::class, 'store'])->name('shops.ways.store');
-    Route::get('/users', fn () => view('admin.users'))->name('users');
+    Route::get('/users', [AuthController::class, 'showUsers'])->name('users');
+    Route::post('/users', [AuthController::class, 'createUser'])->name('users.create');
     Route::get('/bikers', [BikerController::class, 'index'])->name('bikers');
     Route::post('/bikers', [BikerController::class, 'store'])->name('bikers.create');
     Route::put('/bikers/{biker}', [BikerController::class, 'update'])->name('bikers.update');

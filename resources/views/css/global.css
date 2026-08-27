@@ -6,6 +6,12 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body {
+    width: 100%;
+    min-width: 0;
+}
+
 body {
     height: 100vh;
     overflow-x: hidden;
@@ -26,6 +32,8 @@ body {
 }
 
 .ui-card-white {
+    width: 100%;
+    min-width: 0;
     background: white;
     border-radius: 20px;
     padding: 20px;

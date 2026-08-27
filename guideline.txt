@@ -1,3 +1,4 @@
 Admin	admin	admin@gogodelivery.test	admin123
 Shop	shop1	shop@gogodelivery.test	shop123
 Biker	biker1	biker@gogodelivery.test	biker123
+<p class="bottom-hint">Default: admin / admin123 (or use email)</p>
