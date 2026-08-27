@@ -35,52 +35,69 @@
       <h1 class="main-heading">Way Check</h1>
 
       <div class="badge-group">
-        <span class="ui-badge badge-navy">23-08-2026</span>
-        <span class="ui-badge badge-lime">Total Way · 0</span>
+        <span class="ui-badge badge-navy">{{ $today->format('d-m-Y') }}</span>
+        <span class="ui-badge badge-lime">Total Ways · {{ $totalWays }}</span>
       </div>
 
-      <div class="ui-card-white form-card">
+      @if (session('way_status'))
+        <p role="status">{{ session('way_status') }}</p>
+      @endif
+      <form class="ui-card-white form-card" method="POST" action="{{ route('admin.way-check.store') }}" enctype="multipart/form-data">
+        @csrf
         <h3 class="form-title">New way</h3>
         <div class="input-field-group">
-          <label>ONLINE SHOP</label
-          ><select>
-            <option>Select</option>
+          <label>ONLINE SHOP</label>
+          <select name="shop_id" required>
+            <option value="">Select</option>
+            @foreach ($shops as $shop)
+              <option value="{{ $shop->id }}">{{ $shop->name }}</option>
+            @endforeach
           </select>
         </div>
         <div class="input-field-group">
-          <label>BIKER</label
-          ><select>
-            <option>Choose</option>
+          <label>BIKER</label>
+          <select name="biker_id">
+            <option value="">Choose</option>
+            @foreach ($bikers as $biker)
+              <option value="{{ $biker->id }}">{{ $biker->name }}</option>
+            @endforeach
           </select>
         </div>
         <div class="input-field-group">
-          <label>STATUS</label
-          ><select>
-            <option>PENDING</option>
+          <label>STATUS</label>
+          <select name="status">
+            <option value="pending">PENDING</option>
+            <option value="onway">ON WAY</option>
+            <option value="delivered">DELIVERED</option>
+            <option value="failed">FAILED</option>
           </select>
         </div>
         <div class="input-field-group">
-          <label>CUSTOMER NAME</label><input type="text" />
+          <label>CUSTOMER NAME</label><input name="recipient_name" type="text" placeholder="Recipient name" required />
         </div>
         <div class="input-field-group">
-          <label>CUSTOMER PHONE</label><input type="tel" />
+          <label>CUSTOMER PHONE</label><input name="phone_number" type="tel" placeholder="09..." required />
         </div>
         <div class="input-field-group">
-          <label>CUSTOMER ADDRESS</label><input type="text" />
+          <label>CUSTOMER ADDRESS</label><input name="address" type="text" placeholder="Delivery address" required />
         </div>
         <div class="input-field-group">
-          <label>AMOUNT</label><input type="number" value="0" />
+          <label>AMOUNT</label><input name="amount" type="number" min="0" value="0" required />
         </div>
         <div class="input-field-group">
-          <label>DELI AMOUNT</label><input type="number" value="0" />
+          <label>DELI AMOUNT</label><input name="delivery_fees" type="number" min="0" value="0" required />
         </div>
         <div class="input-field-group">
-          <label>NOTES</label><input type="text" />
+          <label>DATE</label><input name="date" type="date" value="{{ old('date', now()->format('Y-m-d')) }}" required />
+        </div>
+        <div class="input-field-group">
+          <label>NOTES</label><input name="remark" type="text" placeholder="Add a note" />
         </div>
         <div class="input-field-group photo-field-group">
           <label for="wayPhoto">DELIVERY PHOTO</label>
           <input
             id="wayPhoto"
+            name="item_image"
             class="photo-input"
             type="file"
             accept="image/*"
@@ -90,8 +107,8 @@
             <span id="photoPreviewName"></span>
           </div>
         </div>
-        <button class="ui-btn btn-navy-blue">Add way</button>
-      </div>
+        <button class="ui-btn btn-navy-blue" type="submit">Add way</button>
+      </form>
     </main>
 
     <script>

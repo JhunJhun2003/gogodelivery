@@ -36,7 +36,8 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
     Route::put('/bikers/{biker}', [BikerController::class, 'update'])->name('bikers.update');
     Route::post('/bikers/{biker}/ways', [BikerController::class, 'assign'])->name('bikers.ways.assign');
     Route::get('/history', fn () => view('admin.history'))->name('history');
-    Route::get('/way-check', fn () => view('admin.way-check'))->name('way-check');
+    Route::get('/way-check', [WayController::class, 'check'])->name('way-check');
+    Route::post('/way-check', [WayController::class, 'storeFromCheck'])->name('way-check.store');
 });
 
 Route::middleware('auth', 'role:shop')->prefix('shop')->name('shop.')->group(function () {
