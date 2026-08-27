@@ -43,7 +43,8 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
 
 Route::middleware('auth', 'role:shop')->prefix('shop')->name('shop.')->group(function () {
     Route::get('/orders', [WayController::class, 'shopOrders'])->name('orders');
-    Route::get('/history', fn () => view('shop.history'))->name('history');
+    Route::get('/history', [WayController::class, 'shopHistory'])->name('history');
+    Route::get('/history/{way}', [WayController::class, 'shopHistoryDetail'])->name('history.detail');
 });
 
 Route::middleware('auth', 'role:biker')->prefix('bikers')->name('bikers.')->group(function () {

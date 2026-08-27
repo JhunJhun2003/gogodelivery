@@ -13,59 +13,55 @@
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
-        <span class="user-role">Shop · ABC Store</span
+        <span class="user-role">Shop · {{ $shop->name }}</span
         ><button class="hamburger-icon-btn" type="button">☰</button>
       </div>
     </header>
     <main class="workspace-body">
-      <span class="section-tag">ABC STORE</span>
+      <span class="section-tag">{{ strtoupper($shop->name) }}</span>
       <h1 class="main-heading">Order history</h1>
       <p class="page-intro">All orders made by your shop.</p>
-      <section class="ui-card-white history-filter-card">
+      <form class="ui-card-white history-filter-card" method="GET" action="{{ route('shop.history') }}">
         <h2>Find an order</h2>
         <div class="history-form-grid">
           <div class="input-field-group full-field">
             <label>SEARCH</label
             ><input
-              id="historySearch"
+              name="search"
+              value="{{ $filters['search'] ?? '' }}"
               type="search"
               placeholder="Search order, customer, address..."
             />
           </div>
           <div class="input-field-group">
             <label>STATUS</label
-            ><select>
-              <option>All statuses</option>
-              <option>Pending</option>
-              <option>On way</option>
-              <option>Delivered</option>
-              <option>Failed</option>
+            ><select name="status">
+              <option value="">All statuses</option>
+              @foreach (['pending' => 'Pending', 'onway' => 'On way', 'delivered' => 'Delivered', 'failed' => 'Failed'] as $value => $label)
+                <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
+              @endforeach
             </select>
           </div>
           <div class="input-field-group">
             <label>DATE</label>
             <div class="custom-date-picker">
-              <input id="historyDate" type="date" /><button
+              <input id="historyDate" name="date" type="date" value="{{ $filters['date'] ?? '' }}" /><button
                 class="custom-date-trigger"
                 type="button"
               >
-                dd/mm/yy
+                {{ isset($filters['date']) ? \Carbon\Carbon::parse($filters['date'])->format('d/m/y') : 'dd/mm/yy' }}
               </button>
               <div class="custom-calendar"></div>
             </div>
           </div>
         </div>
-        <button
-          class="ui-btn btn-navy-blue history-save"
-          id="saveFilter"
-          type="button"
-        >
+        <button class="ui-btn btn-navy-blue history-save" type="submit">
           Search
         </button>
-      </section>
+      </form>
       <div class="badge-group history-badges">
-        <span class="ui-badge badge-navy">24-08-2026</span
-        ><span class="ui-badge badge-lime" id="resultCount">3 orders</span>
+        <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span
+        ><span class="ui-badge badge-lime">{{ $orders->count() }} orders</span>
       </div>
       <section class="ui-card-white history-list-card">
         <div class="history-card-heading">
@@ -85,64 +81,24 @@
                 <th>ACTION</th>
               </tr>
             </thead>
-            <tbody id="historyRows">
-              <tr>
-                <td>01</td>
-                <td>Cho Aung Tin</td>
-                <td>24-08-2026</td>
-                <td>Pending</td>
-                <td>
-                  <a
-                    class="table-action"
-                    href="./history-detail.html?order=91axcn"
-                    >View</a
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td>02</td>
-                <td>Nyi Nyi Thant</td>
-                <td>23-08-2026</td>
-                <td>On way</td>
-                <td>
-                  <a
-                    class="table-action"
-                    href="./history-detail.html?order=ovzbgx"
-                    >View</a
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td>03</td>
-                <td>Aye Aye</td>
-                <td>21-08-2026</td>
-                <td>Delivered</td>
-                <td>
-                  <a
-                    class="table-action"
-                    href="./history-detail.html?order=ayeaye"
-                    >View</a
-                  >
-                </td>
-              </tr>
+            <tbody>
+              @forelse ($orders as $index => $order)
+                <tr>
+                  <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                  <td>{{ $order->recipient_name }}</td>
+                  <td>{{ $order->date->format('d-m-Y') }}</td>
+                  <td>{{ ucfirst($order->status) }}</td>
+                  <td><a class="table-action" href="{{ route('shop.history.detail', $order) }}">View</a></td>
+                </tr>
+              @empty
+                <tr><td class="no-data-msg" colspan="5">No orders found.</td></tr>
+              @endforelse
             </tbody>
           </table>
         </div>
       </section>
     </main>
     <script>
-      document.getElementById("historySearch").oninput = (e) => {
-        const q = e.target.value.toLowerCase();
-        document
-          .querySelectorAll("#historyRows tr")
-          .forEach(
-            (row) => (row.hidden = !row.textContent.toLowerCase().includes(q)),
-          );
-        document.getElementById("resultCount").textContent =
-          [...document.querySelectorAll("#historyRows tr")].filter(
-            (row) => !row.hidden,
-          ).length + " orders";
-      };
       document
         .querySelectorAll(".history-filter-card select")
         .forEach((select) => {

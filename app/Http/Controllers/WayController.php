@@ -39,6 +39,46 @@ class WayController extends Controller
         ]);
     }
 
+    public function shopHistory(Request $request): View
+    {
+        $shop = Auth::user();
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string', 'max:30'],
+            'date' => ['nullable', 'date'],
+        ]);
+        $search = $filters['search'] ?? null;
+
+        $ordersQuery = Way::query()
+            ->where('shop_id', $shop->id)
+            ->with('biker')
+            ->latest('date')
+            ->latest('id')
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('recipient_name', 'like', "%{$search}%")
+                        ->orWhere('phone_number', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%");
+                });
+            })
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+
+        return view('shop.history', [
+            'shop' => $shop,
+            'orders' => $ordersQuery->get(),
+            'filters' => $filters,
+        ]);
+    }
+
+    public function shopHistoryDetail(Way $way): View
+    {
+        abort_unless($way->shop_id === Auth::id(), 404);
+        $way->load(['shop', 'biker']);
+
+        return view('shop.history-detail', compact('way'));
+    }
+
     public function history(Request $request): View
     {
         $filters = $request->validate([

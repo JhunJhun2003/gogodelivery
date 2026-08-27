@@ -13,45 +13,46 @@
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
-        <span class="user-role">Shop · ABC Store</span
+        <span class="user-role">Shop · {{ $way->shop?->name ?? 'Shop' }}</span
         ><button class="hamburger-icon-btn" type="button">☰</button>
       </div>
     </header>
     <main class="workspace-body">
-      <a class="back-link" href="/shop/history">← Back to history</a
-      ><span class="section-tag">ORDER · 02</span>
+      <a class="back-link" href="{{ route('shop.history') }}">← Back to history</a
+      ><span class="section-tag">ORDER · {{ $way->id }}</span>
       <h1 class="main-heading">Order detail</h1>
       <section class="ui-card-white history-detail-card">
         <div class="history-card-heading">
           <div>
-            <span class="section-tag">23-08-2026</span>
-            <h2>Nyi Nyi Thant</h2>
+            <span class="section-tag">{{ $way->date->format('d-m-Y') }}</span>
+            <h2>{{ $way->recipient_name }}</h2>
           </div>
-          <span class="status-pill status-delivered">On way</span>
+          <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
         </div>
         <div class="detail-layout">
           <div class="detail-photo">
-            <img src="/assets/logo.jpg?v=1787684056" alt="Order photo" />
+            @if ($way->item_image)
+              <img src="/{{ $way->item_image }}" alt="Order photo" />
+            @else
+              No photo
+            @endif
           </div>
           <div class="detail-grid">
-            <div><span>Customer name</span><strong>Nyi Nyi Thant</strong></div>
+            <div><span>Customer name</span><strong>{{ $way->recipient_name }}</strong></div>
             <div>
-              <span>Customer phone</span><strong>09 257 159 132</strong>
+              <span>Customer phone</span><strong>{{ $way->phone_number }}</strong>
             </div>
-            <div><span>Order status</span><strong>On way</strong></div>
-            <div><span>Biker</span><strong>Ko Ko</strong></div>
-            <div><span>Order amount</span><strong>25,000 MMK</strong></div>
-            <div><span>Delivery fee</span><strong>3,000 MMK</strong></div>
+            <div><span>Order status</span><strong>{{ ucfirst($way->status) }}</strong></div>
+            <div><span>Biker</span><strong>{{ $way->biker?->name ?? 'Not assigned' }}</strong></div>
+            <div><span>Order amount</span><strong>{{ number_format($way->amount, 2) }} MMK</strong></div>
+            <div><span>Delivery fee</span><strong>{{ number_format($way->delivery_fees, 2) }} MMK</strong></div>
             <div class="detail-wide">
-              <span>Customer address</span><strong>အလုံ</strong>
+              <span>Customer address</span><strong>{{ $way->address }}</strong>
             </div>
           </div>
         </div>
         <div class="history-event">
-          23-08-2026 10:12 · ABC Store<strong>ORDER CREATED</strong>
-        </div>
-        <div class="history-event">
-          23-08-2026 10:30 · Ko Ko<strong>ON_WAY</strong>
+          {{ $way->created_at->format('d-m-Y H:i') }} · {{ $way->shop?->name ?? 'Shop' }}<strong>ORDER CREATED</strong>
         </div>
       </section>
     </main>
