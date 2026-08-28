@@ -104,6 +104,21 @@
     margin-bottom: 14px;
 }
 .page-intro { color:#64748b; font-size:15px; line-height:1.5; margin:-6px 0 18px; }
+.today-deliveries-card { margin:0 0 16px; padding:16px; border:1px solid #263244; border-radius:12px; background:#111a27; color:#f8fafc; }
+.today-deliveries-heading { display:flex; align-items:center; gap:9px; }
+.today-deliveries-heading h2 { flex:1; font-size:15px; font-weight:700; }
+.today-deliveries-icon, .delivery-stat-icon { display:grid; place-items:center; }
+.today-deliveries-icon { width:28px; height:28px; border-radius:50%; background:#344f13; color:#ccff00; font-size:14px; }
+.today-deliveries-count { padding:5px 8px; border-radius:12px; background:#27312a; color:#ccff00; font-size:10px; font-weight:700; white-space:nowrap; }
+.delivery-stats { display:grid; grid-template-columns:repeat(3, 1fr); margin:18px 0 14px; }
+.delivery-stat { display:grid; justify-items:center; gap:3px; padding:0 8px; border-right:1px solid #263244; text-align:center; }
+.delivery-stat:last-child { border-right:0; }
+.delivery-stat-icon { width:26px; height:26px; margin-bottom:2px; border-radius:50%; background:#344f13; color:#ccff00; font-size:13px; }
+.delivery-stat strong { font-size:19px; line-height:1.1; }
+.delivery-stat span:last-child { color:#9aa6b7; font-size:10px; }
+.today-deliveries-link { display:flex; align-items:center; justify-content:center; gap:8px; min-height:35px; border:1px solid #263244; border-radius:7px; color:#f8fafc; font-size:12px; font-weight:700; text-decoration:none; }
+.today-deliveries-link span { color:#ccff00; font-size:18px; line-height:1; }
+.today-deliveries-link:hover { border-color:#ccff00; }
 .section-card-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .section-card-heading h2, .shop-order-card h2 { color:#0f172a; font-size:19px; }
 .compact-btn { width:auto; padding:11px 17px; }

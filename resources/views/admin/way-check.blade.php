@@ -39,6 +39,34 @@
         <span class="ui-badge badge-lime">Total Ways · {{ $totalWays }}</span>
       </div>
 
+      <section class="today-deliveries-card" aria-labelledby="todayDeliveriesTitle">
+        <div class="today-deliveries-heading">
+          <div class="today-deliveries-icon" aria-hidden="true">&#128205;</div>
+          <h2 id="todayDeliveriesTitle">Today's Deliveries</h2>
+          <span class="today-deliveries-count">{{ $totalWays }} Deliveries</span>
+        </div>
+        <div class="delivery-stats">
+          <div class="delivery-stat">
+            <span class="delivery-stat-icon" aria-hidden="true">&#128203;</span>
+            <strong>{{ $totalWays }}</strong>
+            <span>Total Orders</span>
+          </div>
+          <div class="delivery-stat">
+            <span class="delivery-stat-icon" aria-hidden="true">&#127873;</span>
+            <strong>{{ $pendingWays }}</strong>
+            <span>Pending</span>
+          </div>
+          <div class="delivery-stat">
+            <span class="delivery-stat-icon" aria-hidden="true">&#10003;</span>
+            <strong>{{ $completedWays }}</strong>
+            <span>Completed</span>
+          </div>
+        </div>
+        <a class="today-deliveries-link" href="{{ route('admin.history') }}">
+          View all deliveries <span aria-hidden="true">&#8594;</span>
+        </a>
+      </section>
+
       @if (session('way_status'))
         <p role="status">{{ session('way_status') }}</p>
       @endif

@@ -207,10 +207,13 @@ class WayController extends Controller
     public function check(): View
     {
         $today = today();
+        $todayWays = Way::query()->whereDate('date', $today);
 
         return view('admin.way-check', [
             'today' => $today,
-            'totalWays' => Way::query()->whereDate('date', $today)->count(),
+            'totalWays' => (clone $todayWays)->count(),
+            'pendingWays' => (clone $todayWays)->where('status', Way::STATUS_PENDING)->count(),
+            'completedWays' => (clone $todayWays)->where('status', Way::STATUS_DELIVERED)->count(),
             'shops' => User::query()->where('role', User::ROLE_SHOP)->orderBy('name')->get(),
             'bikers' => Biker::query()->orderBy('name')->get(),
         ]);
