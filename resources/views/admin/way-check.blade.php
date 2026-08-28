@@ -7,11 +7,11 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Deli - Way Check</title>
-    <link rel="icon" href="/assets/logo-nobg.png?v=1787685826" />
-    <link rel="stylesheet" href="/css/global.css?v=1787684056" />
-    <link rel="stylesheet" href="/css/components.css?v=1787684056" />
-    <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
-  <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
+    <link rel="icon" href="../assets/logo-nobg.png?v=1787685826" />
+    <link rel="stylesheet" href="../css/global.css?v=1787684056" />
+    <link rel="stylesheet" href="../css/components.css?v=1787684056" />
+    <link rel="stylesheet" href="../css/screens.css?v=1787684056" />
+  <script src="../js/sidebar.js?v=1787686291" defer></script><script src="../js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
