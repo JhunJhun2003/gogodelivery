@@ -239,6 +239,7 @@ class WayController extends Controller
             $image = $request->file('item_image');
             $directory = config('filesystems.order_image_path');
             File::ensureDirectoryExists($directory);
+            abort_unless(is_dir($directory) && is_writable($directory), 500, 'The order image directory is not writable.');
             $filename = $image->hashName();
             $path = $directory . '/' . $filename;
 
@@ -264,7 +265,7 @@ class WayController extends Controller
                 $source = $resized;
             }
 
-            imagejpeg($source, $path, 85);
+            abort_unless(imagejpeg($source, $path, 85) && is_file($path), 500, 'The order image could not be saved.');
             imagedestroy($source);
             $data['item_image'] = 'order_image/' . $filename;
         }
@@ -294,6 +295,7 @@ class WayController extends Controller
             $image = $request->file('item_image');
             $directory = config('filesystems.order_image_path');
             File::ensureDirectoryExists($directory);
+            abort_unless(is_dir($directory) && is_writable($directory), 500, 'The order image directory is not writable.');
             $filename = $image->hashName();
             $path = $directory . '/' . $filename;
 
@@ -319,7 +321,7 @@ class WayController extends Controller
                 $source = $resized;
             }
 
-            imagejpeg($source, $path, 85);
+            abort_unless(imagejpeg($source, $path, 85) && is_file($path), 500, 'The order image could not be saved.');
             imagedestroy($source);
             $data['item_image'] = 'order_image/' . $filename;
         }

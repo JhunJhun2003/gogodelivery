@@ -354,6 +354,7 @@
     const onway = card.querySelector(".onway"),
       fail = card.querySelector(".fail"),
       info = card.querySelector(".info-btn");
+    if (!onway || !fail || !info) return;
     onway.onclick = () => {
       activeDelivery = card;
       onway.hidden = true;
@@ -408,6 +409,7 @@
   document.querySelectorAll(".delivery-card").forEach((card) => {
     const onway = card.querySelector(".onway"),
       fail = card.querySelector(".fail");
+    if (!onway || !fail) return;
     onway.addEventListener("click", () => {
       fail.classList.remove("failed");
       fail.textContent = "fail";
@@ -441,7 +443,9 @@
 </script>
 <script>
   document.querySelectorAll(".delivery-card").forEach((card) => {
-    card.querySelector(".onway").addEventListener("click", () => {
+    const onway = card.querySelector(".onway");
+    if (!onway) return;
+    onway.addEventListener("click", () => {
       const buttons = [...card.querySelectorAll(".done")];
       buttons.slice(1).forEach((button) => button.remove());
       const done = buttons[0];

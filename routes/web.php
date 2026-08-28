@@ -24,6 +24,17 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+Route::get('/order_image/{filename}', function (string $filename) {
+    abort_unless(preg_match('/\A[A-Za-z0-9._-]+\z/', $filename), 404);
+
+    $path = rtrim(config('filesystems.order_image_path'), DIRECTORY_SEPARATOR)
+        . DIRECTORY_SEPARATOR . $filename;
+
+    abort_unless(is_file($path), 404);
+
+    return response()->file($path);
+})->where('filename', '[A-Za-z0-9._-]+');
+
 Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/shops', [AuthController::class, 'showShops'])->name('shops');
     Route::post('/shops', [AuthController::class, 'createShop'])->name('shops.create');
