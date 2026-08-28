@@ -10,7 +10,10 @@
     : isAdmin
       ? '<a class="sidebar-row" href="/admin/shops"><strong>Shops</strong><span>Partners</span></a><a class="sidebar-row" href="/admin/bikers"><strong>Bikers</strong><span>Fleet</span></a><a class="sidebar-row" href="/admin/way-check"><strong>Way Check</strong><span>Today</span></a><a class="sidebar-row" href="/admin/history"><strong>History</strong><span>Records</span></a><a class="sidebar-row" href="/admin/users"><strong>Users</strong><span>Access</span></a>'
         : '<a class="sidebar-row" href="/bikers/ways"><strong>Ways</strong><span>Assigned deliveries</span></a><a class="sidebar-row" href="/bikers/history"><strong>History</strong><span>My records</span></a>';
-      const logout = '<form class="sidebar-logout" action="/logout" method="POST"><input type="hidden" name="_token" value="' + decodeURIComponent((document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/) || [])[1] || '') + '"><button class="sidebar-row" type="submit"><strong>Logout</strong><span>End session</span></button></form>';
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        || decodeURIComponent((document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/) || [])[1] || '');
+      const logoutPath = location.pathname.replace(new RegExp('/' + folder + '(/.*)?$'), '') + '/logout';
+      const logout = '<form class="sidebar-logout" action="' + logoutPath + '" method="POST"><input type="hidden" name="_token" value="' + csrfToken.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"><button class="sidebar-row" type="submit"><strong>Logout</strong><span>End session</span></button></form>';
   const nav = document.createElement("div");
   nav.className = "slide-sidebar";
   nav.id = "appSidebar";
