@@ -48,7 +48,8 @@ Route::middleware('auth', 'role:shop')->prefix('shop')->name('shop.')->group(fun
 });
 
 Route::middleware('auth', 'role:biker')->prefix('bikers')->name('bikers.')->group(function () {
-    Route::get('/ways', fn () => view('bikers.ways'))->name('ways');
+    Route::get('/ways', [WayController::class, 'bikerWays'])->name('ways');
+    Route::post('/ways/{way}/status', [WayController::class, 'updateBikerStatus'])->name('ways.status');
     Route::get('/history', fn () => view('bikers.history'))->name('history');
 });
 

@@ -13,6 +13,39 @@ use Illuminate\View\View;
 
 class WayController extends Controller
 {
+    public function bikerWays(): View
+    {
+        $biker = Auth::user()->biker;
+        abort_unless($biker, 403);
+
+        return view('bikers.ways', [
+            'ways' => Way::query()
+                ->where('biker_id', $biker->id)
+                ->whereDate('date', today())
+                ->with('shop')
+                ->latest('id')
+                ->get(),
+        ]);
+    }
+
+    public function updateBikerStatus(Request $request, Way $way): RedirectResponse
+    {
+        $biker = Auth::user()->biker;
+        abort_unless($biker && $way->biker_id === $biker->id, 403);
+
+        $data = $request->validate([
+            'status' => ['required', 'in:onway,failed,delivered'],
+            'remark' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $way->update([
+            'status' => $data['status'],
+            'remark' => $data['remark'] ?? $way->remark,
+        ]);
+
+        return redirect()->route('bikers.ways')->with('way_status', 'Way status updated.');
+    }
+
     public function shopOrders(Request $request): View
     {
         $search = $request->string('search')->trim()->toString();

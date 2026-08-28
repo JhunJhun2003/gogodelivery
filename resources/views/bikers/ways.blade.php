@@ -22,9 +22,12 @@
       <h1 class="main-heading">My ways</h1>
       <p class="page-intro">Deliveries assigned to you today.</p>
       <div class="badge-group history-badges">
-        <span class="ui-badge badge-navy">24-08-2026</span
-        ><span class="ui-badge badge-lime">6 assigned ways</span>
+        <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span
+        ><span class="ui-badge badge-lime">{{ $ways->count() }} assigned ways</span>
       </div>
+      @if (session('way_status'))
+        <p class="form-success">{{ session('way_status') }}</p>
+      @endif
       <section class="ui-card-white assigned-card">
         <div class="detail-section-heading">
           <div>
@@ -33,133 +36,64 @@
           </div>
         </div>
         <div class="delivery-list">
-          <article class="delivery-card" data-status="active">
-            <div class="delivery-main">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>#l4adu · Jejey / Bahan</strong>
-                <p>ABC Store / 1234567 / 60,000 / 5,000 deli</p>
-                <small>ADDRESS · Bahan</small>
+          @forelse ($ways as $way)
+            <article class="delivery-card" data-status="{{ $way->status }}">
+              <div class="delivery-main">
+                <div class="order-photo">
+                  @if ($way->item_image)
+                    <img src="/{{ $way->item_image }}" alt="Package photo" />
+                  @else
+                    ITEM
+                  @endif
+                </div>
+                <div>
+                  <strong>#{{ $way->id }} · {{ $way->recipient_name }}</strong>
+                  <p>{{ $way->shop?->name ?? 'Shop' }} / {{ $way->phone_number }} / {{ number_format($way->amount, 0) }} / {{ number_format($way->delivery_fees, 0) }} deli</p>
+                  <small>ADDRESS · {{ $way->address }}</small>
+                  @if ($way->status === 'failed' && $way->remark)
+                    <small class="fail-note">{{ $way->remark }}</small>
+                  @endif
+                </div>
               </div>
-            </div>
-            <div class="delivery-actions">
-              <button class="status-btn onway" type="button">onway</button
-              ><button class="status-btn fail" type="button">fail</button
-              ><button class="info-btn" type="button">Info</button>
-            </div>
-          </article>
-          <article class="delivery-card" data-status="active">
-            <div class="delivery-main">
-              <div class="order-photo">ITEM</div>
-              <div>
-                <strong>#jo6a4h · မောင် / ကျောက်တံတား</strong>
-                <p>M Store / 09665690997 / 26,500 / 3,500 deli</p>
-                <small>ADDRESS · Downtown</small>
+              <div class="delivery-actions">
+                @if ($way->status !== 'delivered')
+                  <form method="POST" action="{{ route('bikers.ways.status', $way) }}">
+                    @csrf
+                    <input type="hidden" name="status" value="onway" />
+                    <button class="status-btn onway" type="submit" {{ $way->status === 'onway' ? 'disabled' : '' }}>onway</button>
+                  </form>
+                  <form class="fail-form" method="POST" action="{{ route('bikers.ways.status', $way) }}">
+                    @csrf
+                    <input type="hidden" name="status" value="failed" />
+                    <input class="fail-reason" type="hidden" name="remark" />
+                    <button class="status-btn fail" type="submit">fail</button>
+                  </form>
+                  <form method="POST" action="{{ route('bikers.ways.status', $way) }}">
+                    @csrf
+                    <input type="hidden" name="status" value="delivered" />
+                    <button class="status-btn done" type="submit">done</button>
+                  </form>
+                @endif
+                <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
               </div>
-            </div>
-            <div class="delivery-actions">
-              <button class="status-btn onway" type="button">onway</button
-              ><button class="status-btn fail" type="button">fail</button
-              ><button class="info-btn" type="button">Info</button>
-            </div>
-          </article>
+            </article>
+          @empty
+            <p class="empty-state">No ways are assigned to you today.</p>
+          @endforelse
         </div>
       </section>
     </main>
-    <div class="modal-backdrop" id="doneBackdrop" hidden>
-      <section class="action-modal" role="dialog" aria-modal="true">
-        <h2>Mark way as done?</h2>
-        <p>Confirm that this delivery has been completed.</p>
-        <div class="modal-actions">
-          <button class="back-button" id="cancelDone" type="button">
-            Cancel</button
-          ><button class="ui-btn btn-navy-blue" id="confirmDone" type="button">
-            Confirm done
-          </button>
-        </div>
-      </section>
-    </div>
-    <div class="modal-backdrop" id="failBackdrop" hidden>
-      <section class="action-modal" role="dialog" aria-modal="true">
-        <h2>Why did this delivery fail?</h2>
-        <textarea
-          id="failReason"
-          rows="4"
-          placeholder="Write fail reason..."
-        ></textarea>
-        <div class="modal-actions">
-          <button class="back-button" id="cancelFail" type="button">
-            Cancel</button
-          ><button class="ui-btn btn-danger" id="confirmFail" type="button">
-            Confirm fail
-          </button>
-        </div>
-      </section>
-    </div>
-    <div class="modal-backdrop" id="infoBackdrop" hidden><section class="action-modal info-modal" role="dialog" aria-modal="true"><h2>Way info history</h2><p>Onway / fail notes / delivered timeline</p><div class="history-event">24-08-2026 21:56 · Ko Ko<strong>ON_WAY</strong></div><div class="history-event">24-08-2026 21:57 · Ko Ko<strong>FAILED</strong><em>Customer unavailable</em></div><div class="history-event">24-08-2026 22:10 · Ko Ko<strong>DELIVERED</strong></div><div class="modal-actions"><button class="back-button" id="closeInfo" type="button">Close</button></div></section></div>
     <script>
-      let activeDelivery = null;
-      const doneBackdrop = document.getElementById("doneBackdrop");
-      const failBackdrop = document.getElementById("failBackdrop");
-      const infoBackdrop = document.getElementById("infoBackdrop");
-      document.querySelectorAll(".delivery-card").forEach((card) => {
-        const onway = card.querySelector(".onway"),
-          fail = card.querySelector(".fail"), info = card.querySelector(".info-btn");
-        onway.onclick = () => {
-          activeDelivery = card;
-          onway.hidden = true;
-          fail.hidden = false;
-          fail.classList.remove("failed");
-          fail.textContent = "fail";
-          const done = document.createElement("button");
-          done.className = "status-btn done";
-          done.type = "button";
-          done.textContent = "done";
-          done.onclick = () => {
-            activeDelivery = card;
-            doneBackdrop.hidden = false;
-          };
-          onway.parentNode.insertBefore(done, fail);
-        };
-        fail.onclick = () => {
-          activeDelivery = card;
-          failBackdrop.hidden = false;
-        };
-        info.onclick = () => (infoBackdrop.hidden = false);
-      });
-      cancelDone.onclick = () => (doneBackdrop.hidden = true);
-      confirmDone.onclick = () => {
-        if (activeDelivery) {
-          activeDelivery.dataset.status = "done";
-          activeDelivery.querySelector(".onway").hidden = true;
-          activeDelivery.querySelector(".fail").hidden = true;
-          activeDelivery.querySelector(".done").classList.add("completed");
-        }
-        doneBackdrop.hidden = true;
-      };
-      cancelFail.onclick = () => (failBackdrop.hidden = true);
-      closeInfo.onclick = () => (infoBackdrop.hidden = true);
-      confirmFail.onclick = () => {
-        if (activeDelivery) {
-          const fail = activeDelivery.querySelector(".fail"),
-            onway = activeDelivery.querySelector(".onway"),
-            done = activeDelivery.querySelector(".done");
-          activeDelivery.dataset.status = "failed";
-          onway.hidden = false;
-          if (done) done.hidden = true;
-          fail.classList.add("failed");
-          fail.textContent = "failed";
-          let note = activeDelivery.querySelector(".fail-note");
-          if (!note) {
-            note = document.createElement("small");
-            note.className = "fail-note";
-            activeDelivery.querySelector(".delivery-actions").append(note);
+      document.querySelectorAll(".fail-form").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+          const reason = window.prompt("Why did this delivery fail?")
+          if (reason === null) {
+            event.preventDefault();
+            return;
           }
-          note.textContent = failReason.value || "No reason provided";
-        }
-        failReason.value = "";
-        failBackdrop.hidden = true;
-      };
+          form.querySelector(".fail-reason").value = reason;
+        });
+      });
     </script>
   </body>
 </html>
