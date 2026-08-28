@@ -7,7 +7,8 @@
     <link rel="icon" href="/assets/logo-nobg.png?v=1787685826" />
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
-    <link rel="stylesheet" href="/css/screens.css?v=1787687001" />
+    <link rel="stylesheet" href="/css/screens.css?v=1787689002" />
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
   <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg">
     <header class="top-app-bar">
@@ -25,11 +26,24 @@
       </div>
     </header>
     <main class="workspace-body shops-page">
-      <span class="section-tag">OPERATIONS</span>
-      <h1 class="main-heading">Online Shop List</h1>
-      <p class="page-intro">
-        Select a shop to create orders. Click + to edit today's deliveries.
-      </p>
+      <div class="shop-hero-layout">
+        <div class="shop-hero-heading">
+          <span class="section-tag">OPERATIONS</span>
+          <h1 class="main-heading">Online Shop List</h1>
+        </div>
+        <p class="page-intro">
+          Select a shop to create orders. Click + to edit today's deliveries.
+        </p>
+        <div class="shop-hero-animation" aria-hidden="true">
+          <dotlottie-player
+            src="https://lottie.host/9d302f22-8973-41af-851d-323a89cc0f07/oXN3ArVoZa.lottie"
+            background="transparent"
+            speed="1"
+            loop
+            autoplay
+          ></dotlottie-player>
+        </div>
+      </div>
       <section class="ui-card-white shop-list-card">
         <div class="section-card-heading">
           <h2>Shop list</h2>

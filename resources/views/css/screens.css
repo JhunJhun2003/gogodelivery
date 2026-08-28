@@ -104,6 +104,20 @@
     margin-bottom: 14px;
 }
 .page-intro { color:#64748b; font-size:15px; line-height:1.5; margin:-6px 0 18px; }
+.shop-hero-layout { display:grid; grid-template-columns:minmax(0, 1fr) minmax(180px, 1.1fr); grid-template-rows:auto auto; grid-template-areas:"heading animation" "intro animation"; align-items:center; column-gap:10px; min-height:150px; margin-bottom:16px; padding:10px; overflow:hidden; border-radius:4px; background:#111a27; }
+.shop-hero-heading { grid-area:heading; align-self:end; }
+.shop-hero-heading .section-tag { color:#b8e600; margin-bottom:4px; }
+.shop-hero-heading .main-heading { margin-bottom:0; color:#f8fafc; font-size:22px; line-height:1.05; }
+.shop-hero-layout .page-intro { grid-area:intro; align-self:start; max-width:220px; margin:8px 0 0; color:#d1d9e4; font-size:11px; line-height:1.45; }
+.shop-hero-animation { grid-area:animation; display:flex; justify-content:center; align-items:center; width:100%; height:150px; pointer-events:none; }
+.shop-hero-animation dotlottie-player { width:100%; height:150px; }
+@media (max-width:600px) {
+    .shop-hero-layout { grid-template-columns:minmax(0, 1fr) minmax(125px, 1.05fr); min-height:126px; padding:8px; }
+    .shop-hero-heading .main-heading { font-size:18px; }
+    .shop-hero-layout .page-intro { max-width:145px; font-size:10px; }
+    .shop-hero-animation { height:126px; }
+    .shop-hero-animation dotlottie-player { height:126px; }
+}
 .today-deliveries-card { margin:0 0 16px; padding:16px; border:1px solid #263244; border-radius:12px; background:#111a27; color:#f8fafc; }
 .today-deliveries-heading { display:flex; align-items:center; gap:9px; }
 .today-deliveries-heading h2 { flex:1; font-size:15px; font-weight:700; }
