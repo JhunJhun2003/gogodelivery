@@ -15,6 +15,8 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'order_image_path' => env('ORDER_IMAGE_PATH', public_path('order_image')),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

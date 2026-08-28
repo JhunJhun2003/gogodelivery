@@ -237,7 +237,7 @@ class WayController extends Controller
 
         if ($request->hasFile('item_image')) {
             $image = $request->file('item_image');
-            $directory = public_path('order_image');
+            $directory = config('filesystems.order_image_path');
             File::ensureDirectoryExists($directory);
             $filename = $image->hashName();
             $path = $directory . '/' . $filename;
@@ -292,7 +292,7 @@ class WayController extends Controller
 
         if ($request->hasFile('item_image')) {
             $image = $request->file('item_image');
-            $directory = public_path('order_image');
+            $directory = config('filesystems.order_image_path');
             File::ensureDirectoryExists($directory);
             $filename = $image->hashName();
             $path = $directory . '/' . $filename;
