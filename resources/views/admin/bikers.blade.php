@@ -107,11 +107,13 @@
                     <strong>#{{ $way->id }} · {{ $way->recipient_name }}</strong>
                     <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>
                     <small>ADDRESS · {{ $way->address }}</small>
+                    <small>ASSIGNED · {{ ($way->assigned_at ?? $way->date)->format('d-m-Y') }}</small>
                   </div>
                 </div>
                 <div class="delivery-actions">
-                  <button class="status-btn onway" type="button">onway</button>
-                  <button class="status-btn fail" type="button">fail</button>
+                  {{-- <button class="status-btn onway" type="button">onway</button>
+                  <button class="status-btn fail" type="button">fail</button> --}}
+                  <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
                   <button class="info-btn" type="button">Info</button>
                 </div>
               </article>

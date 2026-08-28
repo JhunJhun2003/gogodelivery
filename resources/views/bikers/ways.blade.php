@@ -77,6 +77,7 @@
                 @endif
                 <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
               </div>
+              <a class="info-btn" href="{{ route('bikers.history.detail', $way) }}">Info</a>
             </article>
           @empty
             <p class="empty-state">No ways are assigned to you today.</p>
@@ -84,15 +85,74 @@
         </div>
       </section>
     </main>
+    <div class="modal-backdrop" id="doneBackdrop" hidden>
+      <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+        <h2 id="doneTitle">Confirm</h2>
+        <p>Mark this way as delivered (done)?</p>
+        <div class="modal-actions">
+          <button class="back-button" id="cancelDone" type="button">Cancel</button>
+          <button class="ui-btn btn-navy-blue" id="confirmDone" type="button">Confirm</button>
+        </div>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="failBackdrop" hidden>
+      <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="failTitle">
+        <h2 id="failTitle">Failure reason</h2>
+        <p>Why did this delivery fail?</p>
+        <textarea id="failReason" rows="4" placeholder="Write a reason..."></textarea>
+        <div class="modal-actions">
+          <button class="back-button" id="cancelFail" type="button">Cancel</button>
+          <button class="ui-btn btn-danger" id="confirmFail" type="button">Confirm fail</button>
+        </div>
+      </section>
+    </div>
     <script>
+      let activeFailForm = null;
+      let activeDoneForm = null;
+      const doneBackdrop = document.getElementById("doneBackdrop");
+      const failBackdrop = document.getElementById("failBackdrop");
+      const failReason = document.getElementById("failReason");
+
       document.querySelectorAll(".fail-form").forEach((form) => {
         form.addEventListener("submit", (event) => {
-          const reason = window.prompt("Why did this delivery fail?")
-          if (reason === null) {
+          event.preventDefault();
+          activeFailForm = form;
+          failReason.value = "";
+          failBackdrop.hidden = false;
+          failReason.focus();
+        });
+      });
+
+      document.querySelectorAll(".delivery-actions form").forEach((form) => {
+        if (form.querySelector('input[name="status"][value="delivered"]')) {
+          form.addEventListener("submit", (event) => {
             event.preventDefault();
-            return;
-          }
-          form.querySelector(".fail-reason").value = reason;
+            activeDoneForm = form;
+            doneBackdrop.hidden = false;
+          });
+        }
+      });
+
+      document.getElementById("cancelDone").onclick = () => {
+        doneBackdrop.hidden = true;
+        activeDoneForm = null;
+      };
+      document.getElementById("confirmDone").onclick = () => {
+        if (activeDoneForm) activeDoneForm.submit();
+      };
+      document.getElementById("cancelFail").onclick = () => {
+        failBackdrop.hidden = true;
+        activeFailForm = null;
+      };
+      document.getElementById("confirmFail").onclick = () => {
+        if (!activeFailForm) return;
+        activeFailForm.querySelector(".fail-reason").value = failReason.value.trim();
+        activeFailForm.submit();
+      };
+
+      [doneBackdrop, failBackdrop].forEach((backdrop) => {
+        backdrop.addEventListener("click", (event) => {
+          if (event.target === backdrop) backdrop.hidden = true;
         });
       });
     </script>
