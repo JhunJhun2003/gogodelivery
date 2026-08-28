@@ -41,7 +41,7 @@
               <div class="delivery-main">
                 <div class="order-photo">
                   @if ($way->item_image)
-                    <img src="/{{ $way->item_image }}" alt="Package photo" />
+                    <img src="{{ asset($way->item_image) }}" alt="Package photo" />
                   @else
                     ITEM
                   @endif

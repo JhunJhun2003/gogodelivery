@@ -102,7 +102,7 @@
             @foreach ($assignedWays->get($biker->id, collect()) as $way)
               <article class="delivery-card" data-biker-id="{{ $biker->id }}" data-status="{{ $way->status }}">
                 <div class="delivery-main">
-                  <div class="order-photo">@if($way->item_image)<img src="/{{ $way->item_image }}" alt="Item" />@else ITEM @endif</div>
+                  <div class="order-photo">@if($way->item_image)<img src="{{ asset($way->item_image) }}" alt="Item" />@else ITEM @endif</div>
                   <div>
                     <strong>#{{ $way->id }} · {{ $way->recipient_name }}</strong>
                     <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>
@@ -153,7 +153,7 @@
             <article class="ui-card-white order-card" data-way-id="{{ $way->id }}">
               <label><input class="order-check" type="checkbox" /><strong>Way #{{ $way->id }}</strong></label>
               <div class="order-content">
-                <div class="order-photo">@if($way->item_image)<img src="/{{ $way->item_image }}" alt="Item" />@else ITEM @endif</div>
+                <div class="order-photo">@if($way->item_image)<img src="{{ asset($way->item_image) }}" alt="Item" />@else ITEM @endif</div>
                 <div>
                   <strong>{{ $way->recipient_name }}</strong>
                   <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>

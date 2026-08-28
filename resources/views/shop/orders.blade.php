@@ -46,7 +46,7 @@
               <div class="order-content">
                 <div class="order-photo">
                   @if ($order->item_image)
-                    <img src="/{{ $order->item_image }}" alt="Order item" />
+                    <img src="{{ asset($order->item_image) }}" alt="Order item" />
                   @else
                     ITEM
                   @endif

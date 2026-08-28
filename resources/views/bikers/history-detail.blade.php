@@ -23,7 +23,7 @@
         <div class="detail-layout">
           <div class="detail-photo">
             @if ($way->item_image)
-              <img src="/{{ $way->item_image }}" alt="Package photo" />
+              <img src="{{ asset($way->item_image) }}" alt="Package photo" />
             @else
               <span>ITEM</span>
             @endif

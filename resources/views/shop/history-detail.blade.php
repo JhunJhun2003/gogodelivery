@@ -32,7 +32,7 @@
         <div class="detail-layout">
           <div class="detail-photo">
             @if ($way->item_image)
-              <img src="/{{ $way->item_image }}" alt="Order photo" />
+              <img src="{{ asset($way->item_image) }}" alt="Order photo" />
             @else
               No photo
             @endif
