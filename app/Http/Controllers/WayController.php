@@ -46,6 +46,47 @@ class WayController extends Controller
         return redirect()->route('bikers.ways')->with('way_status', 'Way status updated.');
     }
 
+    public function bikerHistory(Request $request): View
+    {
+        $biker = Auth::user()->biker;
+        abort_unless($biker, 403);
+
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:delivered,failed'],
+            'date' => ['nullable', 'date'],
+        ]);
+
+        $ways = Way::query()
+            ->where('biker_id', $biker->id)
+            ->whereIn('status', ['delivered', 'failed'])
+            ->with('shop')
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('recipient_name', 'like', "%{$search}%")
+                        ->orWhere('phone_number', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhereHas('shop', fn ($shop) => $shop->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date))
+            ->latest('date')
+            ->latest('id')
+            ->get();
+
+        return view('bikers.history', compact('biker', 'ways', 'filters'));
+    }
+
+    public function bikerHistoryDetail(Way $way): View
+    {
+        $biker = Auth::user()->biker;
+        abort_unless($biker && $way->biker_id === $biker->id, 404);
+        $way->load(['shop', 'biker']);
+
+        return view('bikers.history-detail', compact('way'));
+    }
+
     public function shopOrders(Request $request): View
     {
         $search = $request->string('search')->trim()->toString();

@@ -50,7 +50,8 @@ Route::middleware('auth', 'role:shop')->prefix('shop')->name('shop.')->group(fun
 Route::middleware('auth', 'role:biker')->prefix('bikers')->name('bikers.')->group(function () {
     Route::get('/ways', [WayController::class, 'bikerWays'])->name('ways');
     Route::post('/ways/{way}/status', [WayController::class, 'updateBikerStatus'])->name('ways.status');
-    Route::get('/history', fn () => view('bikers.history'))->name('history');
+    Route::get('/history', [WayController::class, 'bikerHistory'])->name('history');
+    Route::get('/history/{way}', [WayController::class, 'bikerHistoryDetail'])->name('history.detail');
 });
 
 Route::get('/css/{file}', function (string $file) {

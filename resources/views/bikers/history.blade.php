@@ -13,7 +13,7 @@
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
-        <span class="user-role">Biker · Ko Ko</span
+        <span class="user-role">Biker · {{ $biker->name }}</span
         ><button class="hamburger-icon-btn" type="button">☰</button>
       </div>
     </header>
@@ -23,42 +23,43 @@
       <p class="page-intro">Your completed and failed deliveries.</p>
       <section class="ui-card-white history-filter-card">
         <h2>Find a way</h2>
-        <div class="history-form-grid">
+        <form method="GET" action="{{ route('bikers.history') }}">
+          <div class="history-form-grid">
           <div class="input-field-group full-field">
             <label>SEARCH</label
             ><input
               id="historySearch"
               type="search"
+              name="search"
+              value="{{ $filters['search'] ?? '' }}"
               placeholder="Search order, shop, or customer..."
             />
           </div>
           <div class="input-field-group">
             <label>STATUS</label
-            ><select>
-              <option>All statuses</option>
-              <option>Delivered</option>
-              <option>Failed</option>
+            ><select name="status">
+              <option value="">All statuses</option>
+              <option value="delivered" @selected(($filters['status'] ?? '') === 'delivered')>Delivered</option>
+              <option value="failed" @selected(($filters['status'] ?? '') === 'failed')>Failed</option>
             </select>
           </div>
           <div class="input-field-group">
-            <label>DATE</label><div class="custom-date-picker"><input id="historyDate" type="date" /><button class="custom-date-trigger" type="button">dd/mm/yy</button><div class="custom-calendar"></div></div>
+            ><label>DATE</label><div class="custom-date-picker"><input id="historyDate" name="date" value="{{ $filters['date'] ?? '' }}" type="date" /><button class="custom-date-trigger" type="button">dd/mm/yy</button><div class="custom-calendar"></div></div>
           </div>
-        </div>
-        <button class="ui-btn btn-navy-blue history-save" id="saveFilter" type="button">
-          Search
-        </button>
+          <button class="ui-btn btn-navy-blue history-save" id="saveFilter" type="submit">Search</button>
+        </form>
       </section>
       <div class="badge-group history-badges">
-        <span class="ui-badge badge-navy">24-08-2026</span
-        ><span class="ui-badge badge-lime">18 total ways</span>
+        <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span
+        ><span class="ui-badge badge-lime">{{ $ways->count() }} ways</span>
       </div>
       <section class="ui-card-white history-list-card">
         <div class="history-card-heading">
           <div>
-            <span class="section-tag">KO KO</span>
+            <span class="section-tag">{{ strtoupper($biker->name) }}</span>
             <h2>My delivery history</h2>
           </div>
-          <span class="ui-badge badge-navy" id="resultCount">3 ways</span>
+          <span class="ui-badge badge-navy" id="resultCount">{{ $ways->count() }} ways</span>
         </div>
         <div class="history-table-wrap">
           <table class="workspace-table history-table">
@@ -72,33 +73,17 @@
               </tr>
             </thead>
             <tbody id="historyRows">
-              <tr>
-                <td>01</td>
-                <td>ABC Store</td>
-                <td>24-08-2026</td>
-                <td>Delivered</td>
-                <td>
-                  <a class="table-action" href="./history-detail.html">View</a>
-                </td>
-              </tr>
-              <tr>
-                <td>02</td>
-                <td>M Store</td>
-                <td>23-08-2026</td>
-                <td>Delivered</td>
-                <td>
-                  <a class="table-action" href="./history-detail.html">View</a>
-                </td>
-              </tr>
-              <tr>
-                <td>03</td>
-                <td>City Mart</td>
-                <td>21-08-2026</td>
-                <td>Failed</td>
-                <td>
-                  <a class="table-action" href="./history-detail.html">View</a>
-                </td>
-              </tr>
+              @forelse ($ways as $way)
+                <tr>
+                  <td>{{ $loop->iteration }}</td>
+                  <td>{{ $way->shop?->name ?? 'Shop' }}</td>
+                  <td>{{ $way->date->format('d-m-Y') }}</td>
+                  <td><span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span></td>
+                  <td><a class="table-action" href="{{ route('bikers.history.detail', $way) }}">View</a></td>
+                </tr>
+              @empty
+                <tr><td colspan="5">No completed or failed ways found.</td></tr>
+              @endforelse
             </tbody>
           </table>
         </div>

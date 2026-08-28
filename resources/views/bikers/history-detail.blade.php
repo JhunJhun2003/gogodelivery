@@ -12,28 +12,34 @@
   <body data-role="biker" class="app-bg history-screen">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
-      <div class="bar-right"><span class="user-role">Biker · Ko Ko</span><button class="hamburger-icon-btn" type="button">☰</button></div>
+      <div class="bar-right"><span class="user-role">Biker · {{ $way->biker?->name ?? 'Biker' }}</span><button class="hamburger-icon-btn" type="button">☰</button></div>
     </header>
     <main class="workspace-body">
       <a class="back-link" href="/bikers/history">← Back to history</a>
-      <span class="section-tag">WAY · 01</span>
+      <span class="section-tag">WAY · {{ $way->id }}</span>
       <h1 class="main-heading">Way history detail</h1>
       <section class="ui-card-white history-detail-card">
-        <div class="history-card-heading"><div><span class="section-tag">23-08-2026</span><h2>Aye Aye</h2></div><span class="status-pill status-delivered">Delivered</span></div>
+        <div class="history-card-heading"><div><span class="section-tag">{{ $way->date->format('d-m-Y') }}</span><h2>{{ $way->recipient_name }}</h2></div><span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span></div>
         <div class="detail-layout">
-          <div class="detail-photo"><img src="/assets/logo.jpg?v=1787684056" alt="Package photo" /></div>
+          <div class="detail-photo">
+            @if ($way->item_image)
+              <img src="/{{ $way->item_image }}" alt="Package photo" />
+            @else
+              <span>ITEM</span>
+            @endif
+          </div>
           <div class="detail-grid">
-            <div><span>Customer name</span><strong>Aye Aye</strong></div>
-            <div><span>Online shop</span><strong>Shopify Store</strong></div>
-            <div><span>Biker</span><strong>Ko Ko</strong></div>
-            <div><span>Status</span><strong>Delivered</strong></div>
-            <div><span>Customer phone</span><strong>09 777 123 456</strong></div>
-            <div><span>Amount</span><strong>25,000 MMK</strong></div>
-            <div class="detail-wide"><span>Customer address</span><strong>No. 12, Insein Road</strong></div>
+            <div><span>Customer name</span><strong>{{ $way->recipient_name }}</strong></div>
+            <div><span>Online shop</span><strong>{{ $way->shop?->name ?? 'Shop' }}</strong></div>
+            <div><span>Biker</span><strong>{{ $way->biker?->name ?? 'Biker' }}</strong></div>
+            <div><span>Status</span><strong>{{ ucfirst($way->status) }}</strong></div>
+            <div><span>Customer phone</span><strong>{{ $way->phone_number }}</strong></div>
+            <div><span>Amount</span><strong>{{ number_format($way->amount, 0) }} MMK</strong></div>
+            <div><span>Delivery fee</span><strong>{{ number_format($way->delivery_fees, 0) }} MMK</strong></div>
+            <div class="detail-wide"><span>Customer address</span><strong>{{ $way->address }}</strong></div>
+            @if ($way->remark)<div class="detail-wide"><span>Remark</span><strong>{{ $way->remark }}</strong></div>@endif
           </div>
         </div>
-        <div class="history-event">24-08-2026 21:56 · Ko Ko<strong>ON_WAY</strong></div>
-        <div class="history-event">24-08-2026 22:10 · Ko Ko<strong>DELIVERED</strong></div>
       </section>
     </main>
     <script>
