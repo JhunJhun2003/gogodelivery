@@ -7,11 +7,23 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
-    'shop_id', 'biker_id', 'item_image', 'amount', 'delivery_fees', 'recipient_name',
+    'shop_id', 'biker_id', 'assigned_at', 'item_image', 'amount', 'delivery_fees', 'recipient_name',
     'address', 'phone_number', 'date', 'remark', 'status',
 ])]
 class Way extends Model
 {
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_ONWAY = 'onway';
+    public const STATUS_FAILED = 'failed';
+    public const STATUS_DELIVERED = 'delivered';
+
+    public const STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_ONWAY,
+        self::STATUS_FAILED,
+        self::STATUS_DELIVERED,
+    ];
+
     public function shop()
     {
         return $this->belongsTo(User::class, 'shop_id');
@@ -25,6 +37,7 @@ class Way extends Model
     protected function casts(): array
     {
         return [
+            'assigned_at' => 'datetime',
             'amount' => 'decimal:2',
             'delivery_fees' => 'decimal:2',
             'date' => 'date',

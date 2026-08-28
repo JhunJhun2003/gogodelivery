@@ -24,8 +24,8 @@
         <h2>Filter orders</h2>
         <div class="history-form-grid">
           <div class="input-field-group full-field">
-            <label>SEARCH</label
-            ><input name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search..." />
+            <label for="historySearch">SEARCH NAME, PHONE OR ADDRESS</label
+            ><input id="historySearch" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search customer name, phone, or address..." />
           </div>
           <div class="input-field-group">
             <label>ONLINE SHOP</label

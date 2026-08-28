@@ -19,10 +19,11 @@ class WayController extends Controller
         abort_unless($biker, 403);
 
         return view('bikers.ways', [
+            'biker' => $biker,
             'ways' => Way::query()
                 ->where('biker_id', $biker->id)
-                ->whereDate('date', today())
                 ->with('shop')
+                ->orderByDesc('assigned_at')
                 ->latest('id')
                 ->get(),
         ]);
@@ -34,7 +35,7 @@ class WayController extends Controller
         abort_unless($biker && $way->biker_id === $biker->id, 403);
 
         $data = $request->validate([
-            'status' => ['required', 'in:onway,failed,delivered'],
+            'status' => ['required', 'in:'.implode(',', [Way::STATUS_ONWAY, Way::STATUS_FAILED, Way::STATUS_DELIVERED])],
             'remark' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -53,13 +54,12 @@ class WayController extends Controller
 
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'in:delivered,failed'],
+            'status' => ['nullable', 'in:'.implode(',', Way::STATUSES)],
             'date' => ['nullable', 'date'],
         ]);
 
         $ways = Way::query()
             ->where('biker_id', $biker->id)
-            ->whereIn('status', ['delivered', 'failed'])
             ->with('shop')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -93,7 +93,7 @@ class WayController extends Controller
         $shop = Auth::user();
         $ordersQuery = Way::query()
             ->where('shop_id', $shop->id)
-            ->whereNotIn('status', ['delivered', 'failed'])
+            ->whereNotIn('status', [Way::STATUS_DELIVERED, Way::STATUS_FAILED])
             ->with('biker')
             ->latest('date')
             ->latest('id');
@@ -266,7 +266,7 @@ class WayController extends Controller
             $data['item_image'] = 'order_image/' . $filename;
         }
 
-        $data['status'] = $data['status'] ?: 'pending';
+        $data['status'] = $data['status'] ?: Way::STATUS_PENDING;
         Way::create($data);
 
         return redirect()->route('admin.way-check')->with('way_status', 'Way created successfully.');
@@ -322,7 +322,7 @@ class WayController extends Controller
         }
 
         $data['shop_id'] = $shop->id;
-        $data['status'] = 'pending';
+        $data['status'] = Way::STATUS_PENDING;
         Way::create($data);
 
         return redirect()->route('admin.shops')->with('way_status', 'New way created successfully.');

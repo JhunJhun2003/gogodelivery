@@ -13,16 +13,16 @@
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
-        <span class="user-role">Biker · Ko Ko</span
+        <span class="user-role">Biker · {{ $biker->name }}</span
         ><button class="hamburger-icon-btn" type="button">☰</button>
       </div>
     </header>
     <main class="workspace-body">
-      <span class="section-tag">TODAY</span>
+      <span class="section-tag">ASSIGNED WAYS</span>
       <h1 class="main-heading">My ways</h1>
-      <p class="page-intro">Deliveries assigned to you today.</p>
+      <p class="page-intro">Deliveries assigned to you.</p>
       <div class="badge-group history-badges">
-        <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span
+        <span class="ui-badge badge-navy">{{ $ways->count() }} total</span
         ><span class="ui-badge badge-lime">{{ $ways->count() }} assigned ways</span>
       </div>
       @if (session('way_status'))
@@ -50,6 +50,7 @@
                   <strong>#{{ $way->id }} · {{ $way->recipient_name }}</strong>
                   <p>{{ $way->shop?->name ?? 'Shop' }} / {{ $way->phone_number }} / {{ number_format($way->amount, 0) }} / {{ number_format($way->delivery_fees, 0) }} deli</p>
                   <small>ADDRESS · {{ $way->address }}</small>
+                  <small>ASSIGNED · {{ ($way->assigned_at ?? $way->date)->format('d-m-Y') }}</small>
                   @if ($way->status === 'failed' && $way->remark)
                     <small class="fail-note">{{ $way->remark }}</small>
                   @endif

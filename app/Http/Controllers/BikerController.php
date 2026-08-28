@@ -6,6 +6,7 @@ use App\Models\Biker;
 use App\Models\Way;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class BikerController extends Controller
@@ -35,7 +36,10 @@ class BikerController extends Controller
         Way::query()
             ->whereIn('id', $data['way_ids'])
             ->whereNull('biker_id')
-            ->update(['biker_id' => $biker->id]);
+            ->update([
+                'biker_id' => $biker->id,
+                'assigned_at' => Carbon::now(),
+            ]);
 
         return redirect()->route('admin.bikers')->with('biker_status', 'Ways assigned successfully.');
     }
