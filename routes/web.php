@@ -46,8 +46,11 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
     Route::post('/bikers', [BikerController::class, 'store'])->name('bikers.create');
     Route::put('/bikers/{biker}', [BikerController::class, 'update'])->name('bikers.update');
     Route::post('/bikers/{biker}/ways', [BikerController::class, 'assign'])->name('bikers.ways.assign');
+    Route::post('/ways/{way}/status', [WayController::class, 'updateAdminStatus'])->name('ways.status');
     Route::get('/history', [WayController::class, 'history'])->name('history');
     Route::get('/history/{way}', [WayController::class, 'historyDetail'])->name('history.detail');
+    Route::get('/ways/{way}/edit', [WayController::class, 'editWay'])->name('ways.edit');
+    Route::put('/ways/{way}', [WayController::class, 'updateWay'])->name('ways.update');
     Route::get('/way-check', [WayController::class, 'check'])->name('way-check');
     Route::post('/way-check', [WayController::class, 'storeFromCheck'])->name('way-check.store');
 });

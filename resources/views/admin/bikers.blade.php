@@ -100,7 +100,7 @@
         <div class="delivery-list">
           @foreach ($bikers as $biker)
             @foreach ($assignedWays->get($biker->id, collect()) as $way)
-              <article class="delivery-card" data-biker-id="{{ $biker->id }}" data-status="{{ $way->status }}">
+              <article class="delivery-card" data-biker-id="{{ $biker->id }}" data-way-id="{{ $way->id }}" data-status="{{ $way->status }}">
                 <div class="delivery-main">
                   <div class="order-photo">@if($way->item_image)<img src="{{ asset($way->item_image) }}" alt="Item" />@else ITEM @endif</div>
                   <div>
@@ -111,9 +111,14 @@
                   </div>
                 </div>
                 <div class="delivery-actions">
-                  {{-- <button class="status-btn onway" type="button">onway</button>
-                  <button class="status-btn fail" type="button">fail</button> --}}
-                  <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
+                  @if ($way->status !== 'delivered')
+                    <button class="status-btn onway" type="button" {{ $way->status === 'onway' ? 'disabled' : '' }}>On way</button>
+                    
+                    <button class="status-btn done" type="button">done</button>
+                    <button class="status-btn fail" type="button">fail</button>
+                  @endif
+                  <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
+                  
                   <button class="info-btn" type="button">Info</button>
                 </div>
               </article>
@@ -245,6 +250,42 @@
         assignedView.hidden = false;
       };
       const checks = [...document.querySelectorAll(".order-check")];
+      async function updateWayStatus(button, status) {
+        const card = button.closest(".delivery-card");
+        const wayId = card?.dataset.wayId;
+        if (!wayId) return;
+
+        const token = document.querySelector('input[name="_token"]')?.value;
+        if (!token) return;
+
+        const response = await fetch("/admin/ways/" + wayId + "/status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": token,
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ status }),
+        });
+
+        if (!response.ok) {
+          alert("Unable to update delivery status.");
+          return;
+        }
+
+        window.location.reload();
+      }
+
+      document.querySelectorAll(".status-btn.onway").forEach((button) => {
+        button.addEventListener("click", () => updateWayStatus(button, "onway"));
+      });
+      document.querySelectorAll(".status-btn.fail").forEach((button) => {
+        button.addEventListener("click", () => updateWayStatus(button, "failed"));
+      });
+      document.querySelectorAll(".status-btn.done").forEach((button) => {
+        button.addEventListener("click", () => updateWayStatus(button, "delivered"));
+      });
+
       function updateCount() {
         const n = checks.filter((x) => x.checked).length;
         selectedCount.textContent = n + " selected";
@@ -318,9 +359,9 @@
   </div>
   <div class="action-modal info-modal" id="infoModal" hidden>
     <h2>Way Info History</h2>
-    <p>Onway / fail notes / delivered timeline</p>
+    <p>On way / fail notes / delivered timeline</p>
     <div class="history-event">
-      24-08-2026 21:56 · Ko Ko<strong>ON_WAY</strong>
+      24-08-2026 21:56 · Ko Ko<strong>ON WAY</strong>
     </div>
     <div class="history-event">
       24-08-2026 21:57 · Ko Ko<strong>FAILED</strong
@@ -334,128 +375,7 @@
     </div>
   </div>
 </div>
-<script>
-  let activeDelivery = null;
-  const backdrop = document.getElementById("modalBackdrop"),
-    doneModal = document.getElementById("doneModal"),
-    failModal = document.getElementById("failModal"),
-    infoModal = document.getElementById("infoModal");
-  function openModal(modal) {
-    backdrop.hidden = false;
-    doneModal.hidden = true;
-    failModal.hidden = true;
-    infoModal.hidden = true;
-    modal.hidden = false;
-  }
-  function closeModal() {
-    backdrop.hidden = true;
-  }
-  document.querySelectorAll(".delivery-card").forEach((card) => {
-    const onway = card.querySelector(".onway"),
-      fail = card.querySelector(".fail"),
-      info = card.querySelector(".info-btn");
-    if (!onway || !fail || !info) return;
-    onway.onclick = () => {
-      activeDelivery = card;
-      onway.hidden = true;
-      fail.hidden = false;
-      const done = document.createElement("button");
-      done.className = "status-btn done";
-      done.textContent = "done";
-      done.type = "button";
-      done.onclick = () => openModal(doneModal);
-      onway.parentNode.insertBefore(done, fail);
-    };
-    fail.onclick = () => {
-      activeDelivery = card;
-      openModal(failModal);
-    };
-    info.onclick = () => openModal(infoModal);
-  });
-  document
-    .querySelectorAll("[data-close-modal]")
-    .forEach((x) => (x.onclick = closeModal));
-  confirmDone.onclick = () => {
-    if (activeDelivery) {
-      activeDelivery.dataset.status = "done";
-      activeDelivery.querySelector(".onway").hidden = true;
-      activeDelivery.querySelector(".fail").hidden = true;
-      const done = activeDelivery.querySelector(".done");
-      if (done) {
-        done.textContent = "done";
-        done.classList.add("completed");
-      }
-    }
-    closeModal();
-  };
-  confirmFail.onclick = () => {
-    if (activeDelivery) {
-      activeDelivery.dataset.status = "failed";
-      activeDelivery.querySelector(".onway").hidden = false;
-      activeDelivery.querySelector(".fail").classList.add("failed");
-      activeDelivery.querySelector(".fail").textContent = "failed";
-      let note = activeDelivery.querySelector(".fail-note");
-      if (!note) {
-        note = document.createElement("small");
-        note.className = "fail-note";
-        activeDelivery.querySelector(".delivery-actions").append(note);
-      }
-      note.textContent = failReason.value || "No reason provided";
-    }
-    closeModal();
-  };
-</script>
-<script>
-  document.querySelectorAll(".delivery-card").forEach((card) => {
-    const onway = card.querySelector(".onway"),
-      fail = card.querySelector(".fail");
-    if (!onway || !fail) return;
-    onway.addEventListener("click", () => {
-      fail.classList.remove("failed");
-      fail.textContent = "fail";
-      fail.style.display = "inline-block";
-      const done = card.querySelector(".done");
-      if (done) done.hidden = false;
-    });
-    fail.addEventListener("click", () => {
-      setTimeout(() => {
-        const done = card.querySelector(".done");
-        if (done) done.hidden = true;
-        onway.hidden = false;
-        fail.classList.add("failed");
-        fail.textContent = "failed";
-      }, 0);
-    });
-  });
-  confirmDone.addEventListener("click", () => {
-    setTimeout(() => {
-      if (activeDelivery) {
-        activeDelivery.querySelector(".onway").hidden = true;
-        activeDelivery.querySelector(".fail").hidden = true;
-        const done = activeDelivery.querySelector(".done");
-        if (done) {
-          done.hidden = false;
-          done.classList.add("completed");
-        }
-      }
-    }, 0);
-  });
-</script>
-<script>
-  document.querySelectorAll(".delivery-card").forEach((card) => {
-    const onway = card.querySelector(".onway");
-    if (!onway) return;
-    onway.addEventListener("click", () => {
-      const buttons = [...card.querySelectorAll(".done")];
-      buttons.slice(1).forEach((button) => button.remove());
-      const done = buttons[0];
-      if (done) {
-        done.hidden = false;
-        done.classList.remove("completed");
-      }
-    });
-  });
-</script>
+
 <input
   id="bikerSearch"
   class="shop-search"

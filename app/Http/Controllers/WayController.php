@@ -47,6 +47,24 @@ class WayController extends Controller
         return redirect()->route('bikers.ways')->with('way_status', 'Way status updated.');
     }
 
+    public function updateAdminStatus(Request $request, Way $way): \Illuminate\Http\JsonResponse
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        $data = $request->validate([
+            'status' => ['required', 'in:'.implode(',', [Way::STATUS_ONWAY, Way::STATUS_FAILED, Way::STATUS_DELIVERED])],
+        ]);
+
+        $way->update([
+            'status' => $data['status'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => $way->status,
+        ]);
+    }
+
     public function bikerHistory(Request $request): View
     {
         $biker = Auth::user()->biker;
@@ -202,6 +220,79 @@ class WayController extends Controller
         $way->load(['shop', 'biker']);
 
         return view('admin.history-detail', compact('way'));
+    }
+
+    public function editWay(Way $way): View
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+        $way->load(['shop', 'biker']);
+
+        return view('admin.way-edit', [
+            'way' => $way,
+            'shops' => User::query()->where('role', User::ROLE_SHOP)->orderBy('name')->get(),
+            'bikers' => Biker::query()->orderBy('name')->get(),
+        ]);
+    }
+
+    public function updateWay(Request $request, Way $way): RedirectResponse
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        $data = $request->validate([
+            'shop_id' => ['required', 'exists:users,id'],
+            'biker_id' => ['nullable', 'exists:bikers,id'],
+            'recipient_name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:30'],
+            'address' => ['required', 'string', 'max:1000'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'delivery_fees' => ['required', 'numeric', 'min:0'],
+            'date' => ['required', 'date'],
+            'remark' => ['nullable', 'string', 'max:2000'],
+            'status' => ['required', 'in:'.implode(',', Way::STATUSES)],
+            'item_image' => ['nullable', 'image', 'max:5120'],
+        ]);
+
+        if ($request->hasFile('item_image')) {
+            $image = $request->file('item_image');
+            $directory = config('filesystems.order_image_path');
+            File::ensureDirectoryExists($directory);
+            abort_unless(is_dir($directory) && is_writable($directory), 500, 'The order image directory is not writable.');
+            $filename = $image->hashName();
+            $path = $directory . '/' . $filename;
+
+            $source = match ($image->getClientMimeType()) {
+                'image/jpeg' => imagecreatefromjpeg($image->getRealPath()),
+                'image/png' => imagecreatefrompng($image->getRealPath()),
+                'image/webp' => imagecreatefromwebp($image->getRealPath()),
+                default => imagecreatefromjpeg($image->getRealPath()),
+            };
+
+            $maxWidth = 800;
+            $maxHeight = 800;
+            $width = imagesx($source);
+            $height = imagesy($source);
+
+            if ($width > $maxWidth || $height > $maxHeight) {
+                $ratio = min($maxWidth / $width, $maxHeight / $height);
+                $newWidth = (int) ($width * $ratio);
+                $newHeight = (int) ($height * $ratio);
+                $resized = imagecreatetruecolor($newWidth, $newHeight);
+                imagecopyresampled($resized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                imagedestroy($source);
+                $source = $resized;
+            }
+
+            abort_unless(imagejpeg($source, $path, 85) && is_file($path), 500, 'The order image could not be saved.');
+            imagedestroy($source);
+            $data['item_image'] = 'order_image/' . $filename;
+        } else {
+            unset($data['item_image']);
+        }
+
+        $data['assigned_at'] = $way->assigned_at;
+        $way->update($data);
+
+        return redirect()->route('admin.history.detail', $way)->with('way_status', 'Way updated successfully.');
     }
 
     public function check(): View

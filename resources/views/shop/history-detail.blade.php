@@ -27,7 +27,7 @@
             <span class="section-tag">{{ $way->date->format('d-m-Y') }}</span>
             <h2>{{ $way->recipient_name }}</h2>
           </div>
-          <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
+          <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
         </div>
         <div class="detail-layout">
           <div class="detail-photo">
@@ -42,7 +42,7 @@
             <div>
               <span>Customer phone</span><strong>{{ $way->phone_number }}</strong>
             </div>
-            <div><span>Order status</span><strong>{{ ucfirst($way->status) }}</strong></div>
+            <div><span>Order status</span><strong>{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</strong></div>
             <div><span>Biker</span><strong>{{ $way->biker?->name ?? 'Not assigned' }}</strong></div>
             <div><span>Order amount</span><strong>{{ number_format($way->amount, 2) }} MMK</strong></div>
             <div><span>Delivery fee</span><strong>{{ number_format($way->delivery_fees, 2) }} MMK</strong></div>

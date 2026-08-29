@@ -61,7 +61,7 @@
                   <form method="POST" action="{{ route('bikers.ways.status', $way) }}">
                     @csrf
                     <input type="hidden" name="status" value="onway" />
-                    <button class="status-btn onway" type="submit" {{ $way->status === 'onway' ? 'disabled' : '' }}>onway</button>
+                    <button class="status-btn onway" type="submit" {{ $way->status === 'onway' ? 'disabled' : '' }}>On way</button>
                   </form>
                   <form class="fail-form" method="POST" action="{{ route('bikers.ways.status', $way) }}">
                     @csrf
@@ -75,7 +75,7 @@
                     <button class="status-btn done" type="submit">done</button>
                   </form>
                 @endif
-                <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
+                <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
               </div>
               <a class="info-btn" href="{{ route('bikers.history.detail', $way) }}">Info</a>
             </article>

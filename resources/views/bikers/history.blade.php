@@ -83,7 +83,7 @@
                   <td>{{ $loop->iteration }}</td>
                   <td>{{ $way->shop?->name ?? 'Shop' }}</td>
                   <td>{{ $way->date->format('d-m-Y') }}</td>
-                  <td><span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span></td>
+                  <td><span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span></td>
                   <td><a class="table-action" href="{{ route('bikers.history.detail', $way) }}">View</a></td>
                 </tr>
               @empty

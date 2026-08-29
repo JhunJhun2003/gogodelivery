@@ -27,7 +27,10 @@
             <span class="section-tag">{{ $way->date->format('d-m-Y') }}</span>
             <h2>{{ $way->recipient_name }}</h2>
           </div>
-          <span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span>
+          <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
+        </div>
+        <div style="margin:12px 0;">
+          <a class="table-action" href="{{ route('admin.ways.edit', $way) }}" style="display:inline-block;">Edit</a>
         </div>
         <div class="detail-layout">
           <div class="detail-photo">
@@ -41,7 +44,7 @@
             <div><span>Customer name</span><strong>{{ $way->recipient_name }}</strong></div>
             <div><span>Online shop</span><strong>{{ $way->shop?->name ?? 'N/A' }}</strong></div>
             <div><span>Biker</span><strong>{{ $way->biker?->name ?? 'Unassigned' }}</strong></div>
-            <div><span>Status</span><strong>{{ ucfirst($way->status) }}</strong></div>
+            <div><span>Status</span><strong>{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</strong></div>
             <div>
               <span>Customer phone</span><strong>{{ $way->phone_number }}</strong>
             </div>

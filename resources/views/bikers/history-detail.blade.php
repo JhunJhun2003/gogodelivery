@@ -19,7 +19,7 @@
       <span class="section-tag">WAY · {{ $way->id }}</span>
       <h1 class="main-heading">Way history detail</h1>
       <section class="ui-card-white history-detail-card">
-        <div class="history-card-heading"><div><span class="section-tag">{{ $way->date->format('d-m-Y') }}</span><h2>{{ $way->recipient_name }}</h2></div><span class="status-pill status-{{ $way->status }}">{{ ucfirst($way->status) }}</span></div>
+        <div class="history-card-heading"><div><span class="section-tag">{{ $way->date->format('d-m-Y') }}</span><h2>{{ $way->recipient_name }}</h2></div><span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span></div>
         <div class="detail-layout">
           <div class="detail-photo">
             @if ($way->item_image)
@@ -32,7 +32,7 @@
             <div><span>Customer name</span><strong>{{ $way->recipient_name }}</strong></div>
             <div><span>Online shop</span><strong>{{ $way->shop?->name ?? 'Shop' }}</strong></div>
             <div><span>Biker</span><strong>{{ $way->biker?->name ?? 'Biker' }}</strong></div>
-            <div><span>Status</span><strong>{{ ucfirst($way->status) }}</strong></div>
+            <div><span>Status</span><strong>{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</strong></div>
             <div><span>Customer phone</span><strong>{{ $way->phone_number }}</strong></div>
             <div><span>Amount</span><strong>{{ number_format($way->amount, 0) }} MMK</strong></div>
             <div><span>Delivery fee</span><strong>{{ number_format($way->delivery_fees, 0) }} MMK</strong></div>
