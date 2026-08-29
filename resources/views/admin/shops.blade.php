@@ -64,7 +64,7 @@
         />
         <div class="shop-list" id="shopList">
           @forelse ($shops as $shop)
-            <button class="shop-row{{ $loop->first ? ' selected' : '' }}" type="button" data-shop="{{ $shop->name }}" data-shop-id="{{ $shop->id }}">
+            <button class="shop-row{{ $loop->first ? ' selected' : '' }}" type="button" data-shop="{{ $shop->name }}" data-shop-id="{{ $shop->id }}" data-username="{{ $shop->username }}" data-email="{{ $shop->email }}">
               <span class="shop-avatar{{ $loop->first ? ' avatar-lime' : '' }}">{{ strtoupper(substr($shop->name, 0, 1)) }}</span>
               <span class="shop-copy"><strong>{{ $shop->name }}</strong><small>{{ $shop->username }} · {{ $shop->email }}</small></span>
               <span class="shop-row-actions"><span class="edit-shop-btn" role="button" tabindex="0" data-id="{{ $shop->id }}" data-name="{{ $shop->name }}" data-username="{{ $shop->username }}" data-email="{{ $shop->email }}" aria-label="Edit {{ $shop->name }}">⚙</span><b class="add-way-btn" role="button" tabindex="0" aria-label="Create way for {{ $shop->name }}">+</b></span>
@@ -72,6 +72,7 @@
           @empty
             <p class="shop-orders-empty">No shop accounts found.</p>
           @endforelse
+          <p class="shop-orders-empty" id="shopNoResult" hidden>No matching shops found.</p>
         </div>
         <section class="ui-card-white nested-form" id="shopForm" @if (!$errors->getBag('shop')->any() && !session('shop_status')) hidden @endif>
           <h2>Create shop</h2>
@@ -251,6 +252,11 @@
       const shopForm = document.getElementById("shopForm");
       const orderHeading = document.getElementById("orderHeading");
       const rows = [...document.querySelectorAll(".shop-row")];
+      const noResult = document.getElementById("shopNoResult");
+      const itemImage = document.getElementById("itemImage");
+      const photoPreview = document.getElementById("photoPreview");
+      const photoPreviewImage = document.getElementById("photoPreviewImage");
+      const photoPreviewName = document.getElementById("photoPreviewName");
       rows.forEach(
         (r) =>
           (r.onclick = () => {
@@ -300,10 +306,28 @@
       const wayForm = document.getElementById("wayForm");
       const wayCard = document.querySelector(".shop-order-card");
       shopSearch.oninput = () => {
-        const q = shopSearch.value.toLowerCase();
-        rows.forEach(
-          (r) => (r.hidden = !r.dataset.shop.toLowerCase().includes(q)),
-        );
+        const q = shopSearch.value.trim().toLowerCase();
+        const shopList = document.getElementById("shopList");
+        const matches = [];
+        const others = [];
+
+        rows.forEach((r) => {
+          const haystack = ((r.dataset.shop || "") + " " + (r.dataset.username || "") + " " + (r.dataset.email || "")).toLowerCase();
+          const show = !q || haystack.includes(q);
+          r.hidden = !show;
+          if (show) {
+            matches.push(r);
+          } else {
+            others.push(r);
+          }
+        });
+
+        const ordered = [...matches, ...others];
+        ordered.forEach((row) => shopList.appendChild(row));
+
+        if (noResult) {
+          noResult.hidden = matches.length > 0;
+        }
       };
       addShopBtn.onclick = () => {
         shopForm.hidden = !shopForm.hidden;
