@@ -246,6 +246,10 @@
       </section>
     </main>
     <script>
+      const shopSearch = document.getElementById("shopSearch");
+      const addShopBtn = document.getElementById("addShopBtn");
+      const shopForm = document.getElementById("shopForm");
+      const orderHeading = document.getElementById("orderHeading");
       const rows = [...document.querySelectorAll(".shop-row")];
       rows.forEach(
         (r) =>
@@ -293,6 +297,8 @@
       editShopBackdrop.onclick = (event) => {
         if (event.target === editShopBackdrop) editShopBackdrop.hidden = true;
       };
+      const wayForm = document.getElementById("wayForm");
+      const wayCard = document.querySelector(".shop-order-card");
       shopSearch.oninput = () => {
         const q = shopSearch.value.toLowerCase();
         rows.forEach(
@@ -302,8 +308,6 @@
       addShopBtn.onclick = () => {
         shopForm.hidden = !shopForm.hidden;
       };
-      const wayForm = document.getElementById("wayForm");
-      const wayCard = document.querySelector(".shop-order-card");
       document.getElementById("closeWayForm").onclick = () => {
         wayCard.hidden = true;
       };

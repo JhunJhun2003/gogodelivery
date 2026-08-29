@@ -286,6 +286,14 @@
         button.addEventListener("click", () => updateWayStatus(button, "delivered"));
       });
 
+      document.querySelectorAll(".info-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest(".delivery-card");
+          const wayId = card?.dataset.wayId;
+          if (wayId) window.location.href = "/admin/history/" + wayId;
+        });
+      });
+
       function updateCount() {
         const n = checks.filter((x) => x.checked).length;
         selectedCount.textContent = n + " selected";
