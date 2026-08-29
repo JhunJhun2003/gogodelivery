@@ -87,3 +87,12 @@ Route::get('/assets/{file}', function (string $file) {
 
     return response()->file(resource_path("views/assets/{$file}"), ['Content-Type' => $mime]);
 });
+
+Route::get('/animations/{file}', function (string $file) {
+    abort_unless($file === 'food-courier.json', 404);
+
+    return response()->file(resource_path("views/Food Courier.json"), [
+        'Content-Type' => 'application/json',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+});

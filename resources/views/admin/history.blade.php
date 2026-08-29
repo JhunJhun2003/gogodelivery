@@ -29,7 +29,7 @@
         </p>
         <div class="shop-hero-animation" aria-hidden="true">
           <dotlottie-player
-            src="/food-courier.json"
+            src="{{ asset('/animations/food-courier.json') }}"
             background="transparent"
             speed="1"
             loop
