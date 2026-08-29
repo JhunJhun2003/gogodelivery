@@ -18,7 +18,7 @@
       </div>
     </header>
     <main class="workspace-body">
-      <a class="back-link" href="{{ route('admin.history') }}">← Back to history</a
+      <a class="back-link" id="backLink" href="{{ route('admin.history') }}">← Back</a
       ><span class="section-tag">ORDER · {{ $way->id }}</span>
       <h1 class="main-heading">History detail</h1>
       <section class="ui-card-white history-detail-card">
@@ -59,4 +59,9 @@
   </body>
 </html>
 <script>
+  const ref = document.referrer || '';
+  const backLink = document.getElementById('backLink');
+  if (ref.includes('/admin/bikers')) {
+    backLink.href = '/admin/bikers';
+  }
 </script>
