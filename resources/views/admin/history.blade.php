@@ -29,7 +29,7 @@
         </p>
         <div class="shop-hero-animation" aria-hidden="true">
           <dotlottie-player
-            src="https://lottie.host/9d302f22-8973-41af-851d-323a89cc0f07/oXN3ArVoZa.lottie"
+            src="/food-courier.json"
             background="transparent"
             speed="1"
             loop
