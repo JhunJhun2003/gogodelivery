@@ -36,6 +36,12 @@
           </button>
         </div>
         <p class="unassigned-count">{{ $unassignedWays->count() }} unassigned ways today</p>
+        <input
+          id="bikerSearch"
+          class="shop-search"
+          type="search"
+          placeholder="Search biker name..."
+        />
         <div class="biker-list">
           @forelse ($bikers as $biker)
             <button class="biker-row{{ $loop->first ? ' selected' : '' }}" data-biker="{{ $biker->name }}" data-biker-id="{{ $biker->id }}" type="button">
@@ -183,7 +189,8 @@
       const bikerRows = [...document.querySelectorAll(".biker-row")],
         assignedView = document.getElementById("assignedView"),
         assignView = document.getElementById("assignView"),
-        assignTitle = document.getElementById("assignTitle");
+        assignTitle = document.getElementById("assignTitle"),
+        bikerSearch = document.getElementById("bikerSearch");
       let selectedBikerId = null;
         const assignedCards = [...document.querySelectorAll(".delivery-card[data-biker-id]")];
         const assignedEmpty = document.getElementById("assignedEmpty");
@@ -242,6 +249,42 @@
             assignView.hidden = false;
           }),
       );
+      if (bikerSearch) {
+        bikerSearch.addEventListener("input", (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          const bikerList = document.querySelector(".biker-list");
+          const matches = [];
+          const others = [];
+
+          bikerRows.forEach((row) => {
+            const bikerName = (row.dataset.biker || "").toLowerCase();
+            const show = !query || bikerName.includes(query);
+            row.hidden = !show;
+            if (show) {
+              matches.push(row);
+            } else {
+              others.push(row);
+            }
+          });
+
+          const ordered = [...matches, ...others];
+          ordered.forEach((row) => bikerList.appendChild(row));
+
+          const visible = bikerRows.filter((row) => !row.hidden);
+          if (visible.length) {
+            bikerRows.forEach((row) => row.classList.remove("selected"));
+            visible[0].classList.add("selected");
+            document.getElementById("assignedTitle").textContent = "Biker Name — " + visible[0].dataset.biker;
+            showAssignedWays(visible[0].dataset.bikerId);
+          } else {
+            bikerRows.forEach((row) => row.classList.remove("selected"));
+            document.getElementById("assignedTitle").textContent = "Biker Name — No biker selected";
+            assignedEmpty.hidden = true;
+            assignedCards.forEach((card) => (card.hidden = true));
+          }
+        });
+      }
+
       addBiker.onclick = () => {
         bikerForm.hidden = !bikerForm.hidden;
       };
@@ -285,6 +328,27 @@
       document.querySelectorAll(".status-btn.done").forEach((button) => {
         button.addEventListener("click", () => updateWayStatus(button, "delivered"));
       });
+
+      const assignedSearch = document.querySelector('#assignedView input[type="search"]');
+      if (assignedSearch) {
+        assignedSearch.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          document.querySelectorAll('.delivery-card').forEach((card) => {
+            const searchable = [
+              card.dataset.wayId || '',
+              card.querySelector('strong')?.textContent || '',
+              card.querySelector('small')?.textContent || '',
+              card.textContent || '',
+            ].join(' ').toLowerCase();
+
+            const show = !query || searchable.includes(query);
+            card.hidden = !show;
+          });
+
+          const visibleCards = [...document.querySelectorAll('.delivery-card:not([hidden])')];
+          assignedEmpty.hidden = visibleCards.length > 0;
+        });
+      }
 
       document.querySelectorAll(".info-btn").forEach((button) => {
         button.addEventListener("click", () => {
@@ -384,33 +448,6 @@
   </div>
 </div>
 
-<input
-  id="bikerSearch"
-  class="shop-search"
-  type="search"
-  placeholder="Search bikers..."
-/>
-<script>
-  document.getElementById("bikerSearch").addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    document.querySelectorAll(".biker-row").forEach((row) => {
-      row.hidden = !row.dataset.biker.toLowerCase().includes(query);
-    });
-  });
-</script>
-<script>
-  const bikerSearch = document.getElementById("bikerSearch");
-  const bikerCard = document.querySelector(".biker-list-card");
-  bikerCard.insertBefore(bikerSearch, bikerCard.querySelector(".biker-list"));
-  bikerSearch.addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    document.querySelectorAll(".biker-row").forEach((row) => {
-      row.hidden = !row.dataset.biker.toLowerCase().includes(query);
-    });
-  });
-</script>
-<script>
-</script>
 <script>
   document
     .querySelectorAll(".sidebar-row")
