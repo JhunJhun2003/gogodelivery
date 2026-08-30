@@ -107,35 +107,6 @@
           </form>
         </section>
       </section>
-      @php
-        $selectedShop = $shops->first();
-        $wayData = $shops->mapWithKeys(fn ($shop) => [
-          $shop->id => $shop->ways->map(fn ($way) => [
-            'id' => $way->id,
-            'recipient' => $way->recipient_name,
-            'amount' => $way->amount,
-            'status' => $way->status,
-          ])->values(),
-        ]);
-      @endphp
-      <section class="ui-card-white shop-orders-card" id="shopOrdersCard">
-        <div class="shop-orders-heading">
-          <h2 id="shopOrdersTitle">Orders · {{ $selectedShop->name ?? '—' }}</h2>
-          <span class="ui-badge badge-navy" id="shopOrderCount">{{ $selectedShop->ways->count() ?? 0 }} ways</span>
-        </div>
-        <div id="shopOrders">
-          @if ($selectedShop && $selectedShop->ways->count())
-            @foreach ($selectedShop->ways as $way)
-              <div class="shop-order-row">
-                <strong>#{{ $way->id }}</strong>
-                <span>{{ $way->recipient_name }} · {{ $way->amount }} · {{ strtoupper($way->status) }}</span>
-              </div>
-            @endforeach
-          @else
-            <div class="shop-orders-empty">No ways for this shop today.</div>
-          @endif
-        </div>
-      </section>
       <div class="modal-backdrop" id="editShopBackdrop" hidden>
         <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="editShopTitle">
           <h2 id="editShopTitle">Edit shop</h2>
@@ -434,21 +405,3 @@
     </script>
   </body>
 </html>
-<script>
-  const wayData = @json($wayData);
-  function renderShopOrders(shopId, name) {
-    const ways = wayData[shopId] || [];
-    document.getElementById("shopOrdersTitle").textContent = "Orders · " + name;
-    document.getElementById("shopOrderCount").textContent = ways.length + " ways";
-    document.getElementById("shopOrders").innerHTML = ways.length
-      ? ways.map(w =>
-          '<div class="shop-order-row"><strong>#' + w.id + '</strong><span>' + w.recipient + ' · ' + w.amount + ' · ' + w.status.toUpperCase() + '</span></div>'
-        ).join("")
-      : '<div class="shop-orders-empty">No ways for this shop today.</div>';
-  }
-  document.querySelectorAll(".shop-row").forEach((row) => {
-    row.addEventListener("click", () => {
-      renderShopOrders(row.dataset.shopId, row.dataset.shop);
-    });
-  });
-</script>
