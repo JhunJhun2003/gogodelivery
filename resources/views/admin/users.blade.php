@@ -8,11 +8,14 @@
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
     <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
-  <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
+    <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg">
     <header class="top-app-bar">
-      <b class="bar-logo">DELI</b>
-      <button class="hamburger-icon-btn" type="button">☰</button>
+      <div class="bar-logo">DELI</div>
+      <div class="bar-right">
+        <span class="user-role">Administrator · ADMIN</span>
+        <button class="hamburger-icon-btn" id="openMenuBtn" type="button" aria-label="Open navigation menu">☰</button>
+      </div>
     </header>
     <main class="workspace-body">
       <span class="section-tag">ACCESS</span>
@@ -76,12 +79,7 @@
       </section>
     </main>
     <div class="modal-backdrop" id="editBackdrop" hidden>
-      <section
-        class="action-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="editTitle"
-      >
+      <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
         <h2 id="editTitle">Edit user</h2>
         <div class="input-field-group">
           <label>NAME</label><input id="editName" />
@@ -90,20 +88,11 @@
           <label>EMAIL</label><input id="editEmail" type="email" />
         </div>
         <div class="input-field-group">
-          <label>PASSWORD</label
-          ><input
-            id="editPassword"
-            type="password"
-            placeholder="Leave blank to keep current"
-          />
+          <label>PASSWORD</label><input id="editPassword" type="password" placeholder="Leave blank to keep current" />
         </div>
-       
         <div class="modal-actions">
-          <button class="back-button" id="cancelEdit" type="button">
-            Cancel</button
-          ><button class="ui-btn btn-navy-blue" id="saveEdit" type="button">
-            Save changes
-          </button>
+          <button class="back-button" id="cancelEdit" type="button">Cancel</button>
+          <button class="ui-btn btn-navy-blue" id="saveEdit" type="button">Save changes</button>
         </div>
       </section>
     </div>
@@ -112,6 +101,72 @@
       const bikerField = document.getElementById("bikerField");
       const bikerSelect = document.getElementById("biker_id");
 
+      function initCustomSelect(select) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "custom-select";
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.appendChild(select);
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "custom-select-toggle";
+        toggle.setAttribute("aria-haspopup", "listbox");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.textContent = select.options[select.selectedIndex]?.text || "Select";
+        wrapper.appendChild(toggle);
+
+        const optionsList = document.createElement("ul");
+        optionsList.className = "custom-select-options";
+        optionsList.setAttribute("role", "listbox");
+        document.body.appendChild(optionsList);
+
+        Array.from(select.options).forEach((option, index) => {
+          const optionItem = document.createElement("li");
+          optionItem.className = "custom-select-option";
+          optionItem.textContent = option.text;
+          optionItem.setAttribute("role", "option");
+          optionItem.setAttribute("aria-selected", String(option.selected));
+          if (option.selected) optionItem.classList.add("selected");
+          optionItem.addEventListener("click", () => {
+            select.selectedIndex = index;
+            toggle.childNodes[0].textContent = option.text;
+            optionsList.querySelectorAll(".custom-select-option").forEach((item) => item.classList.remove("selected"));
+            optionItem.classList.add("selected");
+            optionsList.style.display = "none";
+            toggle.setAttribute("aria-expanded", "false");
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+          });
+          optionsList.appendChild(optionItem);
+        });
+
+        toggle.addEventListener("click", () => {
+          document.querySelectorAll(".custom-select-options").forEach((el) => {
+            if (el !== optionsList) el.style.display = "none";
+          });
+          const isOpen = optionsList.style.display === "block";
+          if (isOpen) {
+            optionsList.style.display = "none";
+            toggle.setAttribute("aria-expanded", "false");
+          } else {
+            const rect = toggle.getBoundingClientRect();
+            optionsList.style.display = "block";
+            optionsList.style.position = "fixed";
+            optionsList.style.top = (rect.bottom + 4) + "px";
+            optionsList.style.left = rect.left + "px";
+            optionsList.style.width = rect.width + "px";
+            toggle.setAttribute("aria-expanded", "true");
+          }
+        });
+      }
+
+      document.querySelectorAll(".form-card select").forEach(initCustomSelect);
+
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".custom-select") && !event.target.closest(".custom-select-options")) {
+          document.querySelectorAll(".custom-select-options").forEach((el) => el.style.display = "none");
+        }
+      });
+
       if (roleSelect && bikerField && bikerSelect) {
         const updateBikerField = () => {
           const isBiker = roleSelect.value === "biker";
@@ -119,22 +174,19 @@
           bikerSelect.disabled = !isBiker;
           bikerSelect.required = isBiker;
         };
-
         roleSelect.addEventListener("change", updateBikerField);
         updateBikerField();
       }
-    </script>
-    <script>
-      const backdrop = document.getElementById("editBackdrop"),
-        nameInput = document.getElementById("editName"),
-        emailInput = document.getElementById("editEmail");
+
+      const backdrop = document.getElementById("editBackdrop");
+      const nameInput = document.getElementById("editName");
+      const emailInput = document.getElementById("editEmail");
       document.querySelectorAll(".edit-user").forEach(
         (button) =>
           (button.onclick = () => {
             nameInput.value = button.dataset.name;
             emailInput.value = button.dataset.email;
             document.getElementById("editPassword").value = "";
-            document.getElementById("editAddress").value = "";
             backdrop.hidden = false;
             nameInput.focus();
           }),
