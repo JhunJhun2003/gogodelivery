@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Biker;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -35,6 +36,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $biker = Biker::firstOrCreate(['name' => 'Biker Rider']);
+
         User::updateOrCreate(
             ['username' => 'biker1'],
             [
@@ -42,6 +45,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'biker@gogodelivery.test',
                 'password' => 'biker123',
                 'role' => User::ROLE_BIKER,
+                'biker_id' => $biker->id,
             ]
         );
     }

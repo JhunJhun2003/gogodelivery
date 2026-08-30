@@ -14,9 +14,27 @@ use Illuminate\View\View;
 
 class WayController extends Controller
 {
+    private function resolveAuthenticatedBiker(): ?Biker
+    {
+        $user = Auth::user();
+
+        if (! $user || $user->role !== User::ROLE_BIKER) {
+            return null;
+        }
+
+        $biker = $user->biker;
+
+        if (! $biker) {
+            $biker = Biker::query()->firstOrCreate(['name' => $user->name]);
+            $user->update(['biker_id' => $biker->id]);
+        }
+
+        return $biker;
+    }
+
     public function bikerWays(): View
     {
-        $biker = Auth::user()->biker;
+        $biker = $this->resolveAuthenticatedBiker();
         abort_unless($biker, 403);
 
         return view('bikers.ways', [
@@ -32,7 +50,7 @@ class WayController extends Controller
 
     public function updateBikerStatus(Request $request, Way $way): RedirectResponse
     {
-        $biker = Auth::user()->biker;
+        $biker = $this->resolveAuthenticatedBiker();
         abort_unless($biker && $way->biker_id === $biker->id, 403);
 
         $data = $request->validate([
@@ -99,7 +117,7 @@ class WayController extends Controller
 
     public function bikerHistory(Request $request): View
     {
-        $biker = Auth::user()->biker;
+        $biker = $this->resolveAuthenticatedBiker();
         abort_unless($biker, 403);
 
         $filters = $request->validate([
@@ -130,7 +148,7 @@ class WayController extends Controller
 
     public function bikerHistoryDetail(Way $way): View
     {
-        $biker = Auth::user()->biker;
+        $biker = $this->resolveAuthenticatedBiker();
         abort_unless($biker && $way->biker_id === $biker->id, 404);
         $way->load(['shop', 'biker']);
 

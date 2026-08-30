@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Biker;
 use App\Models\User;
 use App\Models\Way;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,5 +48,16 @@ class AdminWayStatusTest extends TestCase
             'id' => $way->id,
             'status' => 'onway',
         ]);
+    }
+
+    public function test_seeded_biker_user_is_linked_to_a_biker_record(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $bikerUser = User::query()->where('username', 'biker1')->firstOrFail();
+
+        $this->assertNotNull($bikerUser->biker_id);
+        $this->assertNotNull($bikerUser->biker);
+        $this->assertSame('Biker Rider', $bikerUser->biker->name);
     }
 }
