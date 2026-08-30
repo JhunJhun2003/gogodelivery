@@ -239,10 +239,13 @@ class WayController extends Controller
 
         if ($search = $filters['search'] ?? null) {
             $waysQuery->where(function ($query) use ($search) {
-                $query->where('recipient_name', 'like', "%{$search}%")
+                $query->where('id', 'like', "%{$search}%")
+                    ->orWhere('recipient_name', 'like', "%{$search}%")
                     ->orWhere('phone_number', 'like', "%{$search}%")
                     ->orWhere('address', 'like', "%{$search}%")
-                    ->orWhere('remark', 'like', "%{$search}%");
+                    ->orWhere('remark', 'like', "%{$search}%")
+                    ->orWhereHas('shop', fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('biker', fn ($bikerQuery) => $bikerQuery->where('name', 'like', "%{$search}%"));
             });
         }
 

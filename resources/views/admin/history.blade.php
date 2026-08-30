@@ -41,8 +41,8 @@
         <h2>Filter orders</h2>
         <div class="history-form-grid">
           <div class="input-field-group full-field">
-            <label for="historySearch">SEARCH NAME, PHONE OR ADDRESS</label
-            ><input id="historySearch" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search customer name, phone, or address..." />
+            <label for="historySearch">SEARCH id, SHOP, CUSTOMER NAME, PHONE OR ADDRESS</label
+            ><input id="historySearch" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search online shop, customer name, phone, or address..." />
           </div>
           <div class="input-field-group">
             <label>ONLINE SHOP</label
@@ -65,7 +65,7 @@
           <div class="input-field-group">
             <label>STATUS</label
             ><select name="status">
-              <option value="">Select</option>
+              <option value="">Status</option>
               @foreach (['pending' => 'Pending', 'onway' => 'On way', 'delivered' => 'Delivered', 'failed' => 'Failed'] as $value => $label)
                 <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
               @endforeach
@@ -79,14 +79,14 @@
             <label>CUST. PHONE</label
             ><input name="customer_phone" type="tel" value="{{ $filters['customer_phone'] ?? '' }}" placeholder="cust. ph..." />
           </div>
-          <div class="input-field-group">
+          {{-- <div class="input-field-group">
             <label>MIN AMT.</label
             ><input name="min_amount" type="number" min="0" value="{{ $filters['min_amount'] ?? '' }}" placeholder="Min Amt" />
           </div>
           <div class="input-field-group">
             <label>MAX AMT.</label
             ><input name="max_amount" type="number" min="0" value="{{ $filters['max_amount'] ?? '' }}" placeholder="Max Amt" />
-          </div>
+          </div> --}}
           <div class="input-field-group full-field">
             <label>DATE</label>
             <div class="custom-date-picker">
@@ -145,59 +145,78 @@
       </section>
     </main>
     <script>
-      const dateInput = document.getElementById("historyDate"),
-        datePicker = document.querySelector(".custom-date-picker"),
-        dateTrigger = datePicker.querySelector(".custom-date-trigger"),
-        calendar = datePicker.querySelector(".custom-calendar");
-      let viewDate = new Date(),
-        picked = "";
-      const pad = (n) => String(n).padStart(2, "0");
-      function drawCalendar() {
-        const y = viewDate.getFullYear(),
-          m = viewDate.getMonth(),
-          first = new Date(y, m, 1).getDay(),
-          days = new Date(y, m + 1, 0).getDate();
-        calendar.innerHTML =
-          '<div class="calendar-head"><button type="button" data-step="-1">‹</button><span>' +
-          viewDate.toLocaleString("en", { month: "long", year: "numeric" }) +
-          '</span><button type="button" data-step="1">›</button></div><div class="calendar-grid"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-grid" id="days"></div>';
-        const grid = document.getElementById("days");
-        for (let i = 0; i < first; i++) {
-          const b = document.createElement("button");
-          b.disabled = true;
-          grid.append(b);
+      const dateInput = document.getElementById("historyDate");
+      const datePicker = document.querySelector(".custom-date-picker");
+      const dateTrigger = datePicker?.querySelector(".custom-date-trigger");
+      const calendar = datePicker?.querySelector(".custom-calendar");
+
+      if (dateInput && datePicker && dateTrigger && calendar) {
+        let viewDate = new Date();
+        let picked = dateInput.value || "";
+
+        const pad = (n) => String(n).padStart(2, "0");
+
+        function drawCalendar() {
+          const y = viewDate.getFullYear();
+          const m = viewDate.getMonth();
+          const first = new Date(y, m, 1).getDay();
+          const days = new Date(y, m + 1, 0).getDate();
+
+          calendar.innerHTML =
+            '<div class="calendar-head"><button type="button" data-step="-1">‹</button><span>' +
+            viewDate.toLocaleString("en", { month: "long", year: "numeric" }) +
+            '</span><button type="button" data-step="1">›</button></div><div class="calendar-grid"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-grid" id="days"></div>';
+
+          const grid = document.getElementById("days");
+          for (let i = 0; i < first; i++) {
+            const b = document.createElement("button");
+            b.disabled = true;
+            grid.append(b);
+          }
+
+          for (let d = 1; d <= days; d++) {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = d;
+            const val = y + "-" + pad(m + 1) + "-" + pad(d);
+            if (val === picked) b.className = "selected";
+            b.onclick = () => {
+              picked = val;
+              dateInput.value = val;
+              dateTrigger.textContent =
+                pad(d) + "/" + pad(m + 1) + "/" + String(y).slice(-2);
+              datePicker.classList.remove("open");
+              drawCalendar();
+            };
+            grid.append(b);
+          }
         }
-        for (let d = 1; d <= days; d++) {
-          const b = document.createElement("button");
-          b.type = "button";
-          b.textContent = d;
-          const val = y + "-" + pad(m + 1) + "-" + pad(d);
-          if (val === picked) b.className = "selected";
-          b.onclick = () => {
-            picked = val;
-            dateInput.value = val;
-            dateTrigger.textContent =
-              pad(d) + "/" + pad(m + 1) + "/" + String(y).slice(-2);
-            datePicker.classList.remove("open");
+
+        dateTrigger.onclick = () => {
+          datePicker.classList.toggle("open");
+          drawCalendar();
+        };
+
+        calendar.onclick = (e) => {
+          if (e.target.dataset.step) {
+            viewDate.setMonth(viewDate.getMonth() + Number(e.target.dataset.step));
             drawCalendar();
-          };
-          grid.append(b);
+          }
+        };
+
+        document.addEventListener("click", (e) => {
+          if (!datePicker.contains(e.target)) datePicker.classList.remove("open");
+        });
+
+        if (picked) {
+          const [y, m, d] = picked.split('-').map(Number);
+          if (y && m && d) {
+            dateTrigger.textContent = pad(d) + "/" + pad(m) + "/" + String(y).slice(-2);
+          }
         }
-      }
-      dateTrigger.onclick = () => {
-        datePicker.classList.toggle("open");
+
         drawCalendar();
-      };
-      calendar.onclick = (e) => {
-        if (e.target.dataset.step)
-          viewDate.setMonth(
-            viewDate.getMonth() + Number(e.target.dataset.step),
-          );
-      };
-      document.addEventListener("click", (e) => {
-        if (!datePicker.contains(e.target)) datePicker.classList.remove("open");
-      });
-      drawCalendar();
+      }
     </script>
   </body>
 </html>
@@ -207,6 +226,7 @@
     wrapper.className = "custom-select";
     select.parentNode.insertBefore(wrapper, select);
     wrapper.appendChild(select);
+
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "custom-select-toggle";
@@ -214,28 +234,32 @@
     toggle.setAttribute("aria-expanded", "false");
     toggle.textContent = select.options[select.selectedIndex]?.text || "Select";
     wrapper.appendChild(toggle);
+
     const options = document.createElement("ul");
     options.className = "custom-select-options";
     options.setAttribute("role", "listbox");
+
     Array.from(select.options).forEach((option, index) => {
       const item = document.createElement("li");
       item.className = "custom-select-option";
       item.textContent = option.text;
       item.setAttribute("role", "option");
       if (option.selected) item.classList.add("selected");
+
       item.onclick = () => {
         select.selectedIndex = index;
-        toggle.childNodes[0].textContent = option.text;
-        options
-          .querySelectorAll(".custom-select-option")
-          .forEach((x) => x.classList.remove("selected"));
+        select.value = option.value;
+        toggle.textContent = option.text;
+        options.querySelectorAll(".custom-select-option").forEach((x) => x.classList.remove("selected"));
         item.classList.add("selected");
         wrapper.classList.remove("open");
         toggle.setAttribute("aria-expanded", "false");
         select.dispatchEvent(new Event("change", { bubbles: true }));
       };
+
       options.appendChild(item);
     });
+
     wrapper.appendChild(options);
     toggle.onclick = () => {
       document.querySelectorAll(".custom-select.open").forEach((x) => {
@@ -245,12 +269,10 @@
       toggle.setAttribute("aria-expanded", String(open));
     };
   });
+
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".custom-select"))
-      document
-        .querySelectorAll(".custom-select.open")
-        .forEach((x) => x.classList.remove("open"));
+    if (!e.target.closest(".custom-select")) {
+      document.querySelectorAll(".custom-select.open").forEach((x) => x.classList.remove("open"));
+    }
   });
-</script>
-<script>
 </script>
