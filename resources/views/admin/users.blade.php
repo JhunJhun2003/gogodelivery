@@ -36,6 +36,10 @@
             <input id="username" name="username" value="{{ old('username') }}" placeholder="Username" required />
           </div>
           <div class="input-field-group">
+            <label for="password">PASSWORD</label>
+            <input id="password" name="password" type="password" placeholder="Password" required />
+          </div>
+          <div class="input-field-group">
             <label for="role">ROLE</label>
             <select id="role" name="role" required>
               <option value="">Select a role</option>
@@ -51,14 +55,6 @@
                 <option value="{{ $biker->id }}" @selected((string) old('biker_id') === (string) $biker->id)>{{ $biker->name }}</option>
               @endforeach
             </select>
-          </div>
-          <div class="input-field-group">
-            <label for="email">EMAIL</label>
-            <input id="email" name="email" type="email" value="{{ old('email') }}" placeholder="Email" required />
-          </div>
-          <div class="input-field-group">
-            <label for="password">PASSWORD</label>
-            <input id="password" name="password" type="password" placeholder="Password" required />
           </div>
           <button class="ui-btn btn-navy-blue" type="submit">Save user</button>
         </form>
@@ -112,65 +108,21 @@
       </section>
     </div>
     <script>
-      document.querySelectorAll(".input-field-group select").forEach((select) => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "custom-select";
-        select.parentNode.insertBefore(wrapper, select);
-        wrapper.appendChild(select);
-        const toggle = document.createElement("button");
-        toggle.type = "button";
-        toggle.className = "custom-select-toggle";
-        toggle.setAttribute("aria-haspopup", "listbox");
-        toggle.setAttribute("aria-expanded", "false");
-        toggle.textContent = select.options[select.selectedIndex]?.text || "Select";
-        wrapper.appendChild(toggle);
-        const optionsList = document.createElement("ul");
-        optionsList.className = "custom-select-options";
-        optionsList.setAttribute("role", "listbox");
-        Array.from(select.options).forEach((option, index) => {
-          const optionItem = document.createElement("li");
-          optionItem.className = "custom-select-option";
-          optionItem.textContent = option.text;
-          optionItem.setAttribute("role", "option");
-          optionItem.setAttribute("aria-selected", String(option.selected));
-          if (option.selected) optionItem.classList.add("selected");
-          optionItem.addEventListener("click", () => {
-            select.selectedIndex = index;
-            toggle.childNodes[0].textContent = option.text;
-            optionsList.querySelectorAll(".custom-select-option").forEach((item) => item.classList.remove("selected"));
-            optionItem.classList.add("selected");
-            wrapper.classList.remove("open");
-            toggle.setAttribute("aria-expanded", "false");
-            select.dispatchEvent(new Event("change", { bubbles: true }));
-          });
-          optionsList.appendChild(optionItem);
-        });
-        wrapper.appendChild(optionsList);
-        toggle.addEventListener("click", () => {
-          document.querySelectorAll(".custom-select.open").forEach((openWrapper) => {
-            if (openWrapper !== wrapper) openWrapper.classList.remove("open");
-          });
-          const isOpen = wrapper.classList.toggle("open");
-          toggle.setAttribute("aria-expanded", String(isOpen));
-        });
-      });
-      document.addEventListener("click", (event) => {
-        if (!event.target.closest(".custom-select")) {
-          document.querySelectorAll(".custom-select.open").forEach((wrapper) => wrapper.classList.remove("open"));
-        }
-      });
-
       const roleSelect = document.getElementById("role");
       const bikerField = document.getElementById("bikerField");
       const bikerSelect = document.getElementById("biker_id");
-      const updateBikerField = () => {
-        const isBiker = roleSelect.value === "biker";
-        bikerField.hidden = !isBiker;
-        bikerSelect.disabled = !isBiker;
-        bikerSelect.required = isBiker;
-      };
-      roleSelect.addEventListener("change", updateBikerField);
-      updateBikerField();
+
+      if (roleSelect && bikerField && bikerSelect) {
+        const updateBikerField = () => {
+          const isBiker = roleSelect.value === "biker";
+          bikerField.hidden = !isBiker;
+          bikerSelect.disabled = !isBiker;
+          bikerSelect.required = isBiker;
+        };
+
+        roleSelect.addEventListener("change", updateBikerField);
+        updateBikerField();
+      }
     </script>
     <script>
       const backdrop = document.getElementById("editBackdrop"),
@@ -212,22 +164,3 @@
     </script>
   </body>
 </html>
-<script>
-  let editingUser = null;
-  document.querySelectorAll(".edit-user").forEach((button) =>
-    button.addEventListener("click", () => {
-      editingUser = button;
-    }),
-  );
-  document.getElementById("saveEdit").addEventListener("click", () => {
-    if (!editingUser) return;
-    editingUser.dataset.name = nameInput.value;
-    editingUser.dataset.email = emailInput.value;
-    const item = editingUser.closest(".directory-item");
-    item.querySelector("strong").textContent = nameInput.value;
-    item.querySelector("span").textContent = emailInput.value;
-    backdrop.hidden = true;
-  });
-</script>
-<script>
-</script>
