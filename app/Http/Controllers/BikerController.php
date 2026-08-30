@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Biker;
 use App\Models\Way;
+use App\Models\WayStatusHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class BikerController extends Controller
@@ -40,6 +42,15 @@ class BikerController extends Controller
                 'biker_id' => $biker->id,
                 'assigned_at' => Carbon::now(),
             ]);
+
+        foreach ($data['way_ids'] as $wayId) {
+            WayStatusHistory::create([
+                'way_id' => $wayId,
+                'status' => 'assigned',
+                'remark' => 'Assigned to ' . $biker->name,
+                'changed_by' => Auth::user()->name,
+            ]);
+        }
 
         return redirect()->route('admin.bikers')->with('biker_status', 'Ways assigned successfully.');
     }

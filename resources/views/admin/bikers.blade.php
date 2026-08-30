@@ -114,6 +114,9 @@
                     <p>{{ $way->phone_number }} / {{ $way->amount }} / {{ $way->delivery_fees }} deli</p>
                     <small>ADDRESS · {{ $way->address }}</small>
                     <small>ASSIGNED · {{ ($way->assigned_at ?? $way->date)->format('d-m-Y') }}</small>
+                    @if ($way->status === 'failed' && $way->remark)
+                      <small class="fail-note">Reason · {{ $way->remark }}</small>
+                    @endif
                   </div>
                 </div>
                 <div class="delivery-actions">
@@ -293,40 +296,129 @@
         assignedView.hidden = false;
       };
       const checks = [...document.querySelectorAll(".order-check")];
-      async function updateWayStatus(button, status) {
-        const card = button.closest(".delivery-card");
-        const wayId = card?.dataset.wayId;
-        if (!wayId) return;
 
-        const token = document.querySelector('input[name="_token"]')?.value;
-        if (!token) return;
+      document.addEventListener("DOMContentLoaded", () => {
+        const modalBackdrop = document.getElementById("modalBackdrop");
+        const doneModal = document.getElementById("doneModal");
+        const failModal = document.getElementById("failModal");
+        const infoModal = document.getElementById("infoModal");
+        const confirmDone = document.getElementById("confirmDone");
+        const confirmFail = document.getElementById("confirmFail");
+        const failReason = document.getElementById("failReason");
+        let pendingStatusButton = null;
 
-        const response = await fetch("/admin/ways/" + wayId + "/status", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": token,
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ status }),
-        });
-
-        if (!response.ok) {
-          alert("Unable to update delivery status.");
+        if (!modalBackdrop || !doneModal || !failModal || !confirmDone || !confirmFail || !failReason) {
           return;
         }
 
-        window.location.reload();
-      }
+        function closeStatusModal() {
+          modalBackdrop.hidden = true;
+          doneModal.hidden = true;
+          failModal.hidden = true;
+          infoModal.hidden = true;
+          failReason.value = "";
+          pendingStatusButton = null;
+        }
 
-      document.querySelectorAll(".status-btn.onway").forEach((button) => {
-        button.addEventListener("click", () => updateWayStatus(button, "onway"));
-      });
-      document.querySelectorAll(".status-btn.fail").forEach((button) => {
-        button.addEventListener("click", () => updateWayStatus(button, "failed"));
-      });
-      document.querySelectorAll(".status-btn.done").forEach((button) => {
-        button.addEventListener("click", () => updateWayStatus(button, "delivered"));
+        function openStatusModal(button, status) {
+          pendingStatusButton = button;
+          modalBackdrop.hidden = false;
+          failReason.value = "";
+
+          if (status === "delivered") {
+            doneModal.hidden = false;
+            failModal.hidden = true;
+          } else if (status === "failed") {
+            doneModal.hidden = true;
+            failModal.hidden = false;
+          }
+        }
+
+        async function updateWayStatus(button, status, remark = "") {
+          const card = button.closest(".delivery-card");
+          const wayId = card?.dataset.wayId;
+          if (!wayId) return;
+
+          const token = document.querySelector('input[name="_token"]')?.value;
+          if (!token) return;
+
+          const response = await fetch("/admin/ways/" + wayId + "/status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": token,
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ status, remark }),
+          });
+
+          if (!response.ok) {
+            alert("Unable to update delivery status.");
+            return;
+          }
+
+          if (card) {
+            card.dataset.status = status;
+
+            const pill = card.querySelector(".status-pill");
+            if (pill) {
+              const label = status === "onway" ? "On way" : status.charAt(0).toUpperCase() + status.slice(1);
+              pill.className = "status-pill status-" + status;
+              pill.textContent = label;
+            }
+
+            let failNote = card.querySelector(".fail-note");
+            if (status === "failed") {
+              const message = remark || "No reason provided";
+              if (!failNote) {
+                failNote = document.createElement("small");
+                failNote.className = "fail-note";
+                card.querySelector(".delivery-main > div").appendChild(failNote);
+              }
+              failNote.textContent = "Reason · " + message;
+            } else if (failNote) {
+              failNote.remove();
+            }
+
+            card.querySelectorAll(".status-btn").forEach((control) => {
+              const isSelected = control.classList.contains(
+                status === "failed" ? "fail" : status === "delivered" ? "done" : "onway",
+              );
+              control.disabled = isSelected && status !== "pending";
+            });
+          }
+        }
+
+        document.querySelectorAll(".status-btn.onway").forEach((button) => {
+          button.addEventListener("click", () => updateWayStatus(button, "onway"));
+        });
+        document.querySelectorAll(".status-btn.fail").forEach((button) => {
+          button.addEventListener("click", () => openStatusModal(button, "failed"));
+        });
+        document.querySelectorAll(".status-btn.done").forEach((button) => {
+          button.addEventListener("click", () => openStatusModal(button, "delivered"));
+        });
+
+        confirmDone.addEventListener("click", async () => {
+          if (!pendingStatusButton) return;
+          await updateWayStatus(pendingStatusButton, "delivered");
+          closeStatusModal();
+        });
+
+        confirmFail.addEventListener("click", async () => {
+          if (!pendingStatusButton) return;
+          const remark = failReason.value.trim();
+          await updateWayStatus(pendingStatusButton, "failed", remark);
+          closeStatusModal();
+        });
+
+        document.querySelectorAll("[data-close-modal]").forEach((button) => {
+          button.addEventListener("click", closeStatusModal);
+        });
+
+        modalBackdrop.addEventListener("click", (event) => {
+          if (event.target === modalBackdrop) closeStatusModal();
+        });
       });
 
       const assignedSearch = document.querySelector('#assignedView input[type="search"]');
@@ -351,10 +443,32 @@
       }
 
       document.querySelectorAll(".info-btn").forEach((button) => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", async () => {
           const card = button.closest(".delivery-card");
           const wayId = card?.dataset.wayId;
-          if (wayId) window.location.href = "/admin/history/" + wayId;
+          if (!wayId) return;
+
+          document.getElementById("doneModal").hidden = true;
+          document.getElementById("failModal").hidden = true;
+
+          const res = await fetch("/admin/ways/" + wayId + "/history");
+          const histories = await res.json();
+
+          const container = document.getElementById("infoHistoryList");
+          container.innerHTML = histories.length
+            ? histories.map((h) => {
+                const statusLabel = h.status === "onway" ? "ON_WAY" : h.status.toUpperCase();
+                const remarkHtml = h.remark ? "<em>" + h.remark + "</em>" : "";
+                return '<div class="history-event">' +
+                  "<span>" + (h.created_at || "") + " · " + (h.changed_by || "System") + "</span>" +
+                  "<strong>" + statusLabel + "</strong>" +
+                  remarkHtml +
+                  "</div>";
+              }).join("")
+            : '<div class="history-event"><span>No status history yet.</span></div>';
+
+          document.getElementById("infoModal").hidden = false;
+          document.getElementById("modalBackdrop").hidden = false;
         });
       });
 
@@ -432,16 +546,7 @@
   <div class="action-modal info-modal" id="infoModal" hidden>
     <h2>Way Info History</h2>
     <p>On way / fail notes / delivered timeline</p>
-    <div class="history-event">
-      24-08-2026 21:56 · Ko Ko<strong>ON WAY</strong>
-    </div>
-    <div class="history-event">
-      24-08-2026 21:57 · Ko Ko<strong>FAILED</strong
-      ><em>Customer unavailable</em>
-    </div>
-    <div class="history-event">
-      24-08-2026 22:10 · Ko Ko<strong>DELIVERED</strong>
-    </div>
+    <div id="infoHistoryList"></div>
     <div class="modal-actions">
       <button class="back-button" data-close-modal type="button">Close</button>
     </div>

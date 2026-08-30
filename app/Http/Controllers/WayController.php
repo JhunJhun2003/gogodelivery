@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Biker;
 use App\Models\User;
 use App\Models\Way;
+use App\Models\WayStatusHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,6 +45,13 @@ class WayController extends Controller
             'remark' => $data['remark'] ?? $way->remark,
         ]);
 
+        WayStatusHistory::create([
+            'way_id' => $way->id,
+            'status' => $data['status'],
+            'remark' => $data['remark'] ?? null,
+            'changed_by' => Auth::user()->name,
+        ]);
+
         return redirect()->route('bikers.ways')->with('way_status', 'Way status updated.');
     }
 
@@ -53,16 +61,40 @@ class WayController extends Controller
 
         $data = $request->validate([
             'status' => ['required', 'in:'.implode(',', [Way::STATUS_ONWAY, Way::STATUS_FAILED, Way::STATUS_DELIVERED])],
+            'remark' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $way->update([
             'status' => $data['status'],
+            'remark' => $data['remark'] ?? $way->remark,
+        ]);
+
+        WayStatusHistory::create([
+            'way_id' => $way->id,
+            'status' => $data['status'],
+            'remark' => $data['remark'] ?? null,
+            'changed_by' => Auth::user()->name,
         ]);
 
         return response()->json([
             'success' => true,
             'status' => $way->status,
+            'remark' => $way->remark,
         ]);
+    }
+
+    public function wayHistory(Way $way): \Illuminate\Http\JsonResponse
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        $histories = $way->histories()->get()->map(fn ($h) => [
+            'status' => $h->status,
+            'remark' => $h->remark,
+            'changed_by' => $h->changed_by,
+            'created_at' => $h->created_at?->format('d-m-Y H:i'),
+        ]);
+
+        return response()->json($histories);
     }
 
     public function bikerHistory(Request $request): View
@@ -290,7 +322,17 @@ class WayController extends Controller
         }
 
         $data['assigned_at'] = $way->assigned_at;
+        $oldStatus = $way->status;
         $way->update($data);
+
+        if ($data['status'] !== $oldStatus) {
+            WayStatusHistory::create([
+                'way_id' => $way->id,
+                'status' => $data['status'],
+                'remark' => $data['remark'] ?? null,
+                'changed_by' => Auth::user()->name,
+            ]);
+        }
 
         return redirect()->route('admin.history.detail', $way)->with('way_status', 'Way updated successfully.');
     }
@@ -362,7 +404,13 @@ class WayController extends Controller
         }
 
         $data['status'] = $data['status'] ?: Way::STATUS_PENDING;
-        Way::create($data);
+        $way = Way::create($data);
+
+        WayStatusHistory::create([
+            'way_id' => $way->id,
+            'status' => $way->status,
+            'changed_by' => Auth::user()->name,
+        ]);
 
         return redirect()->route('admin.way-check')->with('way_status', 'Way created successfully.');
     }
@@ -419,7 +467,13 @@ class WayController extends Controller
 
         $data['shop_id'] = $shop->id;
         $data['status'] = Way::STATUS_PENDING;
-        Way::create($data);
+        $way = Way::create($data);
+
+        WayStatusHistory::create([
+            'way_id' => $way->id,
+            'status' => $way->status,
+            'changed_by' => Auth::user()->name,
+        ]);
 
         return redirect()->route('admin.shops')->with('way_status', 'New way created successfully.');
     }

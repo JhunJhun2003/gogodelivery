@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'shop_id', 'biker_id', 'assigned_at', 'item_image', 'amount', 'delivery_fees', 'recipient_name',
@@ -32,6 +33,11 @@ class Way extends Model
     public function biker()
     {
         return $this->belongsTo(Biker::class);
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(WayStatusHistory::class)->orderByDesc('created_at');
     }
 
     protected function casts(): array

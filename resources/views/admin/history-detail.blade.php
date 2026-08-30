@@ -49,6 +49,11 @@
               <span>Customer phone</span><strong>{{ $way->phone_number }}</strong>
             </div>
             <div><span>Amount</span><strong>{{ number_format($way->amount, 2) }} MMK</strong></div>
+            @if ($way->status === 'failed' && $way->remark)
+              <div class="detail-wide">
+                <span>Failure reason</span><strong>{{ $way->remark }}</strong>
+              </div>
+            @endif
             <div class="detail-wide">
               <span>Customer address</span><strong>{{ $way->address }}</strong>
             </div>
