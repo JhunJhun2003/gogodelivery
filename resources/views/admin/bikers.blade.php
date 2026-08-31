@@ -162,7 +162,7 @@
               id="orderSearch"
               class="shop-search"
               type="search"
-              placeholder="Search by order #, name, address..."
+              placeholder="Search by ID, name, address..."
             /><button class="table-action" id="selectAll" type="button">
               Select all
             </button>
@@ -635,12 +635,16 @@
         updateCount();
       };
       orderSearch.oninput = () => {
-        const q = orderSearch.value.toLowerCase();
+        const q = orderSearch.value.toLowerCase().trim();
         document
           .querySelectorAll(".order-card")
-          .forEach(
-            (x) => (x.hidden = !x.textContent.toLowerCase().includes(q)),
-          );
+          .forEach((card) => {
+            const idText = (card.dataset.wayId || "").toString();
+            const nameText = (card.querySelector("strong")?.textContent || "").toLowerCase();
+            const addressText = (card.querySelector(".order-address input")?.value || "").toLowerCase();
+            const haystack = [idText, nameText, addressText].join(" ");
+            card.hidden = !!q && !haystack.includes(q);
+          });
       };
       assignBtn.onclick = async () => {
         const selectedWays = checks
