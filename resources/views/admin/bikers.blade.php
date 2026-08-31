@@ -99,6 +99,7 @@
           
         </div>
         <input
+          id="assignedOrderSearch"
           class="shop-search"
           type="search"
           placeholder="Search assigned orders (#, name, address, phone)..."
@@ -563,15 +564,21 @@
         });
       });
 
-      const assignedSearch = document.querySelector('#assignedView input[type="search"]');
+      const assignedSearch = document.getElementById('assignedOrderSearch');
       if (assignedSearch) {
         assignedSearch.addEventListener('input', (e) => {
           const query = e.target.value.toLowerCase().trim();
           document.querySelectorAll('.delivery-card').forEach((card) => {
+            const recipientName = card.querySelector('strong')?.textContent || '';
+            const summary = card.querySelector('.delivery-main p')?.textContent || '';
+            const addressText = Array.from(card.querySelectorAll('small'))
+              .map((node) => node.textContent)
+              .join(' ');
             const searchable = [
               card.dataset.wayId || '',
-              card.querySelector('strong')?.textContent || '',
-              card.querySelector('small')?.textContent || '',
+              recipientName,
+              summary,
+              addressText,
               card.textContent || '',
             ].join(' ').toLowerCase();
 
