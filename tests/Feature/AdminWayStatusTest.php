@@ -86,4 +86,15 @@ class AdminWayStatusTest extends TestCase
         $this->assertNotNull($bikerUser->biker);
         $this->assertSame('Biker Rider', $bikerUser->biker->name);
     }
+
+    public function test_oversized_upload_dimensions_are_rejected_before_decoding(): void
+    {
+        $method = new \ReflectionMethod(\App\Http\Controllers\WayController::class, 'ensureImageDimensionsAreSafe');
+        $method->setAccessible(true);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('Image dimensions exceed the maximum supported size.');
+
+        $method->invoke(new \App\Http\Controllers\WayController(), 5000, 3000);
+    }
 }

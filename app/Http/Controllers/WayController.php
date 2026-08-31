@@ -15,6 +15,62 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WayController extends Controller
 {
+    private function validateImageDimensionsForProcessing(string $path): void
+    {
+        @ini_set('memory_limit', '512M');
+
+        $imageInfo = @getimagesize($path);
+
+        abort_unless(is_array($imageInfo) && $imageInfo[0] > 0 && $imageInfo[1] > 0, 422, 'The uploaded file is not a valid image.');
+
+        [$width, $height] = [$imageInfo[0], $imageInfo[1]];
+        $pixelLimit = 40_000_000;
+
+        abort_unless($width <= 8000 && $height <= 8000, 422, 'Image dimensions exceed the maximum supported size.');
+        abort_unless(($width * $height) <= $pixelLimit, 422, 'Image dimensions exceed the maximum supported size.');
+    }
+
+    private function resizeImage(string $sourcePath, string $mimeType, string $destPath): void
+    {
+        $source = match ($mimeType) {
+            'image/jpeg' => imagecreatefromjpeg($sourcePath),
+            'image/png' => imagecreatefrompng($sourcePath),
+            'image/webp' => imagecreatefromwebp($sourcePath),
+            default => imagecreatefromjpeg($sourcePath),
+        };
+
+        $maxWidth = 800;
+        $maxHeight = 800;
+        $width = imagesx($source);
+        $height = imagesy($source);
+
+        if ($width > $maxWidth || $height > $maxHeight) {
+            $intermediate = 1600;
+            if ($width > $intermediate || $height > $intermediate) {
+                $ratio = min($intermediate / $width, $intermediate / $height);
+                $tmpW = (int) ($width * $ratio);
+                $tmpH = (int) ($height * $ratio);
+                $tmp = imagecreatetruecolor($tmpW, $tmpH);
+                imagecopyresampled($tmp, $source, 0, 0, 0, 0, $tmpW, $tmpH, $width, $height);
+                imagedestroy($source);
+                $source = $tmp;
+                $width = $tmpW;
+                $height = $tmpH;
+            }
+
+            $ratio = min($maxWidth / $width, $maxHeight / $height);
+            $newWidth = (int) ($width * $ratio);
+            $newHeight = (int) ($height * $ratio);
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagecopyresampled($resized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            imagedestroy($source);
+            $source = $resized;
+        }
+
+        imagejpeg($source, $destPath, 85);
+        imagedestroy($source);
+    }
+
     private function resolveAuthenticatedBiker(): ?Biker
     {
         $user = Auth::user();
@@ -533,37 +589,18 @@ class WayController extends Controller
         ]);
 
         if ($request->hasFile('item_image')) {
+            @ini_set('memory_limit', '512M');
             $image = $request->file('item_image');
             $directory = config('filesystems.order_image_path');
             File::ensureDirectoryExists($directory);
             abort_unless(is_dir($directory) && is_writable($directory), 500, 'The order image directory is not writable.');
+            $this->validateImageDimensionsForProcessing($image->getRealPath());
             $filename = $image->hashName();
             $path = $directory . '/' . $filename;
 
-            $source = match ($image->getClientMimeType()) {
-                'image/jpeg' => imagecreatefromjpeg($image->getRealPath()),
-                'image/png' => imagecreatefrompng($image->getRealPath()),
-                'image/webp' => imagecreatefromwebp($image->getRealPath()),
-                default => imagecreatefromjpeg($image->getRealPath()),
-            };
+            $this->resizeImage($image->getRealPath(), $image->getClientMimeType(), $path);
 
-            $maxWidth = 800;
-            $maxHeight = 800;
-            $width = imagesx($source);
-            $height = imagesy($source);
-
-            if ($width > $maxWidth || $height > $maxHeight) {
-                $ratio = min($maxWidth / $width, $maxHeight / $height);
-                $newWidth = (int) ($width * $ratio);
-                $newHeight = (int) ($height * $ratio);
-                $resized = imagecreatetruecolor($newWidth, $newHeight);
-                imagecopyresampled($resized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                imagedestroy($source);
-                $source = $resized;
-            }
-
-            abort_unless(imagejpeg($source, $path, 85) && is_file($path), 500, 'The order image could not be saved.');
-            imagedestroy($source);
+            abort_unless(is_file($path), 500, 'The order image could not be saved.');
             $data['item_image'] = 'order_image/' . $filename;
         } else {
             unset($data['item_image']);
@@ -617,37 +654,18 @@ class WayController extends Controller
         ]);
 
         if ($request->hasFile('item_image')) {
+            @ini_set('memory_limit', '512M');
             $image = $request->file('item_image');
             $directory = config('filesystems.order_image_path');
             File::ensureDirectoryExists($directory);
             abort_unless(is_dir($directory) && is_writable($directory), 500, 'The order image directory is not writable.');
+            $this->validateImageDimensionsForProcessing($image->getRealPath());
             $filename = $image->hashName();
             $path = $directory . '/' . $filename;
 
-            $source = match ($image->getClientMimeType()) {
-                'image/jpeg' => imagecreatefromjpeg($image->getRealPath()),
-                'image/png' => imagecreatefrompng($image->getRealPath()),
-                'image/webp' => imagecreatefromwebp($image->getRealPath()),
-                default => imagecreatefromjpeg($image->getRealPath()),
-            };
+            $this->resizeImage($image->getRealPath(), $image->getClientMimeType(), $path);
 
-            $maxWidth = 800;
-            $maxHeight = 800;
-            $width = imagesx($source);
-            $height = imagesy($source);
-
-            if ($width > $maxWidth || $height > $maxHeight) {
-                $ratio = min($maxWidth / $width, $maxHeight / $height);
-                $newWidth = (int) ($width * $ratio);
-                $newHeight = (int) ($height * $ratio);
-                $resized = imagecreatetruecolor($newWidth, $newHeight);
-                imagecopyresampled($resized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                imagedestroy($source);
-                $source = $resized;
-            }
-
-            abort_unless(imagejpeg($source, $path, 85) && is_file($path), 500, 'The order image could not be saved.');
-            imagedestroy($source);
+            abort_unless(is_file($path), 500, 'The order image could not be saved.');
             $data['item_image'] = 'order_image/' . $filename;
         }
 
@@ -679,37 +697,18 @@ class WayController extends Controller
         ]);
 
         if ($request->hasFile('item_image')) {
+            @ini_set('memory_limit', '512M');
             $image = $request->file('item_image');
             $directory = config('filesystems.order_image_path');
             File::ensureDirectoryExists($directory);
             abort_unless(is_dir($directory) && is_writable($directory), 500, 'The order image directory is not writable.');
+            $this->validateImageDimensionsForProcessing($image->getRealPath());
             $filename = $image->hashName();
             $path = $directory . '/' . $filename;
 
-            $source = match ($image->getClientMimeType()) {
-                'image/jpeg' => imagecreatefromjpeg($image->getRealPath()),
-                'image/png' => imagecreatefrompng($image->getRealPath()),
-                'image/webp' => imagecreatefromwebp($image->getRealPath()),
-                default => imagecreatefromjpeg($image->getRealPath()),
-            };
+            $this->resizeImage($image->getRealPath(), $image->getClientMimeType(), $path);
 
-            $maxWidth = 800;
-            $maxHeight = 800;
-            $width = imagesx($source);
-            $height = imagesy($source);
-
-            if ($width > $maxWidth || $height > $maxHeight) {
-                $ratio = min($maxWidth / $width, $maxHeight / $height);
-                $newWidth = (int) ($width * $ratio);
-                $newHeight = (int) ($height * $ratio);
-                $resized = imagecreatetruecolor($newWidth, $newHeight);
-                imagecopyresampled($resized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                imagedestroy($source);
-                $source = $resized;
-            }
-
-            abort_unless(imagejpeg($source, $path, 85) && is_file($path), 500, 'The order image could not be saved.');
-            imagedestroy($source);
+            abort_unless(is_file($path), 500, 'The order image could not be saved.');
             $data['item_image'] = 'order_image/' . $filename;
         }
 

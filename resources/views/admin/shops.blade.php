@@ -75,7 +75,10 @@
           <p class="shop-orders-empty" id="shopNoResult" hidden>No matching shops found.</p>
         </div>
         <section class="ui-card-white nested-form" id="shopForm" @if (!$errors->getBag('shop')->any() && !session('shop_status')) hidden @endif>
-          <h2>Create shop</h2>
+          <div class="section-card-heading">
+            <h2>Create shop</h2>
+            <button class="back-button" id="closeShopForm" type="button" aria-label="Close create shop form">X</button>
+          </div>
           @if (session('shop_status'))
             <p role="status">{{ session('shop_status') }}</p>
           @endif
@@ -302,6 +305,9 @@
       };
       addShopBtn.onclick = () => {
         shopForm.hidden = !shopForm.hidden;
+      };
+      document.getElementById("closeShopForm").onclick = () => {
+        shopForm.hidden = true;
       };
       document.getElementById("closeWayForm").onclick = () => {
         wayCard.hidden = true;
