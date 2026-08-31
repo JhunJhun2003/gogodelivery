@@ -394,7 +394,33 @@
             trigger.textContent =
               pad(d) + "/" + pad(m + 1) + "/" + String(y).slice(-2);
             dateWrap.classList.remove("open");
-            draw();
+      draw();
+
+      wayForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const token = wayForm.querySelector('input[name="_token"]').value;
+        const formData = new FormData(wayForm);
+        const res = await fetch(wayForm.action, {
+          method: "POST",
+          headers: { "X-CSRF-TOKEN": token, Accept: "application/json" },
+          body: formData,
+        });
+        const json = await res.json();
+        if (res.ok) {
+          wayForm.reset();
+          photoPreview.classList.remove("visible");
+          photoPreviewImage.src = "";
+          photoPreviewName.textContent = "";
+          const banner = document.createElement("p");
+          banner.className = "form-success";
+          banner.textContent = json.message || "Way created successfully.";
+          wayCard.querySelector(".section-card-heading").after(banner);
+          setTimeout(() => banner.remove(), 4000);
+        } else {
+          const errBox = wayCard.querySelector("[role='alert']") || (() => { const d = document.createElement("div"); d.setAttribute("role","alert"); wayCard.querySelector("form").insertAdjacentElement("beforebegin", d); return d; })();
+          errBox.innerHTML = Object.values(json.errors || {}).flat().map(m => "<p>" + m + "</p>").join("");
+        }
+      });
           };
           grid.appendChild(b);
         }

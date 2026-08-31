@@ -681,7 +681,7 @@ class WayController extends Controller
         return redirect()->route('admin.way-check')->with('way_status', 'Way created successfully.');
     }
 
-    public function store(Request $request, User $shop): RedirectResponse
+    public function store(Request $request, User $shop): \Symfony\Component\HttpFoundation\Response
     {
         abort_unless($shop->role === User::ROLE_SHOP, 404);
 
@@ -721,6 +721,21 @@ class WayController extends Controller
             'status' => $way->status,
             'changed_by' => Auth::user()->name,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true, 'message' => 'New way created successfully.', 'way' => [
+                'id' => $way->id,
+                'recipient_name' => $way->recipient_name,
+                'address' => $way->address,
+                'phone_number' => $way->phone_number,
+                'amount' => $way->amount,
+                'delivery_fees' => $way->delivery_fees,
+                'status' => $way->status,
+                'date' => $way->date->format('d-m-Y'),
+                'item_image' => $way->item_image ? asset($way->item_image) : null,
+                'remark' => $way->remark,
+            ]]);
+        }
 
         return redirect()->route('admin.shops')->with('way_created', 'New way created successfully.');
     }
