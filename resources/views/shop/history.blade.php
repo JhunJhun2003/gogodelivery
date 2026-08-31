@@ -70,30 +70,64 @@
             <h2>All orders</h2>
           </div>
         </div>
-        <div class="history-table-wrap">
-          <table class="workspace-table history-table">
+        <div class="history-table-wrap" style="overflow-x:auto;">
+          <table class="workspace-table history-table" style="min-width: 1500px;">
             <thead>
               <tr>
-                <th>NO.</th>
-                <th>CUSTOMER</th>
-                <th>DATE</th>
-                <th>STATUS</th>
-                <th>ACTION</th>
+                <th>No</th>
+                <th>Shop</th>
+                <th>Date</th>
+                <th>Image</th>
+                <th>Amount</th>
+                <th>Deli Fees</th>
+                <th>Customer Detail</th>
+                <th>Biker</th>
+                <th>Status</th>
+                <th>Deli Date</th>
+                <th>Remark</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               @forelse ($orders as $index => $order)
                 <tr>
                   <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
-                  <td>{{ $order->recipient_name }}</td>
+                  <td>{{ $shop->name }}</td>
                   <td>{{ $order->date->format('d-m-Y') }}</td>
-                  <td>{{ ucfirst($order->status) }}</td>
+                  <td>
+                    @if ($order->item_image)
+                      <img src="{{ asset($order->item_image) }}" alt="Package image" style="display:block;width:54px;height:54px;object-fit:cover;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;" />
+                    @else
+                      <span style="display:grid;place-items:center;width:54px;height:54px;border:1px solid #e2e8f0;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;">No</span>
+                    @endif
+                  </td>
+                  <td>{{ number_format($order->amount, 2) }}</td>
+                  <td>{{ number_format($order->delivery_fees, 2) }}</td>
+                  <td>
+                    <div>{{ $order->recipient_name }}</div>
+                    <small>{{ $order->address }}</small><br>
+                    <small>{{ $order->phone_number }}</small>
+                  </td>
+                  <td>{{ $order->biker?->name ?? 'Unassigned' }}</td>
+                  <td><span class="status-pill status-{{ $order->status }}">{{ $order->status === 'onway' ? 'On way' : ucfirst($order->status) }}</span></td>
+                  <td>{{ $order->assigned_at ? $order->assigned_at->format('d-m-Y') : ($order->date->format('d-m-Y')) }}</td>
+                  <td>{{ $order->remark ?: '—' }}</td>
                   <td><a class="table-action" href="{{ route('shop.history.detail', $order) }}">View</a></td>
                 </tr>
               @empty
-                <tr><td class="no-data-msg" colspan="5">No orders found.</td></tr>
+                <tr><td class="no-data-msg" colspan="12">No orders found.</td></tr>
               @endforelse
             </tbody>
+            @if ($orders->isNotEmpty())
+              <tfoot>
+                <tr style="background:#f8fafc;font-weight:700;">
+                  <td colspan="4" style="text-align:left;padding-left:12px;">Total</td>
+                  <td style="text-align:right;">{{ number_format($orders->sum('amount'), 2) }}</td>
+                  <td style="text-align:right;">{{ number_format($orders->sum('delivery_fees'), 2) }}</td>
+                  <td colspan="6"></td>
+                </tr>
+              </tfoot>
+            @endif
           </table>
         </div>
       </section>
