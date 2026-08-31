@@ -116,8 +116,8 @@
           </div>
           <span class="ui-badge badge-navy">{{ $ways->count() }} orders</span>
         </div>
-        <div class="history-table-wrap">
-          <table class="workspace-table history-table">
+        <div class="history-table-wrap" style="overflow-x:auto;">
+          <table class="workspace-table history-table" style="min-width: 1500px;">
             <thead>
               <tr>
                 <th>No</th>
