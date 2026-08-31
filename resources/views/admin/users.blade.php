@@ -39,6 +39,10 @@
             <input id="username" name="username" value="{{ old('username') }}" placeholder="Username" required />
           </div>
           <div class="input-field-group">
+            <label for="phone_number">PHONE NUMBER</label>
+            <input id="phone_number" name="phone_number" type="tel" value="{{ old('phone_number') }}" placeholder="09..." required />
+          </div>
+          <div class="input-field-group">
             <label for="password">PASSWORD</label>
             <input id="password" name="password" type="password" placeholder="Password" required />
           </div>

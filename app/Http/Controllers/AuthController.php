@@ -52,6 +52,7 @@ class AuthController extends Controller
         $data = $request->validateWithBag('user', [
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:users,username'],
+            'phone_number' => ['required', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_BIKER])],
             'biker_id' => [

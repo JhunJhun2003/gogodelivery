@@ -50,6 +50,32 @@ class AdminWayStatusTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_a_user_with_phone_number(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'admin-create',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/users', [
+                'name' => 'Biker One',
+                'username' => 'biker-one',
+                'password' => 'secret123',
+                'role' => User::ROLE_BIKER,
+                'biker_id' => null,
+                'phone_number' => '0912345678',
+            ])
+            ->assertRedirect('/admin/users');
+
+        $this->assertDatabaseHas('users', [
+            'username' => 'biker-one',
+            'phone_number' => '0912345678',
+            'role' => User::ROLE_BIKER,
+            'email' => null,
+        ]);
+    }
+
     public function test_seeded_biker_user_is_linked_to_a_biker_record(): void
     {
         $this->seed(DatabaseSeeder::class);
