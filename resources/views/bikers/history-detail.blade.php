@@ -15,7 +15,7 @@
       <div class="bar-right"><span class="user-role">Biker · {{ $way->biker?->name ?? 'Biker' }}</span><button class="hamburger-icon-btn" type="button">☰</button></div>
     </header>
     <main class="workspace-body">
-      <a class="back-link" href="/bikers/history">← Back to history</a>
+      <a class="back-link" id="backLink" href="/bikers/history">← Back to history</a>
       <span class="section-tag">WAY · {{ $way->id }}</span>
       <h1 class="main-heading">Way history detail</h1>
       <section class="ui-card-white history-detail-card">
@@ -43,6 +43,11 @@
       </section>
     </main>
     <script>
+      const ref = document.referrer || '';
+      const backLink = document.getElementById('backLink');
+      if (ref.includes('/bikers/ways')) {
+        backLink.href = '/bikers/ways';
+      }
     </script>
   </body>
 </html>
