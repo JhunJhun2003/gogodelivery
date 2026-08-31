@@ -44,6 +44,9 @@
           ></dotlottie-player>
         </div>
       </div>
+      @if (session('way_created'))
+        <p class="form-success" role="status">{{ session('way_created') }}</p>
+      @endif
       <section class="ui-card-white shop-list-card">
         <div class="section-card-heading">
           <h2>Shop list</h2>
@@ -237,6 +240,7 @@
             rows.forEach((x) => x.classList.remove("selected"));
             r.classList.add("selected");
             orderHeading.textContent = "Online Shop · " + r.dataset.shop;
+            shopForm.hidden = true;
             wayForm.action = "/admin/shops/" + r.dataset.shopId + "/ways";
           }),
       );
@@ -320,6 +324,7 @@
       function openWayForm(button) {
         const row = button.closest(".shop-row");
         selectShop(row);
+        shopForm.hidden = true;
         wayForm.action = "/admin/shops/" + row.dataset.shopId + "/ways";
         wayCard.hidden = false;
         wayCard.scrollIntoView({ behavior: "smooth", block: "start" });

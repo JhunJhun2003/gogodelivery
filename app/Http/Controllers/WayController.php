@@ -722,6 +722,6 @@ class WayController extends Controller
             'changed_by' => Auth::user()->name,
         ]);
 
-        return redirect()->route('admin.shops')->with('way_status', 'New way created successfully.');
+        return redirect()->route('admin.shops')->with('way_created', 'New way created successfully.');
     }
 }
