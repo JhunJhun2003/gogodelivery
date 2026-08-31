@@ -54,9 +54,11 @@
             <label for="biker_id">BIKER NAME</label>
             <select id="biker_id" name="biker_id" disabled>
               <option value="">Select a biker</option>
-              @foreach ($bikers as $biker)
+              @forelse ($bikers as $biker)
                 <option value="{{ $biker->id }}" @selected((string) old('biker_id') === (string) $biker->id)>{{ $biker->name }}</option>
-              @endforeach
+              @empty
+                <option value="" disabled>No available bikers left</option>
+              @endforelse
             </select>
           </div>
           <button class="ui-btn btn-navy-blue" type="submit">Save user</button>

@@ -30,8 +30,15 @@ class AuthController extends Controller
 
     public function showUsers(): View
     {
+        $assignedBikerIds = User::query()
+            ->whereNotNull('biker_id')
+            ->pluck('biker_id');
+
         return view('admin.users', [
-            'bikers' => Biker::query()->orderBy('name')->get(),
+            'bikers' => Biker::query()
+                ->whereNotIn('id', $assignedBikerIds)
+                ->orderBy('name')
+                ->get(),
             'users' => User::query()
                 ->where('role', User::ROLE_BIKER)
                 ->with('biker')
@@ -47,8 +54,17 @@ class AuthController extends Controller
             'username' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:users,username'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_BIKER])],
-            'biker_id' => ['nullable', 'required_if:role,biker', 'exists:bikers,id'],
+            'biker_id' => [
+                'nullable',
+                'required_if:role,biker',
+                'exists:bikers,id',
+                Rule::unique('users', 'biker_id'),
+            ],
         ]);
+
+        if (($data['role'] ?? null) !== User::ROLE_BIKER) {
+            $data['biker_id'] = null;
+        }
 
         $data['email'] = null;
 
