@@ -55,9 +55,14 @@
             </div>
           </div>
         </div>
-        <button class="ui-btn btn-navy-blue history-save" type="submit">
-          Search
-        </button>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+          <button class="ui-btn btn-navy-blue history-save" type="submit">
+            Search
+          </button>
+          <a class="ui-btn btn-white" href="{{ route('shop.history.export', request()->query()) }}" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+            Export Excel
+          </a>
+        </div>
       </form>
       <div class="badge-group history-badges">
         <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span

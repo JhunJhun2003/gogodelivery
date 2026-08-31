@@ -56,28 +56,28 @@
                   @endif
                 </div>
               </div>
-              <div class="delivery-actions">
+              <div class="delivery-actions" data-status="{{ $way->status }}">
                 @if ($way->status !== 'delivered')
-                  <form method="POST" action="{{ route('bikers.ways.status', $way) }}">
+                  <form method="POST" action="{{ route('bikers.ways.status', $way) }}" class="{{ in_array($way->status, ['pending', 'failed'], true) ? '' : 'is-hidden' }}">
                     @csrf
                     <input type="hidden" name="status" value="onway" />
-                    <button class="status-btn onway" type="submit" {{ $way->status === 'onway' ? 'disabled' : '' }}>On way</button>
+                    <button class="status-btn onway" type="submit">On way</button>
                   </form>
-                  <form class="fail-form" method="POST" action="{{ route('bikers.ways.status', $way) }}">
+                  <form class="fail-form {{ $way->status === 'onway' ? '' : 'is-hidden' }}" method="POST" action="{{ route('bikers.ways.status', $way) }}">
                     @csrf
                     <input type="hidden" name="status" value="failed" />
                     <input class="fail-reason" type="hidden" name="remark" />
                     <button class="status-btn fail" type="submit">fail</button>
                   </form>
-                  <form method="POST" action="{{ route('bikers.ways.status', $way) }}">
+                  <form method="POST" action="{{ route('bikers.ways.status', $way) }}" class="{{ $way->status === 'onway' ? '' : 'is-hidden' }}">
                     @csrf
                     <input type="hidden" name="status" value="delivered" />
                     <button class="status-btn done" type="submit">done</button>
                   </form>
                 @endif
                 <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
+                <a class="info-btn" href="{{ route('bikers.history.detail', $way) }}">Info</a>
               </div>
-              <a class="info-btn" href="{{ route('bikers.history.detail', $way) }}">Info</a>
             </article>
           @empty
             <p class="empty-state">No ways are assigned to you today.</p>

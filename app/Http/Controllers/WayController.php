@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WayController extends Controller
 {
@@ -182,6 +183,70 @@ class WayController extends Controller
         return view('bikers.history-detail', compact('way'));
     }
 
+    public function exportBikerHistory(Request $request): StreamedResponse
+    {
+        $biker = $this->resolveAuthenticatedBiker();
+        abort_unless($biker, 403);
+
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string', 'max:30'],
+            'date' => ['nullable', 'date'],
+        ]);
+
+        $waysQuery = Way::query()
+            ->where('biker_id', $biker->id)
+            ->with(['shop', 'biker'])
+            ->latest('date')
+            ->latest('id');
+
+        if ($search = $filters['search'] ?? null) {
+            $waysQuery->where(function ($query) use ($search) {
+                $query->where('recipient_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('remark', 'like', "%{$search}%")
+                    ->orWhereHas('shop', fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $waysQuery
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+
+        $filename = 'biker-history-' . now()->format('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($waysQuery) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Deli Date', 'Remark']);
+
+            $ways = $waysQuery->get();
+
+            foreach ($ways as $index => $way) {
+                fputcsv($handle, [
+                    str_pad($index + 1, 2, '0', STR_PAD_LEFT),
+                    $way->shop?->name ?? 'N/A',
+                    $way->date?->format('d-m-Y') ?? '',
+                    $way->item_image ? asset($way->item_image) : '',
+                    number_format((float) $way->amount, 2, '.', ''),
+                    number_format((float) $way->delivery_fees, 2, '.', ''),
+                    $way->recipient_name,
+                    $way->address,
+                    $way->phone_number,
+                    $way->biker?->name ?? 'Unassigned',
+                    $way->status === 'onway' ? 'On way' : ucfirst($way->status),
+                    $way->assigned_at ? $way->assigned_at->format('d-m-Y') : ($way->date?->format('d-m-Y') ?? ''),
+                    $way->remark ?: '—',
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
     public function shopOrders(Request $request): View
     {
         $search = $request->string('search')->trim()->toString();
@@ -300,6 +365,141 @@ class WayController extends Controller
         $way->load(['shop', 'biker']);
 
         return view('admin.history-detail', compact('way'));
+    }
+
+    public function exportAdminHistory(Request $request): StreamedResponse
+    {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'shop_id' => ['nullable', 'exists:users,id'],
+            'biker_id' => ['nullable', 'exists:bikers,id'],
+            'status' => ['nullable', 'string', 'max:30'],
+            'customer_name' => ['nullable', 'string', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:30'],
+            'min_amount' => ['nullable', 'numeric', 'min:0'],
+            'max_amount' => ['nullable', 'numeric', 'gte:min_amount'],
+            'date' => ['nullable', 'date'],
+        ]);
+
+        $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
+
+        if ($search = $filters['search'] ?? null) {
+            $waysQuery->where(function ($query) use ($search) {
+                $query->where('id', 'like', "%{$search}%")
+                    ->orWhere('recipient_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('remark', 'like', "%{$search}%")
+                    ->orWhereHas('shop', fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('biker', fn ($bikerQuery) => $bikerQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $waysQuery
+            ->when($filters['shop_id'] ?? null, fn ($query, $shopId) => $query->where('shop_id', $shopId))
+            ->when($filters['biker_id'] ?? null, fn ($query, $bikerId) => $query->where('biker_id', $bikerId))
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['customer_name'] ?? null, fn ($query, $name) => $query->where('recipient_name', 'like', "%{$name}%"))
+            ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
+            ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
+            ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+
+        $filename = 'admin-history-' . now()->format('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($waysQuery) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Deli Date', 'Remark']);
+
+            $ways = $waysQuery->get();
+
+            foreach ($ways as $index => $way) {
+                fputcsv($handle, [
+                    str_pad($index + 1, 2, '0', STR_PAD_LEFT),
+                    $way->shop?->name ?? 'N/A',
+                    $way->date?->format('d-m-Y') ?? '',
+                    $way->item_image ? asset($way->item_image) : '',
+                    number_format((float) $way->amount, 2, '.', ''),
+                    number_format((float) $way->delivery_fees, 2, '.', ''),
+                    $way->recipient_name,
+                    $way->address,
+                    $way->phone_number,
+                    $way->biker?->name ?? 'Unassigned',
+                    $way->status === 'onway' ? 'On way' : ucfirst($way->status),
+                    $way->assigned_at ? $way->assigned_at->format('d-m-Y') : ($way->date?->format('d-m-Y') ?? ''),
+                    $way->remark ?: '—',
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function exportShopHistory(Request $request): StreamedResponse
+    {
+        $shop = Auth::user();
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string', 'max:30'],
+            'date' => ['nullable', 'date'],
+        ]);
+
+        $search = $filters['search'] ?? null;
+
+        $ordersQuery = Way::query()
+            ->where('shop_id', $shop->id)
+            ->with(['shop', 'biker'])
+            ->latest('date')
+            ->latest('id');
+
+        if ($search !== null && $search !== '') {
+            $ordersQuery->where(function ($query) use ($search) {
+                $query->where('recipient_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('remark', 'like', "%{$search}%")
+                    ->orWhereHas('shop', fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $ordersQuery
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+
+        $filename = 'shop-history-' . now()->format('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($ordersQuery) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Deli Date', 'Remark']);
+
+            $orders = $ordersQuery->get();
+
+            foreach ($orders as $index => $order) {
+                fputcsv($handle, [
+                    str_pad($index + 1, 2, '0', STR_PAD_LEFT),
+                    $order->shop?->name ?? 'N/A',
+                    $order->date?->format('d-m-Y') ?? '',
+                    $order->item_image ? asset($order->item_image) : '',
+                    number_format((float) $order->amount, 2, '.', ''),
+                    number_format((float) $order->delivery_fees, 2, '.', ''),
+                    $order->recipient_name,
+                    $order->address,
+                    $order->phone_number,
+                    $order->biker?->name ?? 'Unassigned',
+                    $order->status === 'onway' ? 'On way' : ucfirst($order->status),
+                    $order->assigned_at ? $order->assigned_at->format('d-m-Y') : ($order->date?->format('d-m-Y') ?? ''),
+                    $order->remark ?: '—',
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     public function editWay(Way $way): View

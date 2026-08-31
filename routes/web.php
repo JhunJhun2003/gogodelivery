@@ -50,6 +50,7 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
     Route::put('/ways/{way}/reassign', [WayController::class, 'reassignBiker'])->name('ways.reassign');
     Route::get('/ways/{way}/history', [WayController::class, 'wayHistory'])->name('ways.history');
     Route::get('/history', [WayController::class, 'history'])->name('history');
+    Route::get('/history/export', [WayController::class, 'exportAdminHistory'])->name('history.export');
     Route::get('/history/{way}', [WayController::class, 'historyDetail'])->name('history.detail');
     Route::get('/ways/{way}/edit', [WayController::class, 'editWay'])->name('ways.edit');
     Route::put('/ways/{way}', [WayController::class, 'updateWay'])->name('ways.update');
@@ -60,6 +61,7 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
 Route::middleware('auth', 'role:shop')->prefix('shop')->name('shop.')->group(function () {
     Route::get('/orders', [WayController::class, 'shopOrders'])->name('orders');
     Route::get('/history', [WayController::class, 'shopHistory'])->name('history');
+    Route::get('/history/export', [WayController::class, 'exportShopHistory'])->name('history.export');
     Route::get('/history/{way}', [WayController::class, 'shopHistoryDetail'])->name('history.detail');
 });
 
@@ -67,6 +69,7 @@ Route::middleware('auth', 'role:biker')->prefix('bikers')->name('bikers.')->grou
     Route::get('/ways', [WayController::class, 'bikerWays'])->name('ways');
     Route::post('/ways/{way}/status', [WayController::class, 'updateBikerStatus'])->name('ways.status');
     Route::get('/history', [WayController::class, 'bikerHistory'])->name('history');
+    Route::get('/history/export', [WayController::class, 'exportBikerHistory'])->name('history.export');
     Route::get('/history/{way}', [WayController::class, 'bikerHistoryDetail'])->name('history.detail');
 });
 

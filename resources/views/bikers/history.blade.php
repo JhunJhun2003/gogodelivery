@@ -25,37 +25,44 @@
         <h2>Find a way</h2>
         <form id="historyFilterForm" method="GET" action="{{ route('bikers.history') }}">
           <div class="history-form-grid">
-          <div class="input-field-group full-field">
-            <label>SEARCH</label
-            ><input
-              id="historySearch"
-              type="search"
-              name="search"
-              value="{{ $filters['search'] ?? '' }}"
-              placeholder="Search order, shop, or customer..."
-            />
+            <div class="input-field-group full-field">
+              <label>SEARCH</label
+              ><input
+                id="historySearch"
+                type="search"
+                name="search"
+                value="{{ $filters['search'] ?? '' }}"
+                placeholder="Search order, shop, or customer..."
+              />
+            </div>
+            <div class="input-field-group">
+              <label>STATUS</label
+              ><select name="status">
+                <option value="">All statuses</option>
+                <option value="pending" @selected(($filters['status'] ?? '') === 'pending')>Pending</option>
+                <option value="onway" @selected(($filters['status'] ?? '') === 'onway')>On way</option>
+                <option value="delivered" @selected(($filters['status'] ?? '') === 'delivered')>Delivered</option>
+                <option value="failed" @selected(($filters['status'] ?? '') === 'failed')>Failed</option>
+              </select>
+            </div>
+            <div class="input-field-group">
+              <label for="historyDate">DATE</label>
+              <div class="custom-date-picker">
+                <input id="historyDate" name="date" value="{{ $filters['date'] ?? '' }}" type="date" />
+                <button class="custom-date-trigger" type="button">{{ isset($filters['date']) ? \Carbon\Carbon::parse($filters['date'])->format('d/m/y') : 'dd/mm/yy' }}</button>
+                <div class="custom-calendar"></div>
+              </div>
+            </div>
           </div>
-          <div class="input-field-group">
-            <label>STATUS</label
-            ><select name="status">
-              <option value="">All statuses</option>
-              <option value="pending" @selected(($filters['status'] ?? '') === 'pending')>Pending</option>
-              <option value="onway" @selected(($filters['status'] ?? '') === 'onway')>On way</option>
-              <option value="delivered" @selected(($filters['status'] ?? '') === 'delivered')>Delivered</option>
-              <option value="failed" @selected(($filters['status'] ?? '') === 'failed')>Failed</option>
-            </select>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <button class="ui-btn btn-navy-blue history-save" id="saveFilter" type="submit">Search</button>
+            <a class="ui-btn btn-white" href="{{ route('bikers.history.export', request()->query()) }}" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Export Excel</a>
           </div>
-          <div class="input-field-group">
-            <label for="historyDate">DATE</label><div class="custom-date-picker"><input id="historyDate" name="date" value="{{ $filters['date'] ?? '' }}" type="date" /><button class="custom-date-trigger" type="button">dd/mm/yy</button><div class="custom-calendar"></div></div>
-          </div>
-          </div>
-          <button class="ui-btn btn-navy-blue history-save" id="saveFilter" type="submit">Search</button>
         </form>
       </section>
       <div class="badge-group history-badges">
-        <span class="ui-badge badge-navy">ALL WAYS</span
+        <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span
         ><span class="ui-badge badge-lime">{{ $ways->count() }} ways</span>
-        
       </div>
       <section class="ui-card-white history-list-card">
         <div class="history-card-heading">
@@ -64,32 +71,65 @@
             <h2>My delivery history</h2>
           </div>
           <span class="ui-badge badge-navy" id="resultCount">{{ $ways->count() }} ways</span>
-
         </div>
-        <div class="history-table-wrap">
-          <table class="workspace-table history-table">
+        <div class="history-table-wrap" style="overflow-x:auto;">
+          <table class="workspace-table history-table" style="min-width: 1500px;">
             <thead>
               <tr>
-                <th>NO.</th>
-                <th>ONLINE SHOP</th>
-                <th>DATE</th>
-                <th>STATUS</th>
-                <th>ACTION</th>
+                <th>No</th>
+                <th>Shop</th>
+                <th>Date</th>
+                <th>Image</th>
+                <th>Amount</th>
+                <th>Deli Fees</th>
+                <th>Customer Detail</th>
+                <th>Biker</th>
+                <th>Status</th>
+                <th>Deli Date</th>
+                <th>Remark</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="historyRows">
-              @forelse ($ways as $way)
+              @forelse ($ways as $index => $way)
                 <tr data-search="{{ strtolower($way->recipient_name . ' ' . $way->phone_number . ' ' . $way->address . ' ' . ($way->shop?->name ?? '')) }}">
-                  <td>{{ $loop->iteration }}</td>
+                  <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
                   <td>{{ $way->shop?->name ?? 'Shop' }}</td>
                   <td>{{ $way->date->format('d-m-Y') }}</td>
+                  <td>
+                    @if ($way->item_image)
+                      <img src="{{ asset($way->item_image) }}" alt="Package image" style="display:block;width:54px;height:54px;object-fit:cover;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;" />
+                    @else
+                      <span style="display:grid;place-items:center;width:54px;height:54px;border:1px solid #e2e8f0;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;">No</span>
+                    @endif
+                  </td>
+                  <td>{{ number_format($way->amount, 2) }}</td>
+                  <td>{{ number_format($way->delivery_fees, 2) }}</td>
+                  <td>
+                    <div>{{ $way->recipient_name }}</div>
+                    <small>{{ $way->address }}</small><br>
+                    <small>{{ $way->phone_number }}</small>
+                  </td>
+                  <td>{{ $way->biker?->name ?? $biker->name }}</td>
                   <td><span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span></td>
+                  <td>{{ $way->assigned_at ? $way->assigned_at->format('d-m-Y') : ($way->date->format('d-m-Y')) }}</td>
+                  <td>{{ $way->remark ?: '—' }}</td>
                   <td><a class="table-action" href="{{ route('bikers.history.detail', $way) }}">View</a></td>
                 </tr>
               @empty
-                <tr><td colspan="5">No ways found.</td></tr>
+                <tr><td class="no-data-msg" colspan="12">No ways found.</td></tr>
               @endforelse
             </tbody>
+            @if ($ways->isNotEmpty())
+              <tfoot>
+                <tr style="background:#f8fafc;font-weight:700;">
+                  <td colspan="4" style="text-align:left;padding-left:12px;">Total</td>
+                  <td style="text-align:right;">{{ number_format($ways->sum('amount'), 2) }}</td>
+                  <td style="text-align:right;">{{ number_format($ways->sum('delivery_fees'), 2) }}</td>
+                  <td colspan="6"></td>
+                </tr>
+              </tfoot>
+            @endif
           </table>
         </div>
       </section>
