@@ -101,6 +101,33 @@ class WayController extends Controller
         ]);
     }
 
+    public function reassignBiker(Request $request, Way $way): \Illuminate\Http\JsonResponse
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        $data = $request->validate([
+            'biker_id' => ['required', 'exists:bikers,id'],
+        ]);
+
+        $oldBiker = $way->biker?->name ?? 'Unassigned';
+        $way->update([
+            'biker_id' => $data['biker_id'],
+            'assigned_at' => now(),
+        ]);
+
+        WayStatusHistory::create([
+            'way_id' => $way->id,
+            'status' => $way->status,
+            'remark' => 'Reassigned from ' . $oldBiker . ' to ' . $way->biker->name,
+            'changed_by' => Auth::user()->name,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'biker_name' => $way->biker->name,
+        ]);
+    }
+
     public function wayHistory(Way $way): \Illuminate\Http\JsonResponse
     {
         abort_unless(Auth::user()?->isAdmin(), 403);

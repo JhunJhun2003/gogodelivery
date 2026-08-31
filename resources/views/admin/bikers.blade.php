@@ -119,15 +119,20 @@
                     @endif
                   </div>
                 </div>
-                <div class="delivery-actions">
+                <div class="delivery-actions" data-status="{{ $way->status }}">
                   @if ($way->status !== 'delivered')
-                    <button class="status-btn onway" type="button" {{ $way->status === 'onway' ? 'disabled' : '' }}>On way</button>
-                    
-                    <button class="status-btn done" type="button">done</button>
-                    <button class="status-btn fail" type="button">fail</button>
+                    <button class="status-btn onway {{ in_array($way->status, ['pending', 'failed'], true) ? '' : 'is-hidden' }}" type="button" data-status-trigger="onway">
+                      On way
+                    </button>
+                    <button class="status-btn done {{ $way->status === 'onway' ? '' : 'is-hidden' }}" type="button" data-status-trigger="delivered">
+                      done
+                    </button>
+                    <button class="status-btn fail {{ $way->status === 'onway' ? '' : 'is-hidden' }}" type="button" data-status-trigger="failed">
+                      fail
+                    </button>
                   @endif
                   <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
-                  
+                  <button class="edit-biker-inline" type="button" data-way-id="{{ $way->id }}" data-biker-id="{{ $way->biker_id }}" aria-label="Reassign biker">Edit</button>
                   <button class="info-btn" type="button">Info</button>
                 </div>
               </article>
@@ -235,6 +240,100 @@
           }
         });
       });
+      let pendingReassignWayId = null;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const reassignSelect = document.getElementById("reassignSelect");
+        if (!reassignSelect) return;
+        const reassignWrapper = document.createElement("div");
+        reassignWrapper.className = "custom-select";
+        reassignSelect.parentNode.insertBefore(reassignWrapper, reassignSelect);
+        reassignWrapper.appendChild(reassignSelect);
+
+        const reassignToggle = document.createElement("button");
+        reassignToggle.type = "button";
+        reassignToggle.className = "custom-select-toggle";
+        reassignToggle.textContent = reassignSelect.options[reassignSelect.selectedIndex]?.text || "Select";
+        reassignWrapper.appendChild(reassignToggle);
+
+        const reassignOptions = document.createElement("ul");
+        reassignOptions.className = "custom-select-options";
+        reassignOptions.setAttribute("role", "listbox");
+        reassignOptions.style.position = "fixed";
+        document.body.appendChild(reassignOptions);
+
+        Array.from(reassignSelect.options).forEach((option, index) => {
+          const li = document.createElement("li");
+          li.className = "custom-select-option";
+          li.textContent = option.text;
+          li.setAttribute("role", "option");
+          if (option.selected) li.classList.add("selected");
+          li.addEventListener("click", () => {
+            reassignSelect.selectedIndex = index;
+            reassignToggle.textContent = option.text;
+            reassignOptions.querySelectorAll(".custom-select-option").forEach((x) => x.classList.remove("selected"));
+            li.classList.add("selected");
+            reassignOptions.style.display = "none";
+          });
+          reassignOptions.appendChild(li);
+        });
+
+        reassignToggle.addEventListener("click", () => {
+          document.querySelectorAll(".custom-select-options").forEach((el) => {
+            if (el !== reassignOptions) el.style.display = "none";
+          });
+          const isOpen = reassignOptions.style.display === "block";
+          if (isOpen) {
+            reassignOptions.style.display = "none";
+          } else {
+            const rect = reassignToggle.getBoundingClientRect();
+            reassignOptions.style.display = "block";
+            reassignOptions.style.top = (rect.bottom + 4) + "px";
+            reassignOptions.style.left = rect.left + "px";
+            reassignOptions.style.width = rect.width + "px";
+          }
+        });
+
+        document.querySelectorAll(".edit-biker-inline").forEach((button) => {
+          button.addEventListener("click", () => {
+            document.getElementById("doneModal").hidden = true;
+            document.getElementById("failModal").hidden = true;
+            document.getElementById("infoModal").hidden = true;
+            pendingReassignWayId = button.dataset.wayId;
+            reassignSelect.value = button.dataset.bikerId;
+            reassignToggle.textContent = reassignSelect.options[reassignSelect.selectedIndex]?.text || "Select";
+            reassignOptions.querySelectorAll(".custom-select-option").forEach((x, i) => {
+              x.classList.toggle("selected", reassignSelect.options[i].selected);
+            });
+            document.getElementById("reassignModal").hidden = false;
+            document.getElementById("modalBackdrop").hidden = false;
+          });
+        });
+
+        document.getElementById("confirmReassign").addEventListener("click", async () => {
+          if (!pendingReassignWayId) return;
+          const bikerId = reassignSelect.value;
+          const token = document.querySelector('input[name="_token"]')?.value;
+          if (!token) return;
+
+          const response = await fetch("/admin/ways/" + pendingReassignWayId + "/reassign", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": token,
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ biker_id: bikerId, _method: "PUT" }),
+          });
+
+          if (!response.ok) {
+            alert("Unable to reassign biker.");
+            return;
+          }
+
+          window.location.reload();
+        });
+      });
       document.getElementById("cancelEditBiker").onclick = () =>
         (editBikerBackdrop.hidden = true);
       editBikerBackdrop.onclick = (event) => {
@@ -302,6 +401,7 @@
         const doneModal = document.getElementById("doneModal");
         const failModal = document.getElementById("failModal");
         const infoModal = document.getElementById("infoModal");
+        const reassignModal = document.getElementById("reassignModal");
         const confirmDone = document.getElementById("confirmDone");
         const confirmFail = document.getElementById("confirmFail");
         const failReason = document.getElementById("failReason");
@@ -316,8 +416,10 @@
           doneModal.hidden = true;
           failModal.hidden = true;
           infoModal.hidden = true;
+          reassignModal.hidden = true;
           failReason.value = "";
           pendingStatusButton = null;
+          pendingReassignWayId = null;
         }
 
         function openStatusModal(button, status) {
@@ -334,6 +436,50 @@
           }
         }
 
+        function syncStatusControls(card, status, { animateReveal = false } = {}) {
+          const onwayButton = card.querySelector(".status-btn.onway");
+          const doneButton = card.querySelector(".status-btn.done");
+          const failButton = card.querySelector(".status-btn.fail");
+
+          const showOnway = status === "pending" || status === "failed";
+          const showAdvance = status === "onway";
+
+          if (animateReveal && onwayButton && !showOnway) {
+            onwayButton.classList.add("exiting");
+            onwayButton.addEventListener("animationend", () => {
+              onwayButton.classList.remove("exiting");
+              onwayButton.classList.add("is-hidden");
+              [doneButton, failButton].forEach((button) => {
+                if (!button) return;
+                button.classList.remove("is-hidden");
+                button.classList.remove("reveal");
+                void button.offsetWidth;
+                button.classList.add("reveal");
+              });
+            }, { once: true });
+          } else {
+            if (onwayButton) {
+              onwayButton.classList.toggle("is-hidden", !showOnway);
+              if (animateReveal && showOnway) {
+                onwayButton.classList.remove("reveal");
+                void onwayButton.offsetWidth;
+                onwayButton.classList.add("reveal");
+              }
+            }
+            [doneButton, failButton].forEach((button) => {
+              if (!button) return;
+              button.classList.toggle("is-hidden", !showAdvance);
+              if (animateReveal && !showAdvance) {
+                button.classList.add("exiting");
+                button.addEventListener("animationend", () => {
+                  button.classList.remove("exiting");
+                  button.classList.add("is-hidden");
+                }, { once: true });
+              }
+            });
+          }
+        }
+
         async function updateWayStatus(button, status, remark = "") {
           const card = button.closest(".delivery-card");
           const wayId = card?.dataset.wayId;
@@ -342,6 +488,7 @@
           const token = document.querySelector('input[name="_token"]')?.value;
           if (!token) return;
 
+          const previousStatus = card.dataset.status || "pending";
           const response = await fetch("/admin/ways/" + wayId + "/status", {
             method: "POST",
             headers: {
@@ -380,12 +527,7 @@
               failNote.remove();
             }
 
-            card.querySelectorAll(".status-btn").forEach((control) => {
-              const isSelected = control.classList.contains(
-                status === "failed" ? "fail" : status === "delivered" ? "done" : "onway",
-              );
-              control.disabled = isSelected && status !== "pending";
-            });
+            syncStatusControls(card, status, { animateReveal: (previousStatus === "pending" && status === "onway") || (previousStatus === "onway" && status === "failed") });
           }
         }
 
@@ -515,51 +657,56 @@
         if (response.ok) window.location.reload();
       };
     </script>
+    <div class="modal-backdrop" id="modalBackdrop" hidden>
+      <div class="action-modal" id="doneModal">
+        <h2>Mark delivery done?</h2>
+        <p>This delivery will be marked as completed.</p>
+        <div class="modal-actions">
+          <button class="back-button" data-close-modal type="button">Cancel</button
+          ><button class="ui-btn btn-lime-green" id="confirmDone" type="button">
+            Confirm done
+          </button>
+        </div>
+      </div>
+      <div class="action-modal" id="failModal" hidden>
+        <h2>Fail reason</h2>
+        <p>Why did this delivery fail?</p>
+        <textarea
+          id="failReason"
+          rows="4"
+          placeholder="Write fail reason..."
+        ></textarea>
+        <div class="modal-actions">
+          <button class="back-button" data-close-modal type="button">Cancel</button
+          ><button class="ui-btn btn-danger" id="confirmFail" type="button">
+            Confirm fail
+          </button>
+        </div>
+      </div>
+      <div class="action-modal info-modal" id="infoModal" hidden>
+        <h2>Way Info History</h2>
+        <p>On way / fail notes / delivered timeline</p>
+        <div id="infoHistoryList"></div>
+        <div class="modal-actions">
+          <button class="back-button" data-close-modal type="button">Close</button>
+        </div>
+      </div>
+      <div class="action-modal" id="reassignModal" hidden>
+        <h2>Reassign biker</h2>
+        <p>Choose a biker for this delivery.</p>
+        <div class="input-field-group">
+          <label>BIKER</label>
+          <select id="reassignSelect">
+            @foreach ($bikers as $biker)
+              <option value="{{ $biker->id }}">{{ $biker->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="back-button" data-close-modal type="button">Cancel</button>
+          <button class="ui-btn btn-navy-blue" id="confirmReassign" type="button">Save</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
-<div class="modal-backdrop" id="modalBackdrop" hidden>
-  <div class="action-modal" id="doneModal">
-    <h2>Mark delivery done?</h2>
-    <p>This delivery will be marked as completed.</p>
-    <div class="modal-actions">
-      <button class="back-button" data-close-modal type="button">Cancel</button
-      ><button class="ui-btn btn-lime-green" id="confirmDone" type="button">
-        Confirm done
-      </button>
-    </div>
-  </div>
-  <div class="action-modal" id="failModal" hidden>
-    <h2>Fail reason</h2>
-    <p>Why did this delivery fail?</p>
-    <textarea
-      id="failReason"
-      rows="4"
-      placeholder="Write fail reason..."
-    ></textarea>
-    <div class="modal-actions">
-      <button class="back-button" data-close-modal type="button">Cancel</button
-      ><button class="ui-btn btn-danger" id="confirmFail" type="button">
-        Confirm fail
-      </button>
-    </div>
-  </div>
-  <div class="action-modal info-modal" id="infoModal" hidden>
-    <h2>Way Info History</h2>
-    <p>On way / fail notes / delivered timeline</p>
-    <div id="infoHistoryList"></div>
-    <div class="modal-actions">
-      <button class="back-button" data-close-modal type="button">Close</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  document
-    .querySelectorAll(".sidebar-row")
-    .forEach((row) =>
-      row.classList.toggle(
-        "active-row",
-        row.getAttribute("href") === "/admin/bikers",
-      ),
-    );
-</script>
