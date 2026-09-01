@@ -467,7 +467,12 @@ class WayController extends Controller
     <meta charset="UTF-8">
     <title>{$title}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+        @font-face {
+            font-family: 'Noto Sans Myanmar';
+            src: url('file:///c:/Users/Admin/Desktop/no end/gogodelivery/public/fonts/NotoSansMyanmar-Regular.ttf') format('truetype');
+        }
+
+        body { font-family: 'Noto Sans Myanmar', 'DejaVu Sans', 'Myanmar3', sans-serif; margin: 24px; color: #111827; }
         h1 { font-size: 20px; margin-bottom: 18px; }
         table { width: 100%; border-collapse: collapse; font-size: 10px; }
         th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
@@ -630,6 +635,7 @@ HTML;
 
         $html = $this->buildAdminHistoryPdfHtml('Admin History', $rows);
         $dompdf = new \Dompdf\Dompdf();
+        $dompdf->set_option('defaultFont', 'DejaVu Sans');
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
