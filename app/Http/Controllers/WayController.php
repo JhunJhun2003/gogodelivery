@@ -436,6 +436,11 @@ class WayController extends Controller
             getenv('PROGRAMFILES') ? getenv('PROGRAMFILES') . '/Google/Chrome/Application/chrome.exe' : null,
             getenv('PROGRAMFILES(X86)') ? getenv('PROGRAMFILES(X86)') . '/Google/Chrome/Application/chrome.exe' : null,
             getenv('PROGRAMFILES(X86)') ? getenv('PROGRAMFILES(X86)') . '/Microsoft/Edge/Application/msedge.exe' : null,
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium-browser',
+            '/usr/bin/chromium',
+            '/snap/bin/chromium',
         ];
 
         foreach ($candidates as $candidate) {
@@ -458,6 +463,14 @@ class WayController extends Controller
             $path = trim(explode("\n", trim($whereEdge))[0]);
             if ($path && file_exists($path)) {
                 return str_replace('\\', '/', $path);
+            }
+        }
+
+        $which = @shell_exec('which chromium-browser 2>/dev/null || which chromium 2>/dev/null || which google-chrome 2>/dev/null');
+        if ($which) {
+            $path = trim(explode("\n", trim($which))[0]);
+            if ($path && file_exists($path)) {
+                return $path;
             }
         }
 
