@@ -424,6 +424,17 @@ class WayController extends Controller
         return view('admin.history-detail', compact('way'));
     }
 
+    private function getMyanmarFontBase64(): string
+    {
+        static $base64 = null;
+        if ($base64 !== null) {
+            return $base64;
+        }
+        $path = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
+        $base64 = file_exists($path) ? base64_encode(file_get_contents($path)) : '';
+        return $base64;
+    }
+
     private function buildAdminHistoryPdfHtml(string $title, array $rows): string
     {
         $rowHtml = '';
@@ -467,7 +478,13 @@ class WayController extends Controller
     <meta charset="UTF-8">
     <title>{$title}</title>
     <style>
-        body { font-family: 'Noto Sans Myanmar', 'DejaVu Sans', 'Myanmar3', sans-serif; margin: 24px; color: #111827; }
+        @font-face {
+            font-family: 'Noto Sans Myanmar';
+            font-style: normal;
+            font-weight: normal;
+            src: url('data:font/truetype;base64,{$this->getMyanmarFontBase64()}') format('truetype');
+        }
+        body { font-family: 'Noto Sans Myanmar', sans-serif; margin: 24px; color: #111827; }
         h1 { font-size: 20px; margin-bottom: 18px; }
         table { width: 100%; border-collapse: collapse; font-size: 10px; }
         th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
@@ -630,6 +647,7 @@ HTML;
 
         $html = $this->buildAdminHistoryPdfHtml('Admin History', $rows);
         $dompdf = new \Dompdf\Dompdf();
+        $dompdf->set_option('isFontSubsettingEnabled', true);
 
         $fontPath = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
         if (file_exists($fontPath)) {
@@ -641,7 +659,7 @@ HTML;
             $dompdf->set_option('defaultFont', 'Noto Sans Myanmar');
         }
 
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
 
