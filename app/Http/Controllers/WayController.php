@@ -409,7 +409,7 @@ class WayController extends Controller
             ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
 
         return view('admin.history', [
-            'ways' => $waysQuery->get(),
+            'ways' => $waysQuery->paginate(50)->withQueryString(),
             'shops' => User::query()->where('role', User::ROLE_SHOP)->orderBy('name')->get(),
             'bikers' => Biker::query()->orderBy('name')->get(),
             'filters' => $filters,

@@ -123,7 +123,7 @@
             <span class="section-tag">ORDERS</span>
             <h2>All orders</h2>
           </div>
-          <span class="ui-badge badge-navy">{{ $ways->count() }} orders</span>
+          <span class="ui-badge badge-navy">{{ $ways->total() }} orders</span>
         </div>
         <div class="history-table-wrap" style="overflow-x:auto;">
           <table class="workspace-table history-table" style="min-width: 1500px;">
@@ -146,7 +146,7 @@
             <tbody>
               @forelse ($ways as $index => $way)
                 <tr>
-                  <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                  <td>{{ str_pad($ways->firstItem() + $index, 2, '0', STR_PAD_LEFT) }}</td>
                   <td>{{ $way->shop?->name ?? 'N/A' }}</td>
                   <td>{{ $way->date->format('d-m-Y') }}</td>
                   <td>
@@ -189,6 +189,27 @@
             @endif
           </table>
         </div>
+        @if ($ways->hasPages())
+          <div style="padding:16px 24px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">
+            @if ($ways->onFirstPage())
+              <span style="padding:6px 12px;border-radius:6px;background:#f1f5f9;color:#94a3b8;font-size:13px;">Previous</span>
+            @else
+              <a href="{{ $ways->previousPageUrl() }}" style="padding:6px 12px;border-radius:6px;background:#e2e8f0;color:#0f172a;text-decoration:none;font-size:13px;">Previous</a>
+            @endif
+            @foreach ($ways->getUrlRange(max(1, $ways->currentPage() - 3), min($ways->lastPage(), $ways->currentPage() + 3)) as $page => $url)
+              @if ($page == $ways->currentPage())
+                <span style="padding:6px 12px;border-radius:6px;background:#0f172a;color:#fff;font-size:13px;font-weight:700;">{{ $page }}</span>
+              @else
+                <a href="{{ $url }}" style="padding:6px 12px;border-radius:6px;background:#e2e8f0;color:#0f172a;text-decoration:none;font-size:13px;">{{ $page }}</a>
+              @endif
+            @endforeach
+            @if ($ways->currentPage() >= $ways->lastPage())
+              <span style="padding:6px 12px;border-radius:6px;background:#f1f5f9;color:#94a3b8;font-size:13px;">Next</span>
+            @else
+              <a href="{{ $ways->nextPageUrl() }}" style="padding:6px 12px;border-radius:6px;background:#e2e8f0;color:#0f172a;text-decoration:none;font-size:13px;">Next</a>
+            @endif
+          </div>
+        @endif
       </section>
     </main>
     <div class="modal-backdrop" id="deleteBackdrop" hidden>
