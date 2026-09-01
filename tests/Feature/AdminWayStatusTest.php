@@ -50,6 +50,41 @@ class AdminWayStatusTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_delete_a_way(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'admin-delete',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $shop = User::factory()->create([
+            'username' => 'shop-delete',
+            'role' => User::ROLE_SHOP,
+        ]);
+
+        $biker = Biker::create(['name' => 'Delete Rider']);
+
+        $way = Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'Bob',
+            'address' => 'House 1',
+            'phone_number' => '0987654321',
+            'amount' => 250,
+            'delivery_fees' => 15,
+            'date' => now()->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete("/admin/ways/{$way->id}")
+            ->assertRedirect('/admin/history');
+
+        $this->assertDatabaseMissing('ways', [
+            'id' => $way->id,
+        ]);
+    }
+
     public function test_admin_can_create_a_user_with_phone_number(): void
     {
         $admin = User::factory()->create([

@@ -163,7 +163,11 @@
                   <td><span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span></td>
                   <td>{{ $way->assigned_at ? $way->assigned_at->format('d-m-Y') : ($way->date->format('d-m-Y')) }}</td>
                   <td>{{ $way->remark ?: '—' }}</td>
-                  <td><a class="table-action" href="{{ route('admin.history.detail', $way) }}">View</a> <a class="table-action" href="{{ route('admin.ways.edit', $way) }}">Edit</a></td>
+                  <td>
+                    <a class="table-action" href="{{ route('admin.history.detail', $way) }}">View</a>
+                    <a class="table-action" href="{{ route('admin.ways.edit', $way) }}">Edit</a>
+                    <button type="button" class="table-action delete-btn" data-id="{{ $way->id }}" data-url="{{ route('admin.ways.destroy', $way) }}">Delete</button>
+                  </td>
                 </tr>
               @empty
                 <tr><td class="no-data-msg" colspan="12">No orders found.</td></tr>
@@ -183,6 +187,16 @@
         </div>
       </section>
     </main>
+    <div class="modal-backdrop" id="deleteBackdrop" hidden>
+      <section class="action-modal" role="dialog" aria-modal="true">
+        <h2>Delete this order?</h2>
+        <p>This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button class="back-button" id="cancelDelete" type="button">Cancel</button>
+          <button class="ui-btn btn-danger" id="confirmDelete" type="button">Delete</button>
+        </div>
+      </section>
+    </div>
     <script>
       const dateInput = document.getElementById("historyDate");
       const datePicker = document.querySelector(".custom-date-picker");
@@ -256,6 +270,44 @@
 
         drawCalendar();
       }
+
+      let pendingDeleteUrl = null;
+      const deleteBackdrop = document.getElementById("deleteBackdrop");
+      document.querySelectorAll(".delete-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          pendingDeleteUrl = btn.dataset.url;
+          deleteBackdrop.hidden = false;
+        });
+      });
+      document.getElementById("cancelDelete").onclick = () => {
+        deleteBackdrop.hidden = true;
+        pendingDeleteUrl = null;
+      };
+      deleteBackdrop.addEventListener("click", (e) => {
+        if (e.target === deleteBackdrop) {
+          deleteBackdrop.hidden = true;
+          pendingDeleteUrl = null;
+        }
+      });
+      document.getElementById("confirmDelete").addEventListener("click", async () => {
+        if (!pendingDeleteUrl) return;
+        const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
+        const res = await fetch(pendingDeleteUrl, {
+          method: "POST",
+          headers: { "X-CSRF-TOKEN": token, "X-HTTP-Method-Override": "DELETE", Accept: "application/json" },
+          body: new URLSearchParams({ _method: "DELETE", _token: token }),
+        });
+        if (res.ok || res.status === 204 || res.status === 302) {
+          const row = document.querySelector('.delete-btn[data-url="' + pendingDeleteUrl + '"]')?.closest("tr");
+          if (row) {
+            row.style.transition = "opacity .3s";
+            row.style.opacity = "0";
+            setTimeout(() => row.remove(), 300);
+          }
+          deleteBackdrop.hidden = true;
+          pendingDeleteUrl = null;
+        }
+      });
     </script>
   </body>
 </html>

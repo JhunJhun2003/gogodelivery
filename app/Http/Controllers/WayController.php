@@ -570,6 +570,26 @@ class WayController extends Controller
         ]);
     }
 
+    public function destroy(Way $way): \Symfony\Component\HttpFoundation\Response
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        if ($way->item_image) {
+            $imagePath = public_path($way->item_image);
+            if (is_file($imagePath)) {
+                unlink($imagePath);
+            }
+        }
+
+        $way->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['ok' => true, 'message' => 'Way deleted successfully.']);
+        }
+
+        return redirect()->route('admin.history')->with('way_status', 'Way deleted successfully.');
+    }
+
     public function updateWay(Request $request, Way $way): RedirectResponse
     {
         abort_unless(Auth::user()?->isAdmin(), 403);
