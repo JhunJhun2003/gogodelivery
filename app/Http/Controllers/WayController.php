@@ -438,26 +438,30 @@ class WayController extends Controller
 
             $rowHtml .= '<tr>'
                 . '<td>' . e($row['no'] ?? '') . '</td>'
-                . '<td>' . e($row['date'] ?? '') . '</td>'
                 . '<td>' . e($row['shop'] ?? '') . '</td>'
-                . '<td>' . e($row['customer'] ?? '') . '</td>'
-                . '<td>' . e($row['phone'] ?? '') . '</td>'
-                . '<td>' . e($row['status'] ?? '') . '</td>'
+                . '<td>' . e($row['date'] ?? '') . '</td>'
+                . '<td>' . ($row['image'] ?? '') . '</td>'
                 . '<td>' . e(number_format($amount, 2, '.', '')) . '</td>'
                 . '<td>' . e(number_format($fees, 2, '.', '')) . '</td>'
+                . '<td>' . ($row['customer'] ?? '') . '</td>'
+                . '<td>' . e($row['biker'] ?? '') . '</td>'
+                . '<td>' . e($row['status'] ?? '') . '</td>'
+                . '<td>' . e($row['deli_date'] ?? '') . '</td>'
+                . '<td>' . e($row['remark'] ?? '') . '</td>'
                 . '</tr>';
         }
 
         if ($rowHtml === '') {
-            $rowHtml = '<tr><td colspan="8" style="text-align:center;">No records found.</td></tr>';
+            $rowHtml = '<tr><td colspan="11" style="text-align:center;">No records found.</td></tr>';
         }
 
         $generatedAt = now()->format('d-m-Y H:i');
 
         $totalRow = '<tr style="font-weight:bold; background:#f3f4f6;">'
-            . '<td colspan="6" style="text-align:right;">Total</td>'
+            . '<td colspan="4" style="text-align:right;">Total</td>'
             . '<td>' . e(number_format($totalAmount, 2, '.', '')) . '</td>'
             . '<td>' . e(number_format($totalFees, 2, '.', '')) . '</td>'
+            . '<td colspan="5"></td>'
             . '</tr>';
 
         $fontUrl = 'file:///' . str_replace('\\', '/', base_path('public/fonts/NotoSansMyanmar-Regular.ttf'));
@@ -491,13 +495,16 @@ class WayController extends Controller
         <thead>
             <tr>
                 <th>No</th>
-                <th>Date</th>
                 <th>Shop</th>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Status</th>
+                <th>Date</th>
+                <th>Image</th>
                 <th>Amount</th>
-                <th>Fees</th>
+                <th>Deli Fees</th>
+                <th>Customer Detail</th>
+                <th>Biker</th>
+                <th>Status</th>
+                <th>Deli Date</th>
+                <th>Remark</th>
             </tr>
         </thead>
         <tbody>
@@ -624,15 +631,22 @@ HTML;
         $rows = [];
 
         foreach ($waysQuery->get() as $index => $way) {
+            $imageHtml = $way->item_image
+                ? '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents(public_path($way->item_image))) . '" style="width:54px;height:54px;object-fit:cover;border:1px solid #e2e8f0;border-radius:8px;" />'
+                : '<span style="display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid #e2e8f0;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;">No</span>';
+
             $rows[] = [
                 'no' => str_pad($index + 1, 2, '0', STR_PAD_LEFT),
-                'date' => $way->date?->format('d-m-Y') ?? '',
                 'shop' => $way->shop?->name ?? 'N/A',
-                'customer' => $way->recipient_name,
-                'phone' => $way->phone_number,
-                'status' => $way->status === 'onway' ? 'On way' : ucfirst($way->status),
+                'date' => $way->date?->format('d-m-Y') ?? '',
+                'image' => $imageHtml,
                 'amount' => number_format((float) $way->amount, 2, '.', ''),
                 'fees' => number_format((float) $way->delivery_fees, 2, '.', ''),
+                'customer' => e($way->recipient_name) . '<br>' . e($way->address) . '<br>' . e($way->phone_number),
+                'biker' => $way->biker?->name ?? 'Unassigned',
+                'status' => $way->status === 'onway' ? 'On way' : ucfirst($way->status),
+                'deli_date' => $way->assigned_at ? $way->assigned_at->format('d-m-Y') : $way->date->format('d-m-Y'),
+                'remark' => $way->remark ?: '—',
             ];
         }
 
