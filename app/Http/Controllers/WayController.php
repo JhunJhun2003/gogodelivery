@@ -440,7 +440,6 @@ class WayController extends Controller
                 . '<td>' . e($row['no'] ?? '') . '</td>'
                 . '<td>' . e($row['shop'] ?? '') . '</td>'
                 . '<td>' . e($row['date'] ?? '') . '</td>'
-                . '<td>' . ($row['image'] ?? '') . '</td>'
                 . '<td>' . e(number_format($amount, 2, '.', '')) . '</td>'
                 . '<td>' . e(number_format($fees, 2, '.', '')) . '</td>'
                 . '<td>' . ($row['customer'] ?? '') . '</td>'
@@ -452,13 +451,13 @@ class WayController extends Controller
         }
 
         if ($rowHtml === '') {
-            $rowHtml = '<tr><td colspan="11" style="text-align:center;">No records found.</td></tr>';
+            $rowHtml = '<tr><td colspan="10" style="text-align:center;">No records found.</td></tr>';
         }
 
         $generatedAt = now()->format('d-m-Y H:i');
 
         $totalRow = '<tr style="font-weight:bold; background:#f3f4f6;">'
-            . '<td colspan="4" style="text-align:right;">Total</td>'
+            . '<td colspan="3" style="text-align:right;">Total</td>'
             . '<td>' . e(number_format($totalAmount, 2, '.', '')) . '</td>'
             . '<td>' . e(number_format($totalFees, 2, '.', '')) . '</td>'
             . '<td colspan="5"></td>'
@@ -497,7 +496,6 @@ class WayController extends Controller
                 <th>No</th>
                 <th>Shop</th>
                 <th>Date</th>
-                <th>Image</th>
                 <th>Amount</th>
                 <th>Deli Fees</th>
                 <th>Customer Detail</th>
@@ -631,19 +629,10 @@ HTML;
         $rows = [];
 
         foreach ($waysQuery->get() as $index => $way) {
-            $imageHtml = '<span style="display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid #e2e8f0;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;">No</span>';
-            if ($way->item_image) {
-                $imgPath = public_path($way->item_image);
-                if (is_file($imgPath)) {
-                    $imageHtml = '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents($imgPath)) . '" style="width:54px;height:54px;object-fit:cover;border:1px solid #e2e8f0;border-radius:8px;" />';
-                }
-            }
-
             $rows[] = [
                 'no' => str_pad($index + 1, 2, '0', STR_PAD_LEFT),
                 'shop' => $way->shop?->name ?? 'N/A',
                 'date' => $way->date?->format('d-m-Y') ?? '',
-                'image' => $imageHtml,
                 'amount' => number_format((float) $way->amount, 2, '.', ''),
                 'fees' => number_format((float) $way->delivery_fees, 2, '.', ''),
                 'customer' => e($way->recipient_name) . '<br>' . e($way->address) . '<br>' . e($way->phone_number),
