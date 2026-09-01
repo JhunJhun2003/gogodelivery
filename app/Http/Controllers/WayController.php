@@ -424,17 +424,6 @@ class WayController extends Controller
         return view('admin.history-detail', compact('way'));
     }
 
-    private function getMyanmarFontBase64(): string
-    {
-        static $base64 = null;
-        if ($base64 !== null) {
-            return $base64;
-        }
-        $path = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
-        $base64 = file_exists($path) ? base64_encode(file_get_contents($path)) : '';
-        return $base64;
-    }
-
     private function buildAdminHistoryPdfHtml(string $title, array $rows): string
     {
         $rowHtml = '';
@@ -471,6 +460,8 @@ class WayController extends Controller
             . '<td>' . e(number_format($totalFees, 2, '.', '')) . '</td>'
             . '</tr>';
 
+        $fontUrl = 'file:///' . str_replace('\\', '/', base_path('public/fonts/NotoSansMyanmar-Regular.ttf'));
+
         return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
@@ -482,7 +473,7 @@ class WayController extends Controller
             font-family: 'Noto Sans Myanmar';
             font-style: normal;
             font-weight: normal;
-            src: url('data:font/truetype;base64,{$this->getMyanmarFontBase64()}') format('truetype');
+            src: url('{$fontUrl}') format('truetype');
         }
         body { font-family: 'Noto Sans Myanmar', sans-serif; margin: 24px; color: #111827; }
         h1 { font-size: 20px; margin-bottom: 18px; }
@@ -646,24 +637,30 @@ HTML;
         }
 
         $html = $this->buildAdminHistoryPdfHtml('Admin History', $rows);
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->set_option('isFontSubsettingEnabled', true);
 
-        $fontPath = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
-        if (file_exists($fontPath)) {
-            $dompdf->getFontMetrics()->registerFont([
-                'family' => 'Noto Sans Myanmar',
-                'style' => 'normal',
-                'weight' => 'normal',
-            ], $fontPath);
-            $dompdf->set_option('defaultFont', 'Noto Sans Myanmar');
+        $tmpHtml = tempnam(sys_get_temp_dir(), 'pdf_') . '.html';
+        file_put_contents($tmpHtml, $html);
+        $tmpPdf = tempnam(sys_get_temp_dir(), 'pdf_') . '.pdf';
+
+        $chrome = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+        if (! file_exists($chrome)) {
+            $chrome = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
         }
 
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
+        $cmd = '"' . $chrome . '" --headless --disable-gpu --no-sandbox --print-to-pdf="' . $tmpPdf . '" --print-to-pdf-no-header "' . $tmpHtml . '" 2>&1';
+        exec($cmd, $output, $exitCode);
 
-        return response($dompdf->output(), 200, [
+        if ($exitCode !== 0 || ! is_file($tmpPdf)) {
+            @unlink($tmpHtml);
+            @unlink($tmpPdf);
+            abort(500, 'PDF generation failed.');
+        }
+
+        $pdfContent = file_get_contents($tmpPdf);
+        @unlink($tmpHtml);
+        @unlink($tmpPdf);
+
+        return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
