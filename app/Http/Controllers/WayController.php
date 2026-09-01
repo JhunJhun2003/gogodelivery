@@ -631,9 +631,13 @@ HTML;
         $rows = [];
 
         foreach ($waysQuery->get() as $index => $way) {
-            $imageHtml = $way->item_image
-                ? '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents(public_path($way->item_image))) . '" style="width:54px;height:54px;object-fit:cover;border:1px solid #e2e8f0;border-radius:8px;" />'
-                : '<span style="display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid #e2e8f0;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;">No</span>';
+            $imageHtml = '<span style="display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid #e2e8f0;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;">No</span>';
+            if ($way->item_image) {
+                $imgPath = public_path($way->item_image);
+                if (is_file($imgPath)) {
+                    $imageHtml = '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents($imgPath)) . '" style="width:54px;height:54px;object-fit:cover;border:1px solid #e2e8f0;border-radius:8px;" />';
+                }
+            }
 
             $rows[] = [
                 'no' => str_pad($index + 1, 2, '0', STR_PAD_LEFT),
