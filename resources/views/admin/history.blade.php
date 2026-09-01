@@ -80,14 +80,14 @@
             <label>CUST. PHONE</label
             ><input name="customer_phone" type="tel" value="{{ $filters['customer_phone'] ?? '' }}" placeholder="cust. ph..." />
           </div>
-          {{-- <div class="input-field-group">
+          <div class="input-field-group">
             <label>MIN AMT.</label
             ><input name="min_amount" type="number" min="0" value="{{ $filters['min_amount'] ?? '' }}" placeholder="Min Amt" />
           </div>
           <div class="input-field-group">
             <label>MAX AMT.</label
             ><input name="max_amount" type="number" min="0" value="{{ $filters['max_amount'] ?? '' }}" placeholder="Max Amt" />
-          </div> --}}
+          </div>
           <div class="input-field-group full-field">
             <label>DATE</label>
             <div class="custom-date-picker">

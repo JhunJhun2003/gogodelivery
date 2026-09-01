@@ -370,9 +370,23 @@ class WayController extends Controller
         return view('shop.history-detail', compact('way'));
     }
 
+    private function normalizeAmountRange(array $filters): array
+    {
+        if (($filters['min_amount'] ?? null) !== null && ($filters['max_amount'] ?? null) !== null) {
+            $minAmount = (float) $filters['min_amount'];
+            $maxAmount = (float) $filters['max_amount'];
+
+            if ($minAmount > $maxAmount) {
+                [$filters['min_amount'], $filters['max_amount']] = [$maxAmount, $minAmount];
+            }
+        }
+
+        return $filters;
+    }
+
     public function history(Request $request): View
     {
-        $filters = $request->validate([
+        $filters = $this->normalizeAmountRange($request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'shop_id' => ['nullable', 'exists:users,id'],
             'biker_id' => ['nullable', 'exists:bikers,id'],
@@ -380,9 +394,9 @@ class WayController extends Controller
             'customer_name' => ['nullable', 'string', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
-            'max_amount' => ['nullable', 'numeric', 'gte:min_amount'],
+            'max_amount' => ['nullable', 'numeric', 'min:0'],
             'date' => ['nullable', 'date'],
-        ]);
+        ]));
 
         $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
 
@@ -635,7 +649,7 @@ HTML;
 
     public function exportAdminHistory(Request $request): StreamedResponse
     {
-        $filters = $request->validate([
+        $filters = $this->normalizeAmountRange($request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'shop_id' => ['nullable', 'exists:users,id'],
             'biker_id' => ['nullable', 'exists:bikers,id'],
@@ -643,9 +657,9 @@ HTML;
             'customer_name' => ['nullable', 'string', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
-            'max_amount' => ['nullable', 'numeric', 'gte:min_amount'],
+            'max_amount' => ['nullable', 'numeric', 'min:0'],
             'date' => ['nullable', 'date'],
-        ]);
+        ]));
 
         $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
 
@@ -706,7 +720,7 @@ HTML;
 
     public function exportAdminHistoryPdf(Request $request): \Symfony\Component\HttpFoundation\Response
     {
-        $filters = $request->validate([
+        $filters = $this->normalizeAmountRange($request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'shop_id' => ['nullable', 'exists:users,id'],
             'biker_id' => ['nullable', 'exists:bikers,id'],
@@ -714,9 +728,9 @@ HTML;
             'customer_name' => ['nullable', 'string', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
-            'max_amount' => ['nullable', 'numeric', 'gte:min_amount'],
+            'max_amount' => ['nullable', 'numeric', 'min:0'],
             'date' => ['nullable', 'date'],
-        ]);
+        ]));
 
         $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
 

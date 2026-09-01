@@ -122,6 +122,65 @@ class AdminWayStatusTest extends TestCase
         $this->assertSame('Biker Rider', $bikerUser->biker->name);
     }
 
+    public function test_admin_history_filters_amount_range_even_when_min_is_higher_than_max(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'admin-range',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $shop = User::factory()->create([
+            'username' => 'shop-range',
+            'role' => User::ROLE_SHOP,
+        ]);
+
+        $biker = Biker::create(['name' => 'Range Rider']);
+
+        Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'Low Amount',
+            'address' => 'Range Street 1',
+            'phone_number' => '0900000001',
+            'amount' => 80,
+            'delivery_fees' => 10,
+            'date' => now()->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'Mid Amount',
+            'address' => 'Range Street 2',
+            'phone_number' => '0900000002',
+            'amount' => 120,
+            'delivery_fees' => 10,
+            'date' => now()->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'High Amount',
+            'address' => 'Range Street 3',
+            'phone_number' => '0900000003',
+            'amount' => 180,
+            'delivery_fees' => 10,
+            'date' => now()->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get('/admin/history?min_amount=120&max_amount=80');
+
+        $response->assertOk()
+            ->assertSeeText('Mid Amount')
+            ->assertDontSeeText('Low Amount')
+            ->assertDontSeeText('High Amount');
+    }
+
     public function test_admin_can_export_history_as_pdf(): void
     {
         $admin = User::factory()->create([
