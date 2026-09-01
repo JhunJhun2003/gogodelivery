@@ -424,6 +424,46 @@ class WayController extends Controller
         return view('admin.history-detail', compact('way'));
     }
 
+    private function findBrowserBinary(): ?string
+    {
+        $candidates = [
+            'C:/Program Files/Google/Chrome/Application/chrome.exe',
+            'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+            'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+            'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+            getenv('LOCALAPPDATA') ? getenv('LOCALAPPDATA') . '/Google/Chrome/Application/chrome.exe' : null,
+            getenv('LOCALAPPDATA') ? getenv('LOCALAPPDATA') . '/Microsoft/Edge/Application/msedge.exe' : null,
+            getenv('PROGRAMFILES') ? getenv('PROGRAMFILES') . '/Google/Chrome/Application/chrome.exe' : null,
+            getenv('PROGRAMFILES(X86)') ? getenv('PROGRAMFILES(X86)') . '/Google/Chrome/Application/chrome.exe' : null,
+            getenv('PROGRAMFILES(X86)') ? getenv('PROGRAMFILES(X86)') . '/Microsoft/Edge/Application/msedge.exe' : null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate && file_exists($candidate)) {
+                return str_replace('\\', '/', $candidate);
+            }
+        }
+
+        // Fallback: search in PATH on Windows
+        $whereChrome = @shell_exec('where chrome 2>nul');
+        if ($whereChrome) {
+            $path = trim(explode("\n", trim($whereChrome))[0]);
+            if ($path && file_exists($path)) {
+                return str_replace('\\', '/', $path);
+            }
+        }
+
+        $whereEdge = @shell_exec('where msedge 2>nul');
+        if ($whereEdge) {
+            $path = trim(explode("\n", trim($whereEdge))[0]);
+            if ($path && file_exists($path)) {
+                return str_replace('\\', '/', $path);
+            }
+        }
+
+        return null;
+    }
+
     private function buildAdminHistoryPdfHtml(string $title, array $rows): string
     {
         $rowHtml = '';
@@ -440,8 +480,8 @@ class WayController extends Controller
                 . '<td>' . e($row['no'] ?? '') . '</td>'
                 . '<td>' . e($row['shop'] ?? '') . '</td>'
                 . '<td>' . e($row['date'] ?? '') . '</td>'
-                . '<td>' . e(number_format($amount, 2, '.', '')) . '</td>'
-                . '<td>' . e(number_format($fees, 2, '.', '')) . '</td>'
+                . '<td style="text-align:right;">' . e(number_format($amount, 2, '.', '')) . '</td>'
+                . '<td style="text-align:right;">' . e(number_format($fees, 2, '.', '')) . '</td>'
                 . '<td>' . ($row['customer'] ?? '') . '</td>'
                 . '<td>' . e($row['biker'] ?? '') . '</td>'
                 . '<td>' . e($row['status'] ?? '') . '</td>'
@@ -456,48 +496,104 @@ class WayController extends Controller
 
         $generatedAt = now()->format('d-m-Y H:i');
 
-        $totalRow = '<tr style="font-weight:bold; background:#f3f4f6;">'
+        $totalRow = '<tr style="font-weight:bold; background:#e2e8f0;">'
             . '<td colspan="3" style="text-align:right;">Total</td>'
-            . '<td>' . e(number_format($totalAmount, 2, '.', '')) . '</td>'
-            . '<td>' . e(number_format($totalFees, 2, '.', '')) . '</td>'
+            . '<td style="text-align:right;">' . e(number_format($totalAmount, 2, '.', '')) . '</td>'
+            . '<td style="text-align:right;">' . e(number_format($totalFees, 2, '.', '')) . '</td>'
             . '<td colspan="5"></td>'
             . '</tr>';
 
-        $fontUrl = 'file:///' . str_replace('\\', '/', base_path('public/fonts/NotoSansMyanmar-Regular.ttf'));
+        $fontPath = public_path('fonts/NotoSansMyanmar-Regular.ttf');
+        $fontSrc = '';
+        if (file_exists($fontPath)) {
+            $fontBase64 = base64_encode(file_get_contents($fontPath));
+            $fontSrc = "@font-face {
+                font-family: 'Noto Sans Myanmar';
+                src: url('data:font/truetype;charset=utf-8;base64,{$fontBase64}') format('truetype');
+                font-weight: normal;
+                font-style: normal;
+            }";
+        }
 
         return <<<HTML
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
     <meta charset="UTF-8">
     <title>{$title}</title>
     <style>
-        @font-face {
-            font-family: 'Noto Sans Myanmar';
-            font-style: normal;
-            font-weight: normal;
-            src: url('{$fontUrl}') format('truetype');
+        {$fontSrc}
+        @page {
+            size: A4 landscape;
+            margin: 10mm 10mm;
         }
-        body { font-family: 'Noto Sans Myanmar', sans-serif; margin: 24px; color: #111827; }
-        h1 { font-size: 20px; margin-bottom: 18px; }
-        table { width: 100%; border-collapse: collapse; font-size: 10px; }
-        th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
-        th { background: #f3f4f6; font-weight: bold; }
-        .summary { margin-bottom: 12px; font-size: 12px; }
-        .totals { margin-top: 12px; font-size: 12px; font-weight: bold; }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans Myanmar', 'Pyidaungsu', 'Myanmar Text', 'Padauk', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #0f172a;
+            font-size: 11px;
+            line-height: 1.4;
+            -webkit-font-smoothing: antialiased;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 14px;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 8px;
+        }
+        h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: #0f172a;
+        }
+        .meta {
+            font-size: 11px;
+            color: #64748b;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 0.04em;
+        }
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
     </style>
 </head>
 <body>
-    <h1>{$title}</h1>
-    <div class="summary">Generated: {$generatedAt}</div>
+    <div class="header-bar">
+        <h1>{$title}</h1>
+        <div class="meta">Generated: {$generatedAt}</div>
+    </div>
     <table>
         <thead>
             <tr>
-                <th>No</th>
+                <th style="width: 32px;">No</th>
                 <th>Shop</th>
                 <th>Date</th>
-                <th>Amount</th>
-                <th>Deli Fees</th>
+                <th style="text-align:right;">Amount</th>
+                <th style="text-align:right;">Deli Fees</th>
                 <th>Customer Detail</th>
                 <th>Biker</th>
                 <th>Status</th>
@@ -510,7 +606,6 @@ class WayController extends Controller
             {$totalRow}
         </tbody>
     </table>
-    <div class="totals">Total Amount: {$totalAmount} | Total Fees: {$totalFees}</div>
 </body>
 </html>
 HTML;
@@ -635,7 +730,9 @@ HTML;
                 'date' => $way->date?->format('d-m-Y') ?? '',
                 'amount' => number_format((float) $way->amount, 2, '.', ''),
                 'fees' => number_format((float) $way->delivery_fees, 2, '.', ''),
-                'customer' => e($way->recipient_name) . '<br>' . e($way->address) . '<br>' . e($way->phone_number),
+                'customer' => '<div><strong>' . e($way->recipient_name) . '</strong></div>'
+                    . '<div>' . e($way->address) . '</div>'
+                    . '<small style="color:#64748b;">' . e($way->phone_number) . '</small>',
                 'biker' => $way->biker?->name ?? 'Unassigned',
                 'status' => $way->status === 'onway' ? 'On way' : ucfirst($way->status),
                 'deli_date' => $way->assigned_at ? $way->assigned_at->format('d-m-Y') : $way->date->format('d-m-Y'),
@@ -643,57 +740,45 @@ HTML;
             ];
         }
 
-        $html = $this->buildAdminHistoryPdfHtml('Admin History', $rows);
+        $html = $this->buildAdminHistoryPdfHtml('Admin History Report', $rows);
 
-        $tmpHtml = tempnam(sys_get_temp_dir(), 'pdf_') . '.html';
-        file_put_contents($tmpHtml, $html);
-        $tmpPdf = tempnam(sys_get_temp_dir(), 'pdf_') . '.pdf';
+        $browserBinary = $this->findBrowserBinary();
+        if ($browserBinary) {
+            $tmpDir = sys_get_temp_dir();
+            $id = uniqid('pdf_', true);
+            $tmpHtml = $tmpDir . DIRECTORY_SEPARATOR . $id . '.html';
+            $tmpPdf = $tmpDir . DIRECTORY_SEPARATOR . $id . '.pdf';
 
-        $chrome = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-        if (! file_exists($chrome)) {
-            $chrome = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe';
-        }
+            file_put_contents($tmpHtml, $html);
 
-        $tmpHtmlPath = str_replace('\\', '/', $tmpHtml);
-        $tmpPdfPath = str_replace('\\', '/', $tmpPdf);
-        $tmpProfile = str_replace('\\', '/', sys_get_temp_dir() . '/chrome-pdf-' . uniqid());
+            $cmd = sprintf(
+                '"%s" --headless=new --disable-gpu --no-sandbox --disable-software-rasterizer --allow-file-access-from-files --run-all-compositor-stages-before-draw --print-to-pdf="%s" --print-to-pdf-no-header "%s"',
+                $browserBinary,
+                str_replace('\\', '/', $tmpPdf),
+                str_replace('\\', '/', $tmpHtml)
+            );
 
-        if (file_exists($chrome)) {
-            $cmd = '"' . $chrome . '" --headless=new --disable-gpu --no-sandbox --user-data-dir="' . $tmpProfile . '" --print-to-pdf="' . $tmpPdfPath . '" --print-to-pdf-no-header "' . $tmpHtmlPath . '"';
-            $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-            $process = proc_open($cmd, $descriptors, $pipes);
-            if (is_resource($process)) {
-                fclose($pipes[0]);
-                fclose($pipes[1]);
-                fclose($pipes[2]);
-                while (proc_get_status($process)['running']) {
-                    usleep(200000);
-                }
-                proc_close($process);
-                sleep(1);
-                clearstatcache(true, $tmpPdfPath);
+            @exec($cmd . ' 2>&1', $output, $returnVar);
+
+            if (is_file($tmpPdf) && filesize($tmpPdf) > 0) {
+                $pdfContent = file_get_contents($tmpPdf);
+                @unlink($tmpHtml);
+                @unlink($tmpPdf);
+
+                return response($pdfContent, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                ]);
             }
-            @unlink($tmpProfile . '/SingletonLock');
-            @rmdir($tmpProfile);
-        }
 
-        if (is_file($tmpPdf) && filesize($tmpPdf) > 0) {
-            $pdfContent = file_get_contents($tmpPdf);
             @unlink($tmpHtml);
             @unlink($tmpPdf);
-
-            return response($pdfContent, 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            ]);
         }
 
-        @unlink($tmpHtml);
-        @unlink($tmpPdf);
-
+        // Fallback Dompdf
         $dompdf = new \Dompdf\Dompdf();
         $dompdf->set_option('isFontSubsettingEnabled', true);
-        $fontPath = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
+        $fontPath = public_path('fonts/NotoSansMyanmar-Regular.ttf');
         if (file_exists($fontPath)) {
             $dompdf->getFontMetrics()->registerFont([
                 'family' => 'Noto Sans Myanmar',
