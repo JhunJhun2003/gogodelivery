@@ -102,7 +102,7 @@
           id="assignedOrderSearch"
           class="shop-search"
           type="search"
-          placeholder="Search assigned orders (#, name, address, phone)..."
+          placeholder="Search by ID, customer name, address, phone..."
         />
         <div class="delivery-list">
           @foreach ($bikers as $biker)
@@ -162,7 +162,7 @@
               id="orderSearch"
               class="shop-search"
               type="search"
-              placeholder="Search by ID, name, address..."
+              placeholder="Search by ID, customer name, address, phone..."
             /><button class="table-action" id="selectAll" type="button">
               Select all
             </button>
@@ -569,15 +569,16 @@
         assignedSearch.addEventListener('input', (e) => {
           const query = e.target.value.toLowerCase().trim();
           document.querySelectorAll('.delivery-card').forEach((card) => {
-            const recipientName = card.querySelector('strong')?.textContent || '';
-            const summary = card.querySelector('.delivery-main p')?.textContent || '';
+            const wayId = card.dataset.wayId || '';
+            const customerName = card.querySelector('.delivery-main strong')?.textContent || '';
+            const phoneText = card.querySelector('.delivery-main p')?.textContent || '';
             const addressText = Array.from(card.querySelectorAll('small'))
               .map((node) => node.textContent)
               .join(' ');
             const searchable = [
-              card.dataset.wayId || '',
-              recipientName,
-              summary,
+              wayId,
+              customerName,
+              phoneText,
               addressText,
               card.textContent || '',
             ].join(' ').toLowerCase();
@@ -640,9 +641,10 @@
           .querySelectorAll(".order-card")
           .forEach((card) => {
             const idText = (card.dataset.wayId || "").toString();
-            const nameText = (card.querySelector("strong")?.textContent || "").toLowerCase();
+            const customerName = (card.querySelector(".order-content strong")?.textContent || "").toLowerCase();
+            const phoneText = (card.querySelector(".order-content p")?.textContent || "").toLowerCase();
             const addressText = (card.querySelector(".order-address input")?.value || "").toLowerCase();
-            const haystack = [idText, nameText, addressText].join(" ");
+            const haystack = [idText, customerName, phoneText, addressText].join(" ");
             card.hidden = !!q && !haystack.includes(q);
           });
       };
