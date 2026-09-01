@@ -642,18 +642,48 @@ HTML;
         file_put_contents($tmpHtml, $html);
         $tmpPdf = tempnam(sys_get_temp_dir(), 'pdf_') . '.pdf';
 
-        $chrome = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+        $chrome = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
         if (! file_exists($chrome)) {
-            $chrome = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+            $chrome = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe';
         }
 
-        $cmd = '"' . $chrome . '" --headless --disable-gpu --no-sandbox --print-to-pdf="' . $tmpPdf . '" --print-to-pdf-no-header "' . $tmpHtml . '" 2>&1';
-        exec($cmd, $output, $exitCode);
+        $tmpHtmlPath = str_replace('\\', '/', $tmpHtml);
+        $tmpPdfPath = str_replace('\\', '/', $tmpPdf);
 
-        if ($exitCode !== 0 || ! is_file($tmpPdf)) {
+        $cmd = '"' . $chrome . '" --headless=new --disable-gpu --no-sandbox --print-to-pdf="' . $tmpPdfPath . '" --print-to-pdf-no-header "' . $tmpHtmlPath . '"';
+
+        $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $process = proc_open($cmd, $descriptors, $pipes);
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($process);
+        }
+
+        if (! is_file($tmpPdf) || filesize($tmpPdf) === 0) {
             @unlink($tmpHtml);
             @unlink($tmpPdf);
-            abort(500, 'PDF generation failed.');
+
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->set_option('isFontSubsettingEnabled', true);
+            $fontPath = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
+            if (file_exists($fontPath)) {
+                $dompdf->getFontMetrics()->registerFont([
+                    'family' => 'Noto Sans Myanmar',
+                    'style' => 'normal',
+                    'weight' => 'normal',
+                ], $fontPath);
+                $dompdf->set_option('defaultFont', 'Noto Sans Myanmar');
+            }
+            $dompdf->loadHtml($html, 'UTF-8');
+            $dompdf->setPaper('A4', 'landscape');
+            $dompdf->render();
+
+            return response($dompdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
         }
 
         $pdfContent = file_get_contents($tmpPdf);
