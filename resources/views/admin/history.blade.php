@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Deli - History</title>
     <link rel="icon" href="/assets/logo-nobg.png?v=1787685826" />
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
@@ -292,11 +293,12 @@
       document.getElementById("confirmDelete").addEventListener("click", async () => {
         if (!pendingDeleteUrl) return;
         const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
-        const res = await fetch(pendingDeleteUrl, {
-          method: "POST",
-          headers: { "X-CSRF-TOKEN": token, "X-HTTP-Method-Override": "DELETE", Accept: "application/json" },
-          body: new URLSearchParams({ _method: "DELETE", _token: token }),
-        });
+          const res = await fetch(pendingDeleteUrl, {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": token, "X-HTTP-Method-Override": "DELETE", Accept: "application/json" },
+            body: new URLSearchParams({ _method: "DELETE", _token: token }),
+            credentials: "same-origin",
+          });
         if (res.ok || res.status === 204 || res.status === 302) {
           const row = document.querySelector('.delete-btn[data-url="' + pendingDeleteUrl + '"]')?.closest("tr");
           if (row) {
