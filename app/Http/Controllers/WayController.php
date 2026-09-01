@@ -424,6 +424,85 @@ class WayController extends Controller
         return view('admin.history-detail', compact('way'));
     }
 
+    private function buildAdminHistoryPdfHtml(string $title, array $rows): string
+    {
+        $rowHtml = '';
+        $totalAmount = 0.0;
+        $totalFees = 0.0;
+
+        foreach ($rows as $row) {
+            $amount = (float) ($row['amount'] ?? 0);
+            $fees = (float) ($row['fees'] ?? 0);
+            $totalAmount += $amount;
+            $totalFees += $fees;
+
+            $rowHtml .= '<tr>'
+                . '<td>' . e($row['no'] ?? '') . '</td>'
+                . '<td>' . e($row['date'] ?? '') . '</td>'
+                . '<td>' . e($row['shop'] ?? '') . '</td>'
+                . '<td>' . e($row['customer'] ?? '') . '</td>'
+                . '<td>' . e($row['phone'] ?? '') . '</td>'
+                . '<td>' . e($row['status'] ?? '') . '</td>'
+                . '<td>' . e(number_format($amount, 2, '.', '')) . '</td>'
+                . '<td>' . e(number_format($fees, 2, '.', '')) . '</td>'
+                . '</tr>';
+        }
+
+        if ($rowHtml === '') {
+            $rowHtml = '<tr><td colspan="8" style="text-align:center;">No records found.</td></tr>';
+        }
+
+        $generatedAt = now()->format('d-m-Y H:i');
+
+        $totalRow = '<tr style="font-weight:bold; background:#f3f4f6;">'
+            . '<td colspan="6" style="text-align:right;">Total</td>'
+            . '<td>' . e(number_format($totalAmount, 2, '.', '')) . '</td>'
+            . '<td>' . e(number_format($totalFees, 2, '.', '')) . '</td>'
+            . '</tr>';
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{$title}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+        h1 { font-size: 20px; margin-bottom: 18px; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
+        th { background: #f3f4f6; font-weight: bold; }
+        .summary { margin-bottom: 12px; font-size: 12px; }
+        .totals { margin-top: 12px; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>{$title}</h1>
+    <div class="summary">Generated: {$generatedAt}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Date</th>
+                <th>Shop</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Amount</th>
+                <th>Fees</th>
+            </tr>
+        </thead>
+        <tbody>
+            {$rowHtml}
+            {$totalRow}
+        </tbody>
+    </table>
+    <div class="totals">Total Amount: {$totalAmount} | Total Fees: {$totalFees}</div>
+</body>
+</html>
+HTML;
+    }
+
     public function exportAdminHistory(Request $request): StreamedResponse
     {
         $filters = $request->validate([
@@ -491,6 +570,72 @@ class WayController extends Controller
             fclose($handle);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function exportAdminHistoryPdf(Request $request): \Symfony\Component\HttpFoundation\Response
+    {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'shop_id' => ['nullable', 'exists:users,id'],
+            'biker_id' => ['nullable', 'exists:bikers,id'],
+            'status' => ['nullable', 'string', 'max:30'],
+            'customer_name' => ['nullable', 'string', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:30'],
+            'min_amount' => ['nullable', 'numeric', 'min:0'],
+            'max_amount' => ['nullable', 'numeric', 'gte:min_amount'],
+            'date' => ['nullable', 'date'],
+        ]);
+
+        $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
+
+        if ($search = $filters['search'] ?? null) {
+            $waysQuery->where(function ($query) use ($search) {
+                $query->where('id', 'like', "%{$search}%")
+                    ->orWhere('recipient_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('remark', 'like', "%{$search}%")
+                    ->orWhereHas('shop', fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('biker', fn ($bikerQuery) => $bikerQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $waysQuery
+            ->when($filters['shop_id'] ?? null, fn ($query, $shopId) => $query->where('shop_id', $shopId))
+            ->when($filters['biker_id'] ?? null, fn ($query, $bikerId) => $query->where('biker_id', $bikerId))
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['customer_name'] ?? null, fn ($query, $name) => $query->where('recipient_name', 'like', "%{$name}%"))
+            ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
+            ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
+            ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+
+        $filename = 'admin-history-' . now()->format('Ymd_His') . '.pdf';
+        $rows = [];
+
+        foreach ($waysQuery->get() as $index => $way) {
+            $rows[] = [
+                'no' => str_pad($index + 1, 2, '0', STR_PAD_LEFT),
+                'date' => $way->date?->format('d-m-Y') ?? '',
+                'shop' => $way->shop?->name ?? 'N/A',
+                'customer' => $way->recipient_name,
+                'phone' => $way->phone_number,
+                'status' => $way->status === 'onway' ? 'On way' : ucfirst($way->status),
+                'amount' => number_format((float) $way->amount, 2, '.', ''),
+                'fees' => number_format((float) $way->delivery_fees, 2, '.', ''),
+            ];
+        }
+
+        $html = $this->buildAdminHistoryPdfHtml('Admin History', $rows);
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }

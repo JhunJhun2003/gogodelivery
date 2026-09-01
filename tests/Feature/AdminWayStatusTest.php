@@ -122,6 +122,41 @@ class AdminWayStatusTest extends TestCase
         $this->assertSame('Biker Rider', $bikerUser->biker->name);
     }
 
+    public function test_admin_can_export_history_as_pdf(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'admin-pdf',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $shop = User::factory()->create([
+            'username' => 'shop-pdf',
+            'role' => User::ROLE_SHOP,
+        ]);
+
+        $biker = Biker::create(['name' => 'PDF Rider']);
+
+        Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'Charlie',
+            'address' => 'PDF Street 9',
+            'phone_number' => '0999999999',
+            'amount' => 155.50,
+            'delivery_fees' => 12.50,
+            'date' => now()->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get('/admin/history/export/pdf');
+
+        $response->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $this->assertStringContainsString('%PDF', $response->getContent());
+    }
+
     public function test_oversized_upload_dimensions_are_rejected_before_decoding(): void
     {
         $method = new \ReflectionMethod(\App\Http\Controllers\WayController::class, 'ensureImageDimensionsAreSafe');

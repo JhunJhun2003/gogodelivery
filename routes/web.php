@@ -51,6 +51,7 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
     Route::get('/ways/{way}/history', [WayController::class, 'wayHistory'])->name('ways.history');
     Route::get('/history', [WayController::class, 'history'])->name('history');
     Route::get('/history/export', [WayController::class, 'exportAdminHistory'])->name('history.export');
+    Route::get('/history/export/pdf', [WayController::class, 'exportAdminHistoryPdf'])->name('history.export.pdf');
     Route::get('/history/{way}', [WayController::class, 'historyDetail'])->name('history.detail');
     Route::get('/ways/{way}/edit', [WayController::class, 'editWay'])->name('ways.edit');
     Route::delete('/ways/{way}', [WayController::class, 'destroy'])->name('ways.destroy');
