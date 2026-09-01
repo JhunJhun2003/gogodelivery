@@ -477,7 +477,7 @@ class WayController extends Controller
         return null;
     }
 
-    private function buildAdminHistoryPdfHtml(string $title, array $rows): string
+    private function buildAdminHistoryPdfHtml(string $title, array $rows, bool $printable = false): string
     {
         $rowHtml = '';
         $totalAmount = 0.0;
@@ -516,6 +516,10 @@ class WayController extends Controller
             . '<td colspan="5"></td>'
             . '</tr>';
 
+        $printButton = $printable
+            ? '<div id="toolbar" style="position:fixed;top:0;left:0;right:0;background:#0f172a;color:#fff;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;z-index:9999;font-family:sans-serif;"><span style="font-weight:700;">Admin History Report</span><button onclick="window.print();" style="background:#22c55e;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700;">Print / Save as PDF</button></div><div style="height:50px;"></div>'
+            : '';
+
         $fontPath = public_path('fonts/NotoSansMyanmar-Regular.ttf');
         $fontSrc = '';
         if (file_exists($fontPath)) {
@@ -534,24 +538,28 @@ class WayController extends Controller
 <head>
     <meta charset="UTF-8">
     <title>{$title}</title>
-    <style>
-        {$fontSrc}
-        @page {
-            size: A4 landscape;
-            margin: 10mm 10mm;
-        }
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Noto Sans Myanmar', 'Pyidaungsu', 'Myanmar Text', 'Padauk', sans-serif;
-            margin: 0;
-            padding: 0;
-            color: #0f172a;
-            font-size: 11px;
-            line-height: 1.4;
-            -webkit-font-smoothing: antialiased;
-        }
+        <style>
+            {$fontSrc}
+            @page {
+                size: A4 landscape;
+                margin: 10mm 10mm;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Noto Sans Myanmar', 'Pyidaungsu', 'Myanmar Text', 'Padauk', sans-serif;
+                margin: 0;
+                padding: 0;
+                color: #0f172a;
+                font-size: 11px;
+                line-height: 1.4;
+                -webkit-font-smoothing: antialiased;
+            }
+            @media print {
+                #toolbar { display: none !important; }
+                body { margin: 0; }
+            }
         .header-bar {
             display: flex;
             justify-content: space-between;
@@ -595,6 +603,7 @@ class WayController extends Controller
     </style>
 </head>
 <body>
+    {$printButton}
     <div class="header-bar">
         <h1>{$title}</h1>
         <div class="meta">Generated: {$generatedAt}</div>
@@ -753,60 +762,11 @@ HTML;
             ];
         }
 
-        $html = $this->buildAdminHistoryPdfHtml('Admin History Report', $rows);
+        $html = $this->buildAdminHistoryPdfHtml('Admin History Report', $rows, true);
 
-        $browserBinary = $this->findBrowserBinary();
-        if ($browserBinary) {
-            $tmpDir = sys_get_temp_dir();
-            $id = uniqid('pdf_', true);
-            $tmpHtml = $tmpDir . DIRECTORY_SEPARATOR . $id . '.html';
-            $tmpPdf = $tmpDir . DIRECTORY_SEPARATOR . $id . '.pdf';
-
-            file_put_contents($tmpHtml, $html);
-
-            $cmd = sprintf(
-                '"%s" --headless=new --disable-gpu --no-sandbox --disable-software-rasterizer --allow-file-access-from-files --run-all-compositor-stages-before-draw --print-to-pdf="%s" --print-to-pdf-no-header "%s"',
-                $browserBinary,
-                str_replace('\\', '/', $tmpPdf),
-                str_replace('\\', '/', $tmpHtml)
-            );
-
-            @exec($cmd . ' 2>&1', $output, $returnVar);
-
-            if (is_file($tmpPdf) && filesize($tmpPdf) > 0) {
-                $pdfContent = file_get_contents($tmpPdf);
-                @unlink($tmpHtml);
-                @unlink($tmpPdf);
-
-                return response($pdfContent, 200, [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-                ]);
-            }
-
-            @unlink($tmpHtml);
-            @unlink($tmpPdf);
-        }
-
-        // Fallback Dompdf
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->set_option('isFontSubsettingEnabled', true);
-        $fontPath = public_path('fonts/NotoSansMyanmar-Regular.ttf');
-        if (file_exists($fontPath)) {
-            $dompdf->getFontMetrics()->registerFont([
-                'family' => 'Noto Sans Myanmar',
-                'style' => 'normal',
-                'weight' => 'normal',
-            ], $fontPath);
-            $dompdf->set_option('defaultFont', 'Noto Sans Myanmar');
-        }
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
-
-        return response($dompdf->output(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="' . str_replace('.pdf', '.html', $filename) . '"',
         ]);
     }
 
