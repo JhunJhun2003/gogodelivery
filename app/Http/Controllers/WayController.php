@@ -187,7 +187,8 @@ class WayController extends Controller
 
     public function wayHistory(Way $way): \Illuminate\Http\JsonResponse
     {
-        abort_unless(Auth::user()?->isAdmin(), 403);
+        $user = Auth::user();
+        abort_unless($user?->isAdmin() || $user?->role === User::ROLE_BIKER, 403);
 
         $histories = $way->histories()->get()->map(fn ($h) => [
             'status' => $h->status,

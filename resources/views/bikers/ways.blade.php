@@ -28,6 +28,7 @@
       @if (session('way_status'))
         <p class="form-success">{{ session('way_status') }}</p>
       @endif
+      <input id="waySearch" class="shop-search" type="search" placeholder="Search id, shop, address, phone..." />
       <section class="ui-card-white assigned-card">
         <div class="detail-section-heading">
           <div>
@@ -37,7 +38,7 @@
         </div>
         <div class="delivery-list">
           @forelse ($ways as $way)
-            <article class="delivery-card" data-status="{{ $way->status }}">
+            <article class="delivery-card" data-status="{{ $way->status }}" data-way-id="{{ $way->id }}">
               <div class="delivery-main">
                 <div class="order-photo">
                   @if ($way->item_image)
@@ -76,7 +77,7 @@
                   </form>
                 @endif
                 <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
-                <a class="info-btn" href="{{ route('bikers.history.detail', $way) }}">Info</a>
+                <button class="info-btn" type="button">Info</button>
               </div>
             </article>
           @empty
@@ -103,6 +104,16 @@
         <div class="modal-actions">
           <button class="back-button" id="cancelFail" type="button">Cancel</button>
           <button class="ui-btn btn-danger" id="confirmFail" type="button">Confirm fail</button>
+        </div>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="infoBackdrop" hidden>
+      <section class="action-modal info-modal" role="dialog" aria-modal="true">
+        <h2>Way Info History</h2>
+        <p>On way / fail notes / delivered timeline</p>
+        <div id="infoHistoryList"></div>
+        <div class="modal-actions">
+          <button class="back-button" id="closeInfo" type="button">Close</button>
         </div>
       </section>
     </div>
@@ -154,6 +165,44 @@
         backdrop.addEventListener("click", (event) => {
           if (event.target === backdrop) backdrop.hidden = true;
         });
+      });
+
+      const waySearch = document.getElementById("waySearch");
+      const cards = [...document.querySelectorAll(".delivery-card")];
+      waySearch.addEventListener("input", () => {
+        const q = waySearch.value.toLowerCase();
+        cards.forEach((card) => {
+          const text = card.textContent.toLowerCase();
+          card.style.display = text.includes(q) ? "" : "none";
+        });
+      });
+
+      const infoBackdrop = document.getElementById("infoBackdrop");
+      document.querySelectorAll(".info-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest(".delivery-card");
+          const wayId = card?.dataset.wayId;
+          if (!wayId) return;
+          const res = await fetch("/bikers/ways/" + wayId + "/history");
+          const histories = await res.json();
+          const container = document.getElementById("infoHistoryList");
+          container.innerHTML = histories.length
+            ? histories.map((h) => {
+                const statusLabel = h.status === "onway" ? "ON_WAY" : h.status.toUpperCase();
+                const remarkHtml = h.remark ? "<em>" + h.remark + "</em>" : "";
+                return '<div class="history-event">' +
+                  "<span>" + (h.created_at || "") + " · " + (h.changed_by || "System") + "</span>" +
+                  "<strong>" + statusLabel + "</strong>" +
+                  remarkHtml +
+                  "</div>";
+              }).join("")
+            : '<div class="history-event"><span>No status history yet.</span></div>';
+          infoBackdrop.hidden = false;
+        });
+      });
+      document.getElementById("closeInfo").onclick = () => (infoBackdrop.hidden = true);
+      infoBackdrop.addEventListener("click", (e) => {
+        if (e.target === infoBackdrop) infoBackdrop.hidden = true;
       });
     </script>
   </body>
