@@ -105,9 +105,9 @@
           <button class="ui-btn btn-navy-blue history-save" type="submit">
             Search
           </button>
-          <a class="ui-btn btn-white" href="{{ route('admin.history.export', request()->query()) }}" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+          {{-- <a class="ui-btn btn-white" href="{{ route('admin.history.export', request()->query()) }}" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
             Export Excel
-          </a>
+          </a> --}}
           <a class="ui-btn btn-white" href="{{ route('admin.history.export.pdf', request()->query()) }}" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
             Export PDF
           </a>

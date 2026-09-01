@@ -649,48 +649,57 @@ HTML;
 
         $tmpHtmlPath = str_replace('\\', '/', $tmpHtml);
         $tmpPdfPath = str_replace('\\', '/', $tmpPdf);
+        $tmpProfile = str_replace('\\', '/', sys_get_temp_dir() . '/chrome-pdf-' . uniqid());
 
-        $cmd = '"' . $chrome . '" --headless=new --disable-gpu --no-sandbox --print-to-pdf="' . $tmpPdfPath . '" --print-to-pdf-no-header "' . $tmpHtmlPath . '"';
-
-        $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-        $process = proc_open($cmd, $descriptors, $pipes);
-        if (is_resource($process)) {
-            fclose($pipes[0]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            proc_close($process);
+        if (file_exists($chrome)) {
+            $cmd = '"' . $chrome . '" --headless=new --disable-gpu --no-sandbox --user-data-dir="' . $tmpProfile . '" --print-to-pdf="' . $tmpPdfPath . '" --print-to-pdf-no-header "' . $tmpHtmlPath . '"';
+            $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+            $process = proc_open($cmd, $descriptors, $pipes);
+            if (is_resource($process)) {
+                fclose($pipes[0]);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                while (proc_get_status($process)['running']) {
+                    usleep(200000);
+                }
+                proc_close($process);
+                sleep(1);
+                clearstatcache(true, $tmpPdfPath);
+            }
+            @unlink($tmpProfile . '/SingletonLock');
+            @rmdir($tmpProfile);
         }
 
-        if (! is_file($tmpPdf) || filesize($tmpPdf) === 0) {
+        if (is_file($tmpPdf) && filesize($tmpPdf) > 0) {
+            $pdfContent = file_get_contents($tmpPdf);
             @unlink($tmpHtml);
             @unlink($tmpPdf);
 
-            $dompdf = new \Dompdf\Dompdf();
-            $dompdf->set_option('isFontSubsettingEnabled', true);
-            $fontPath = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
-            if (file_exists($fontPath)) {
-                $dompdf->getFontMetrics()->registerFont([
-                    'family' => 'Noto Sans Myanmar',
-                    'style' => 'normal',
-                    'weight' => 'normal',
-                ], $fontPath);
-                $dompdf->set_option('defaultFont', 'Noto Sans Myanmar');
-            }
-            $dompdf->loadHtml($html, 'UTF-8');
-            $dompdf->setPaper('A4', 'landscape');
-            $dompdf->render();
-
-            return response($dompdf->output(), 200, [
+            return response($pdfContent, 200, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ]);
         }
 
-        $pdfContent = file_get_contents($tmpPdf);
         @unlink($tmpHtml);
         @unlink($tmpPdf);
 
-        return response($pdfContent, 200, [
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->set_option('isFontSubsettingEnabled', true);
+        $fontPath = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
+        if (file_exists($fontPath)) {
+            $dompdf->getFontMetrics()->registerFont([
+                'family' => 'Noto Sans Myanmar',
+                'style' => 'normal',
+                'weight' => 'normal',
+            ], $fontPath);
+            $dompdf->set_option('defaultFont', 'Noto Sans Myanmar');
+        }
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
