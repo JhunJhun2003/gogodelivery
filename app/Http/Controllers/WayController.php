@@ -467,11 +467,6 @@ class WayController extends Controller
     <meta charset="UTF-8">
     <title>{$title}</title>
     <style>
-        @font-face {
-            font-family: 'Noto Sans Myanmar';
-            src: url('file:///c:/Users/Admin/Desktop/no end/gogodelivery/public/fonts/NotoSansMyanmar-Regular.ttf') format('truetype');
-        }
-
         body { font-family: 'Noto Sans Myanmar', 'DejaVu Sans', 'Myanmar3', sans-serif; margin: 24px; color: #111827; }
         h1 { font-size: 20px; margin-bottom: 18px; }
         table { width: 100%; border-collapse: collapse; font-size: 10px; }
@@ -635,7 +630,17 @@ HTML;
 
         $html = $this->buildAdminHistoryPdfHtml('Admin History', $rows);
         $dompdf = new \Dompdf\Dompdf();
-        $dompdf->set_option('defaultFont', 'DejaVu Sans');
+
+        $fontPath = base_path('public/fonts/NotoSansMyanmar-Regular.ttf');
+        if (file_exists($fontPath)) {
+            $dompdf->getFontMetrics()->registerFont([
+                'family' => 'Noto Sans Myanmar',
+                'style' => 'normal',
+                'weight' => 'normal',
+            ], $fontPath);
+            $dompdf->set_option('defaultFont', 'Noto Sans Myanmar');
+        }
+
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
