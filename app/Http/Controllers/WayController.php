@@ -98,8 +98,14 @@ class WayController extends Controller
             'biker' => $biker,
             'ways' => Way::query()
                 ->where('biker_id', $biker->id)
+                ->whereIn('status', [
+                    Way::STATUS_PENDING,
+                    Way::STATUS_ONWAY,
+                    Way::STATUS_FAILED,
+                ])
                 ->with('shop')
                 ->orderByDesc('assigned_at')
+                ->orderByDesc('date')
                 ->latest('id')
                 ->get(),
         ]);

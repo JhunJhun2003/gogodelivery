@@ -77,7 +77,7 @@
                   </form>
                 @endif
                 <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
-                <button class="info-btn" type="button">Info</button>
+                <a class="info-btn" href="{{ route('bikers.history.detail', $way) }}" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Info</a>
               </div>
             </article>
           @empty
@@ -178,28 +178,6 @@
       });
 
       const infoBackdrop = document.getElementById("infoBackdrop");
-      document.querySelectorAll(".info-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const card = btn.closest(".delivery-card");
-          const wayId = card?.dataset.wayId;
-          if (!wayId) return;
-          const res = await fetch("/bikers/ways/" + wayId + "/history");
-          const histories = await res.json();
-          const container = document.getElementById("infoHistoryList");
-          container.innerHTML = histories.length
-            ? histories.map((h) => {
-                const statusLabel = h.status === "onway" ? "ON_WAY" : h.status.toUpperCase();
-                const remarkHtml = h.remark ? "<em>" + h.remark + "</em>" : "";
-                return '<div class="history-event">' +
-                  "<span>" + (h.created_at || "") + " · " + (h.changed_by || "System") + "</span>" +
-                  "<strong>" + statusLabel + "</strong>" +
-                  remarkHtml +
-                  "</div>";
-              }).join("")
-            : '<div class="history-event"><span>No status history yet.</span></div>';
-          infoBackdrop.hidden = false;
-        });
-      });
       document.getElementById("closeInfo").onclick = () => (infoBackdrop.hidden = true);
       infoBackdrop.addEventListener("click", (e) => {
         if (e.target === infoBackdrop) infoBackdrop.hidden = true;
