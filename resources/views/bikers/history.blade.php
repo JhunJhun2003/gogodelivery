@@ -46,7 +46,7 @@
               </select>
             </div>
             <div class="input-field-group">
-              <label for="historyDate">DATE</label>
+              <label for="historyDate">DELI DATE</label>
               <div class="custom-date-picker">
                 <input id="historyDate" name="date" value="{{ $filters['date'] ?? '' }}" type="date" />
                 <button class="custom-date-trigger" type="button">{{ isset($filters['date']) ? \Carbon\Carbon::parse($filters['date'])->format('d/m/y') : 'dd/mm/yy' }}</button>

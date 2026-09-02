@@ -181,6 +181,54 @@ class AdminWayStatusTest extends TestCase
             ->assertDontSeeText('High Amount');
     }
 
+    public function test_admin_history_date_filter_uses_delivery_date_when_available(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'admin-date-filter',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $shop = User::factory()->create([
+            'username' => 'shop-date-filter',
+            'role' => User::ROLE_SHOP,
+        ]);
+
+        $biker = Biker::create(['name' => 'Delivery Date Rider']);
+
+        Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'Delivered on 20th',
+            'address' => 'Time Street 20',
+            'phone_number' => '0900000020',
+            'amount' => 200,
+            'delivery_fees' => 20,
+            'date' => '2026-08-10',
+            'assigned_at' => '2026-08-20 09:00:00',
+            'status' => 'delivered',
+        ]);
+
+        Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'Created on 20th',
+            'address' => 'Time Street 21',
+            'phone_number' => '0900000021',
+            'amount' => 300,
+            'delivery_fees' => 30,
+            'date' => '2026-08-20',
+            'assigned_at' => null,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get('/admin/history?date=2026-08-20');
+
+        $response->assertOk()
+            ->assertSeeText('Delivered on 20th')
+            ->assertDontSeeText('Created on 20th');
+    }
+
     public function test_admin_can_export_history_as_pdf(): void
     {
         $admin = User::factory()->create([

@@ -223,7 +223,7 @@ class WayController extends Controller
                 });
             })
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date))
+            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date))
             ->latest('date')
             ->latest('id')
             ->get();
@@ -269,7 +269,7 @@ class WayController extends Controller
 
         $waysQuery
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         $filename = 'biker-history-' . now()->format('Ymd_His') . '.csv';
 
@@ -353,7 +353,7 @@ class WayController extends Controller
                 });
             })
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         return view('shop.history', [
             'shop' => $shop,
@@ -382,6 +382,17 @@ class WayController extends Controller
         }
 
         return $filters;
+    }
+
+    private function applyDeliveryDateFilter($query, string $date): void
+    {
+        $query->where(function ($dateQuery) use ($date) {
+            $dateQuery->whereDate('assigned_at', $date)
+                ->orWhere(function ($fallbackQuery) use ($date) {
+                    $fallbackQuery->whereNull('assigned_at')
+                        ->whereDate('date', $date);
+                });
+        });
     }
 
     public function history(Request $request): View
@@ -420,7 +431,7 @@ class WayController extends Controller
             ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
             ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
             ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         return view('admin.history', [
             'ways' => $waysQuery->paginate(50)->withQueryString(),
@@ -683,7 +694,7 @@ HTML;
             ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
             ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
             ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         $filename = 'admin-history-' . now()->format('Ymd_His') . '.csv';
 
@@ -754,7 +765,7 @@ HTML;
             ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
             ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
             ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         $filename = 'admin-history-' . now()->format('Ymd_His') . '.pdf';
         $rows = [];
@@ -813,7 +824,7 @@ HTML;
 
         $ordersQuery
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date));
+            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         $filename = 'shop-history-' . now()->format('Ymd_His') . '.csv';
 

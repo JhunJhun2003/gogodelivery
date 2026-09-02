@@ -138,7 +138,7 @@
                 <th>Customer Detail</th>
                 <th>Biker</th>
                 <th>Status</th>
-                <th>Deli Date</th>
+                <th>Status Date</th>
                 <th>Remark</th>
                 <th>Action</th>
               </tr>
