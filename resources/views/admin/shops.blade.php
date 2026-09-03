@@ -135,9 +135,14 @@
               <label for="editShopPasswordConfirmation">CONFIRM PASSWORD</label><input id="editShopPasswordConfirmation" name="password_confirmation" type="password" />
             </div>
             <div class="modal-actions">
+              <button class="ui-btn btn-danger" style="margin-right:auto;" type="submit" form="deleteShopForm">Delete shop</button>
               <button class="back-button" id="cancelEditShop" type="button">Cancel</button>
               <button class="ui-btn btn-navy-blue" type="submit">Save changes</button>
             </div>
+          </form>
+          <form id="deleteShopForm" method="POST" onsubmit="return confirm('Delete this shop and all of its deliveries? This action cannot be undone.');">
+            @csrf
+            @method('DELETE')
           </form>
         </section>
       </div>
@@ -246,6 +251,7 @@
       );
       const editShopBackdrop = document.getElementById("editShopBackdrop");
       const editShopForm = document.getElementById("editShopForm");
+      const deleteShopForm = document.getElementById("deleteShopForm");
       const editShopName = document.getElementById("editShopName");
       const editShopUsername = document.getElementById("editShopUsername");
       const editShopEmail = document.getElementById("editShopEmail");
@@ -255,6 +261,7 @@
       );
       function openEditShop(button) {
         editShopForm.action = "/admin/shops/" + button.dataset.id;
+        deleteShopForm.action = "/admin/shops/" + button.dataset.id;
         editShopName.value = button.dataset.name;
         editShopUsername.value = button.dataset.username;
         editShopEmail.value = button.dataset.email;

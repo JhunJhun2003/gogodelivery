@@ -39,12 +39,14 @@ Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(
     Route::get('/shops', [AuthController::class, 'showShops'])->name('shops');
     Route::post('/shops', [AuthController::class, 'createShop'])->name('shops.create');
     Route::put('/shops/{shop}', [AuthController::class, 'updateShop'])->name('shops.update');
+    Route::delete('/shops/{shop}', [AuthController::class, 'deleteShop'])->name('shops.destroy');
     Route::post('/shops/{shop}/ways', [WayController::class, 'store'])->name('shops.ways.store');
     Route::get('/users', [AuthController::class, 'showUsers'])->name('users');
     Route::post('/users', [AuthController::class, 'createUser'])->name('users.create');
     Route::get('/bikers', [BikerController::class, 'index'])->name('bikers');
     Route::post('/bikers', [BikerController::class, 'store'])->name('bikers.create');
     Route::put('/bikers/{biker}', [BikerController::class, 'update'])->name('bikers.update');
+    Route::delete('/bikers/{biker}', [BikerController::class, 'destroy'])->name('bikers.destroy');
     Route::post('/bikers/{biker}/ways', [BikerController::class, 'assign'])->name('bikers.ways.assign');
     Route::post('/ways/{way}/status', [WayController::class, 'updateAdminStatus'])->name('ways.status');
     Route::put('/ways/{way}/reassign', [WayController::class, 'reassignBiker'])->name('ways.reassign');

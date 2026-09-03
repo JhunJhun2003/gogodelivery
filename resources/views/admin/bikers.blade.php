@@ -83,9 +83,14 @@
                 <label for="editBikerName">NAME</label><input id="editBikerName" name="name" required />
               </div>
               <div class="modal-actions">
+                <button class="ui-btn btn-danger" style="margin-right:auto;" type="submit" form="deleteBikerForm">Delete biker</button>
                 <button class="back-button" id="cancelEditBiker" type="button">Cancel</button>
                 <button class="ui-btn btn-navy-blue" type="submit">Save changes</button>
               </div>
+            </form>
+            <form id="deleteBikerForm" method="POST" onsubmit="return confirm('Delete this biker? Assigned deliveries will become unassigned. This action cannot be undone.');">
+              @csrf
+              @method('DELETE')
             </form>
           </section>
         </div>
@@ -237,9 +242,11 @@
         if (bikerRows[0]) showAssignedWays(bikerRows[0].dataset.bikerId);
       const editBikerBackdrop = document.getElementById("editBikerBackdrop");
       const editBikerForm = document.getElementById("editBikerForm");
+      const deleteBikerForm = document.getElementById("deleteBikerForm");
       const editBikerName = document.getElementById("editBikerName");
       function openEditBiker(button) {
         editBikerForm.action = "/admin/bikers/" + button.dataset.id;
+        deleteBikerForm.action = "/admin/bikers/" + button.dataset.id;
         editBikerName.value = button.dataset.name;
         editBikerBackdrop.hidden = false;
         editBikerName.focus();

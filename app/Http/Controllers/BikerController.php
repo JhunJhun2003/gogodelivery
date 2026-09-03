@@ -76,4 +76,11 @@ class BikerController extends Controller
 
         return redirect()->route('admin.bikers')->with('biker_status', 'Biker updated successfully.');
     }
+
+    public function destroy(Biker $biker): RedirectResponse
+    {
+        $biker->delete();
+
+        return redirect()->route('admin.bikers')->with('biker_status', 'Biker deleted successfully.');
+    }
 }

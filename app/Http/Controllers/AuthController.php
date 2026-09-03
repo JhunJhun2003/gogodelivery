@@ -142,4 +142,13 @@ class AuthController extends Controller
 
         return redirect()->route('admin.shops')->with('shop_status', 'Shop account updated successfully.');
     }
+
+    public function deleteShop(User $shop): RedirectResponse
+    {
+        abort_unless($shop->role === User::ROLE_SHOP, 404);
+
+        $shop->delete();
+
+        return redirect()->route('admin.shops')->with('shop_status', 'Shop account deleted successfully.');
+    }
 }
