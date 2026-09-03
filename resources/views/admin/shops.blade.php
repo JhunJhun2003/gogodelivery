@@ -365,13 +365,23 @@
       const trigger = document.createElement("button");
       trigger.type = "button";
       trigger.className = "custom-date-trigger";
-      trigger.textContent = "dd/mm/yy";
+      const initialDate = nativeDate.value;
+      if (initialDate) {
+        const [initialYear, initialMonth, initialDay] = initialDate.split("-");
+        trigger.textContent = initialDay + "/" + initialMonth + "/" + initialYear.slice(-2);
+      } else {
+        trigger.textContent = "dd/mm/yy";
+      }
       dateWrap.appendChild(trigger);
       const calendar = document.createElement("div");
       calendar.className = "custom-calendar";
       dateWrap.appendChild(calendar);
       let view = new Date();
-      let chosen = "";
+      let chosen = initialDate;
+      if (chosen) {
+        const [chosenYear, chosenMonth] = chosen.split("-").map(Number);
+        view = new Date(chosenYear, chosenMonth - 1, 1);
+      }
       const pad = (n) => String(n).padStart(2, "0");
       function draw() {
         const y = view.getFullYear(),
