@@ -29,9 +29,11 @@
           </div>
           <span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span>
         </div>
-        <div style="margin:12px 0;">
-          <a class="table-action" href="{{ route('admin.ways.edit', $way) }}" style="display:inline-block;">Edit</a>
-        </div>
+        @if (auth()->user()->isAdmin())
+          <div style="margin:12px 0;">
+            <a class="table-action" href="{{ route('admin.ways.edit', $way) }}" style="display:inline-block;">Edit</a>
+          </div>
+        @endif
         <div class="detail-layout">
           <div class="detail-photo">
             @if ($way->item_image)

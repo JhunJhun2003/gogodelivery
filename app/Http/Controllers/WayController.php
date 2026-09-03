@@ -138,7 +138,7 @@ class WayController extends Controller
 
     public function updateAdminStatus(Request $request, Way $way): \Illuminate\Http\JsonResponse
     {
-        abort_unless(Auth::user()?->isAdmin(), 403);
+        abort_unless(Auth::user()?->isAdminAreaUser(), 403);
 
         $data = $request->validate([
             'status' => ['required', 'in:'.implode(',', [Way::STATUS_ONWAY, Way::STATUS_FAILED, Way::STATUS_DELIVERED])],
@@ -166,7 +166,7 @@ class WayController extends Controller
 
     public function reassignBiker(Request $request, Way $way): \Illuminate\Http\JsonResponse
     {
-        abort_unless(Auth::user()?->isAdmin(), 403);
+        abort_unless(Auth::user()?->isAdminAreaUser(), 403);
 
         $data = $request->validate([
             'biker_id' => ['required', 'exists:bikers,id'],
@@ -194,7 +194,7 @@ class WayController extends Controller
     public function wayHistory(Way $way): \Illuminate\Http\JsonResponse
     {
         $user = Auth::user();
-        abort_unless($user?->isAdmin() || $user?->role === User::ROLE_BIKER, 403);
+        abort_unless($user?->isAdminAreaUser() || $user?->role === User::ROLE_BIKER, 403);
 
         $histories = $way->histories()->get()->map(fn ($h) => [
             'status' => $h->status,

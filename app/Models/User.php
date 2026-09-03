@@ -18,6 +18,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     public const ROLE_ADMIN = 'admin';
+    public const ROLE_STAFF = 'staff';
     public const ROLE_SHOP = 'shop';
     public const ROLE_BIKER = 'biker';
 
@@ -29,6 +30,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isAdminAreaUser(): bool
+    {
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_STAFF], true);
     }
 
     public function ways()

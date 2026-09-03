@@ -54,7 +54,7 @@ class AuthController extends Controller
             'username' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:users,username'],
             'phone_number' => ['required', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_BIKER])],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_BIKER])],
             'biker_id' => [
                 'nullable',
                 'required_if:role,biker',
@@ -92,7 +92,7 @@ class AuthController extends Controller
         $role = Auth::user()->role;
 
         return match ($role) {
-            User::ROLE_ADMIN  => redirect()->route('admin.shops'),
+            User::ROLE_ADMIN, User::ROLE_STAFF => redirect()->route('admin.shops'),
             User::ROLE_SHOP   => redirect()->route('shop.orders'),
             User::ROLE_BIKER  => redirect()->route('bikers.ways'),
             default           => redirect()->route('login'),

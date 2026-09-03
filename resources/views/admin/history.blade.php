@@ -179,8 +179,10 @@
                   <td>{{ $way->remark ?: '—' }}</td>
                   <td>
                     <a class="table-action" href="{{ route('admin.history.detail', $way) }}">View</a>
-                    <a class="table-action" href="{{ route('admin.ways.edit', $way) }}">Edit</a>
-                    <button type="button" class="table-action delete-btn" data-id="{{ $way->id }}" data-url="{{ route('admin.ways.destroy', $way) }}">Delete</button>
+                    @if (auth()->user()->isAdmin())
+                      <a class="table-action" href="{{ route('admin.ways.edit', $way) }}">Edit</a>
+                      <button type="button" class="table-action delete-btn" data-id="{{ $way->id }}" data-url="{{ route('admin.ways.destroy', $way) }}">Delete</button>
+                    @endif
                   </td>
                 </tr>
               @empty
@@ -222,6 +224,7 @@
         @endif
       </section>
     </main>
+    @if (auth()->user()->isAdmin())
     <div class="modal-backdrop" id="deleteBackdrop" hidden>
       <section class="action-modal" role="dialog" aria-modal="true">
         <h2>Delete this order?</h2>
@@ -272,6 +275,7 @@
         }
       });
     </script>
+    @endif
   </body>
 </html>
 <script>

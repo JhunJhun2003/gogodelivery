@@ -13,7 +13,7 @@ Route::get('/', function () {
     }
 
     return match (auth()->user()->role) {
-        User::ROLE_ADMIN  => redirect()->route('admin.shops'),
+        User::ROLE_ADMIN, User::ROLE_STAFF => redirect()->route('admin.shops'),
         User::ROLE_SHOP   => redirect()->route('shop.orders'),
         User::ROLE_BIKER  => redirect()->route('bikers.ways'),
         default           => redirect()->route('login'),
@@ -35,7 +35,7 @@ Route::get('/order_image/{filename}', function (string $filename) {
     return response()->file($path);
 })->where('filename', '[A-Za-z0-9._-]+');
 
-Route::middleware('auth', 'role:admin')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware('auth', 'role:admin,staff')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/shops', [AuthController::class, 'showShops'])->name('shops');
     Route::post('/shops', [AuthController::class, 'createShop'])->name('shops.create');
     Route::put('/shops/{shop}', [AuthController::class, 'updateShop'])->name('shops.update');

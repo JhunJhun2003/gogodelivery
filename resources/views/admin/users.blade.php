@@ -51,6 +51,7 @@
             <select id="role" name="role" required>
               <option value="">Select a role</option>
               <option value="admin" @selected(old('role') === 'admin')>Admin</option>
+              <option value="staff" @selected(old('role') === 'staff')>Staff</option>
               <option value="biker" @selected(old('role') === 'biker')>Biker</option>
             </select>
           </div>
