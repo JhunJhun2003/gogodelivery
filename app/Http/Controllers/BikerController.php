@@ -23,6 +23,7 @@ class BikerController extends Controller
                 ->get(),
             'assignedWays' => Way::query()
                 ->whereNotNull('biker_id')
+                ->where('status', '!=', 'delivered')
                 ->get()
                 ->groupBy('biker_id'),
         ]);

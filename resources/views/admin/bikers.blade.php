@@ -224,6 +224,11 @@
 
           assignedCards.forEach((card) => (card.hidden = !visibleCards.includes(card)));
           assignedEmpty.hidden = visibleCards.length > 0;
+          const selectedRow = bikerRows.find((row) => row.dataset.bikerId === selectedBikerId);
+          const assignedCount = selectedRow?.querySelector(".shop-copy small");
+          if (assignedCount) {
+            assignedCount.textContent = assignedCards.filter((card) => card.dataset.bikerId === selectedBikerId).length + " assigned";
+          }
         }
         function showAssignedWays(bikerId) {
           selectedBikerId = bikerId;
@@ -552,6 +557,13 @@
             }
 
             syncStatusControls(card, status, { animateReveal: (previousStatus === "pending" && status === "onway") || (previousStatus === "onway" && status === "failed") });
+
+            if (status === "delivered") {
+              const cardIndex = assignedCards.indexOf(card);
+              if (cardIndex !== -1) assignedCards.splice(cardIndex, 1);
+              card.remove();
+              filterAssignedWays();
+            }
           }
         }
 
