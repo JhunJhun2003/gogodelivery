@@ -89,13 +89,23 @@
             ><input name="max_amount" type="number" min="0" value="{{ $filters['max_amount'] ?? '' }}" placeholder="Max Amt" />
           </div>
           <div class="input-field-group full-field">
-            <label>DATE</label>
+            <label for="historyShopDate">Shop DATE</label>
             <div class="custom-date-picker">
-              <input id="historyDate" name="date" type="date" value="{{ $filters['date'] ?? '' }}" /><button
+              <input id="historyShopDate" name="shop_date" type="date" value="{{ $filters['shop_date'] ?? '' }}" /><button
                 class="custom-date-trigger"
                 type="button"
               >
-                {{ isset($filters['date']) ? \Carbon\Carbon::parse($filters['date'])->format('d/m/y') : 'dd/mm/yy' }}
+                {{ isset($filters['shop_date']) ? \Carbon\Carbon::parse($filters['shop_date'])->format('d/m/y') : 'dd/mm/yy' }}
+              </button>
+              <div class="custom-calendar"></div>
+            </div>
+            <label for="historyDeliveryDate">DELI DATE</label>
+            <div class="custom-date-picker">
+              <input id="historyDeliveryDate" name="delivery_date" type="date" value="{{ $filters['delivery_date'] ?? '' }}" /><button
+                class="custom-date-trigger"
+                type="button"
+              >
+                {{ isset($filters['delivery_date']) ? \Carbon\Carbon::parse($filters['delivery_date'])->format('d/m/y') : 'dd/mm/yy' }}
               </button>
               <div class="custom-calendar"></div>
             </div>
@@ -223,79 +233,6 @@
       </section>
     </div>
     <script>
-      const dateInput = document.getElementById("historyDate");
-      const datePicker = document.querySelector(".custom-date-picker");
-      const dateTrigger = datePicker?.querySelector(".custom-date-trigger");
-      const calendar = datePicker?.querySelector(".custom-calendar");
-
-      if (dateInput && datePicker && dateTrigger && calendar) {
-        let viewDate = new Date();
-        let picked = dateInput.value || "";
-
-        const pad = (n) => String(n).padStart(2, "0");
-
-        function drawCalendar() {
-          const y = viewDate.getFullYear();
-          const m = viewDate.getMonth();
-          const first = new Date(y, m, 1).getDay();
-          const days = new Date(y, m + 1, 0).getDate();
-
-          calendar.innerHTML =
-            '<div class="calendar-head"><button type="button" data-step="-1">‹</button><span>' +
-            viewDate.toLocaleString("en", { month: "long", year: "numeric" }) +
-            '</span><button type="button" data-step="1">›</button></div><div class="calendar-grid"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-grid" id="days"></div>';
-
-          const grid = document.getElementById("days");
-          for (let i = 0; i < first; i++) {
-            const b = document.createElement("button");
-            b.disabled = true;
-            grid.append(b);
-          }
-
-          for (let d = 1; d <= days; d++) {
-            const b = document.createElement("button");
-            b.type = "button";
-            b.textContent = d;
-            const val = y + "-" + pad(m + 1) + "-" + pad(d);
-            if (val === picked) b.className = "selected";
-            b.onclick = () => {
-              picked = val;
-              dateInput.value = val;
-              dateTrigger.textContent =
-                pad(d) + "/" + pad(m + 1) + "/" + String(y).slice(-2);
-              datePicker.classList.remove("open");
-              drawCalendar();
-            };
-            grid.append(b);
-          }
-        }
-
-        dateTrigger.onclick = () => {
-          datePicker.classList.toggle("open");
-          drawCalendar();
-        };
-
-        calendar.onclick = (e) => {
-          if (e.target.dataset.step) {
-            viewDate.setMonth(viewDate.getMonth() + Number(e.target.dataset.step));
-            drawCalendar();
-          }
-        };
-
-        document.addEventListener("click", (e) => {
-          if (!datePicker.contains(e.target)) datePicker.classList.remove("open");
-        });
-
-        if (picked) {
-          const [y, m, d] = picked.split('-').map(Number);
-          if (y && m && d) {
-            dateTrigger.textContent = pad(d) + "/" + pad(m) + "/" + String(y).slice(-2);
-          }
-        }
-
-        drawCalendar();
-      }
-
       let pendingDeleteUrl = null;
       const deleteBackdrop = document.getElementById("deleteBackdrop");
       document.querySelectorAll(".delete-btn").forEach((btn) => {

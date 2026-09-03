@@ -199,14 +199,30 @@
         assignedView = document.getElementById("assignedView"),
         assignView = document.getElementById("assignView"),
         assignTitle = document.getElementById("assignTitle"),
-        bikerSearch = document.getElementById("bikerSearch");
-      let selectedBikerId = null;
+        bikerSearch = document.getElementById("bikerSearch"),
+        assignedSearch = document.getElementById("assignedOrderSearch");
+      let selectedBikerId = bikerRows[0]?.dataset.bikerId || null;
         const assignedCards = [...document.querySelectorAll(".delivery-card[data-biker-id]")];
         const assignedEmpty = document.getElementById("assignedEmpty");
-        function showAssignedWays(bikerId) {
-          const visibleCards = assignedCards.filter((card) => card.dataset.bikerId === bikerId);
-          assignedCards.forEach((card) => (card.hidden = card.dataset.bikerId !== bikerId));
+        function filterAssignedWays() {
+          const query = (assignedSearch?.value || "").toLowerCase().trim();
+          const visibleCards = assignedCards.filter((card) => {
+            if (card.dataset.bikerId !== selectedBikerId) return false;
+
+            const searchable = [
+              card.dataset.wayId || "",
+              card.querySelector(".delivery-main")?.textContent || "",
+            ].join(" ").toLowerCase();
+
+            return !query || searchable.includes(query);
+          });
+
+          assignedCards.forEach((card) => (card.hidden = !visibleCards.includes(card)));
           assignedEmpty.hidden = visibleCards.length > 0;
+        }
+        function showAssignedWays(bikerId) {
+          selectedBikerId = bikerId;
+          filterAssignedWays();
         }
       bikerRows.forEach(
         (row) =>
@@ -215,7 +231,7 @@
             row.classList.add("selected");
             document.getElementById("assignedTitle").textContent =
               "Biker Name — " + row.dataset.biker;
-              showAssignedWays(row.dataset.bikerId);
+            showAssignedWays(row.dataset.bikerId);
           }),
       );
         if (bikerRows[0]) showAssignedWays(bikerRows[0].dataset.bikerId);
@@ -564,32 +580,8 @@
         });
       });
 
-      const assignedSearch = document.getElementById('assignedOrderSearch');
       if (assignedSearch) {
-        assignedSearch.addEventListener('input', (e) => {
-          const query = e.target.value.toLowerCase().trim();
-          document.querySelectorAll('.delivery-card').forEach((card) => {
-            const wayId = card.dataset.wayId || '';
-            const customerName = card.querySelector('.delivery-main strong')?.textContent || '';
-            const phoneText = card.querySelector('.delivery-main p')?.textContent || '';
-            const addressText = Array.from(card.querySelectorAll('small'))
-              .map((node) => node.textContent)
-              .join(' ');
-            const searchable = [
-              wayId,
-              customerName,
-              phoneText,
-              addressText,
-              card.textContent || '',
-            ].join(' ').toLowerCase();
-
-            const show = !query || searchable.includes(query);
-            card.hidden = !show;
-          });
-
-          const visibleCards = [...document.querySelectorAll('.delivery-card:not([hidden])')];
-          assignedEmpty.hidden = visibleCards.length > 0;
-        });
+        assignedSearch.addEventListener('input', filterAssignedWays);
       }
 
       document.querySelectorAll(".info-btn").forEach((button) => {

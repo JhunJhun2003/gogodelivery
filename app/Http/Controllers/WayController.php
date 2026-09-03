@@ -412,7 +412,8 @@ class WayController extends Controller
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
             'max_amount' => ['nullable', 'numeric', 'min:0'],
-            'date' => ['nullable', 'date'],
+            'shop_date' => ['nullable', 'date'],
+            'delivery_date' => ['nullable', 'date'],
         ]));
 
         $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
@@ -437,7 +438,8 @@ class WayController extends Controller
             ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
             ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
             ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
+            ->when($filters['shop_date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date))
+            ->when($filters['delivery_date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         return view('admin.history', [
             'ways' => $waysQuery->paginate(50)->withQueryString(),
@@ -675,7 +677,8 @@ HTML;
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
             'max_amount' => ['nullable', 'numeric', 'min:0'],
-            'date' => ['nullable', 'date'],
+            'shop_date' => ['nullable', 'date'],
+            'delivery_date' => ['nullable', 'date'],
         ]));
 
         $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
@@ -700,7 +703,8 @@ HTML;
             ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
             ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
             ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
+            ->when($filters['shop_date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date))
+            ->when($filters['delivery_date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         $filename = 'admin-history-' . now()->format('Ymd_His') . '.csv';
 
@@ -746,7 +750,8 @@ HTML;
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
             'max_amount' => ['nullable', 'numeric', 'min:0'],
-            'date' => ['nullable', 'date'],
+            'shop_date' => ['nullable', 'date'],
+            'delivery_date' => ['nullable', 'date'],
         ]));
 
         $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
@@ -771,7 +776,8 @@ HTML;
             ->when($filters['customer_phone'] ?? null, fn ($query, $phone) => $query->where('phone_number', 'like', "%{$phone}%"))
             ->when($filters['min_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
             ->when($filters['max_amount'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
+            ->when($filters['shop_date'] ?? null, fn ($query, $date) => $query->whereDate('date', $date))
+            ->when($filters['delivery_date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         $filename = 'admin-history-' . now()->format('Ymd_His') . '.pdf';
         $rows = [];
