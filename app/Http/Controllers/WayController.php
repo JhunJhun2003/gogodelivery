@@ -417,6 +417,17 @@ class WayController extends Controller
         ]));
 
         $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
+        $hasActiveFilters = collect($filters)->contains(fn ($value) => $value !== null && $value !== '');
+
+        if (! $hasActiveFilters) {
+            return view('admin.history', [
+                'ways' => collect(),
+                'shops' => User::query()->where('role', User::ROLE_SHOP)->orderBy('name')->get(),
+                'bikers' => Biker::query()->orderBy('name')->get(),
+                'filters' => $filters,
+                'totalWays' => Way::query()->whereDate('date', today())->count(),
+            ]);
+        }
 
         if ($search = $filters['search'] ?? null) {
             $waysQuery->where(function ($query) use ($search) {
@@ -442,7 +453,7 @@ class WayController extends Controller
             ->when($filters['delivery_date'] ?? null, fn ($query, $date) => $this->applyDeliveryDateFilter($query, $date));
 
         return view('admin.history', [
-            'ways' => $waysQuery->paginate(50)->withQueryString(),
+            'ways' => $waysQuery->get(),
             'shops' => User::query()->where('role', User::ROLE_SHOP)->orderBy('name')->get(),
             'bikers' => Biker::query()->orderBy('name')->get(),
             'filters' => $filters,
