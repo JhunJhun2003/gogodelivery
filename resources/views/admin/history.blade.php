@@ -9,6 +9,27 @@
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
     <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
+    <style>
+      .search-input-wrap { position: relative; }
+      .search-input-wrap input { padding-right: 64px; }
+      .search-clear-button {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        padding: 4px 6px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: #64748b;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .search-clear-button:hover { background: #f1f5f9; color: #0f172a; }
+      .search-clear-button:focus-visible { outline: 3px solid rgba(14, 165, 233, 0.25); outline-offset: 2px; }
+    </style>
     <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
     <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg history-screen">
@@ -158,40 +179,6 @@
             </thead>
             <tbody>
               @forelse ($ways as $index => $way)
-          <style>
-            .search-input-wrap { position: relative; }
-            .search-input-wrap input { padding-right: 64px; }
-            .search-clear-button {
-              position: absolute;
-              top: 50%;
-              right: 8px;
-              transform: translateY(-50%);
-              padding: 4px 6px;
-              border: 0;
-              border-radius: 5px;
-              background: transparent;
-              color: #64748b;
-              font: inherit;
-              font-size: 12px;
-              font-weight: 700;
-              cursor: pointer;
-            }
-            .search-clear-button:hover { background: #f1f5f9; color: #0f172a; }
-            .search-clear-button:focus-visible { outline: 3px solid rgba(14, 165, 233, 0.25); outline-offset: 2px; }
-          </style>
-          <script>
-            const historySearch = document.getElementById("historySearch");
-            const clearHistorySearch = document.getElementById("clearHistorySearch");
-            const updateHistorySearchClearButton = () => {
-              clearHistorySearch.hidden = !historySearch.value;
-            };
-            historySearch.addEventListener("input", updateHistorySearchClearButton);
-            clearHistorySearch.addEventListener("click", () => {
-              historySearch.value = "";
-              updateHistorySearchClearButton();
-              historySearch.focus();
-            });
-            updateHistorySearchClearButton();
                   <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
                   <td>{{ $way->shop?->name ?? 'N/A' }}</td>
                   <td>{{ $way->date->format('d-m-Y') }}</td>
@@ -291,6 +278,20 @@
       });
     </script>
     @endif
+    <script>
+      const historySearch = document.getElementById("historySearch");
+      const clearHistorySearch = document.getElementById("clearHistorySearch");
+      const updateHistorySearchClearButton = () => {
+        clearHistorySearch.hidden = !historySearch.value;
+      };
+      historySearch.addEventListener("input", updateHistorySearchClearButton);
+      clearHistorySearch.addEventListener("click", () => {
+        historySearch.value = "";
+        updateHistorySearchClearButton();
+        historySearch.focus();
+      });
+      updateHistorySearchClearButton();
+    </script>
   </body>
 </html>
 <script>
