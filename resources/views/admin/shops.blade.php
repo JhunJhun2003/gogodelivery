@@ -411,9 +411,26 @@
             trigger.textContent =
               pad(d) + "/" + pad(m + 1) + "/" + String(y).slice(-2);
             dateWrap.classList.remove("open");
-      draw();
+            draw();
+          };
+          grid.appendChild(b);
+        }
+      }
+      trigger.onclick = () => {
+        dateWrap.classList.toggle("open");
+        draw();
+      };
+      calendar.onclick = (e) => {
+        if (e.target.dataset.step) {
+          view.setMonth(view.getMonth() + Number(e.target.dataset.step));
+          draw();
+        }
+      };
+      document.addEventListener("click", (e) => {
+        if (!dateWrap.contains(e.target)) dateWrap.classList.remove("open");
+      });
 
-      wayForm.addEventListener("submit", async (e) => {
+      const submitWayForm = async (e) => {
         e.preventDefault();
         const token = wayForm.querySelector('input[name="_token"]').value;
         const formData = new FormData(wayForm);
@@ -434,27 +451,17 @@
           wayCard.querySelector(".section-card-heading").after(banner);
           setTimeout(() => banner.remove(), 4000);
         } else {
-          const errBox = wayCard.querySelector("[role='alert']") || (() => { const d = document.createElement("div"); d.setAttribute("role","alert"); wayCard.querySelector("form").insertAdjacentElement("beforebegin", d); return d; })();
-          errBox.innerHTML = Object.values(json.errors || {}).flat().map(m => "<p>" + m + "</p>").join("");
-        }
-      });
-          };
-          grid.appendChild(b);
-        }
-      }
-      trigger.onclick = () => {
-        dateWrap.classList.toggle("open");
-        draw();
-      };
-      calendar.onclick = (e) => {
-        if (e.target.dataset.step) {
-          view.setMonth(view.getMonth() + Number(e.target.dataset.step));
-          draw();
+          const errBox = wayCard.querySelector("[role='alert']") || (() => {
+            const d = document.createElement("div");
+            d.setAttribute("role", "alert");
+            wayCard.querySelector("form").insertAdjacentElement("beforeend", d);
+            return d;
+          })();
+          errBox.innerHTML = Object.values(json.errors || {}).flat().map((m) => "<p>" + m + "</p>").join("");
         }
       };
-      document.addEventListener("click", (e) => {
-        if (!dateWrap.contains(e.target)) dateWrap.classList.remove("open");
-      });
+
+      wayForm.addEventListener("submit", submitWayForm);
       draw();
     </script>
   </body>
