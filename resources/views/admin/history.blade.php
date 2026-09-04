@@ -43,7 +43,10 @@
         <div class="history-form-grid">
           <div class="input-field-group full-field">
             <label for="historySearch">SEARCH id, SHOP, CUSTOMER NAME, PHONE OR ADDRESS</label
-            ><input id="historySearch" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search online shop, customer name, phone, or address..." />
+            ><div class="search-input-wrap">
+              <input id="historySearch" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search online shop, customer name, phone, or address..." />
+              <button class="search-clear-button" id="clearHistorySearch" type="button" aria-label="Clear search" hidden>Clear</button>
+            </div>
           </div>
           <div class="input-field-group">
             <label>ONLINE SHOP</label
@@ -115,6 +118,9 @@
           <button class="ui-btn btn-navy-blue history-save" type="submit">
             Search
           </button>
+          <a class="ui-btn btn-white history-clear-all" href="{{ route('admin.history') }}">
+            Clear all
+          </a>
           {{-- <a class="ui-btn btn-white" href="{{ route('admin.history.export', request()->query()) }}" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
             Export Excel
           </a> --}}
@@ -155,7 +161,40 @@
             </thead>
             <tbody>
               @forelse ($ways as $index => $way)
-                <tr>
+          <style>
+            .search-input-wrap { position: relative; }
+            .search-input-wrap input { padding-right: 64px; }
+            .search-clear-button {
+              position: absolute;
+              top: 50%;
+              right: 8px;
+              transform: translateY(-50%);
+              padding: 4px 6px;
+              border: 0;
+              border-radius: 5px;
+              background: transparent;
+              color: #64748b;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              cursor: pointer;
+            }
+            .search-clear-button:hover { background: #f1f5f9; color: #0f172a; }
+            .search-clear-button:focus-visible { outline: 3px solid rgba(14, 165, 233, 0.25); outline-offset: 2px; }
+          </style>
+          <script>
+            const historySearch = document.getElementById("historySearch");
+            const clearHistorySearch = document.getElementById("clearHistorySearch");
+            const updateHistorySearchClearButton = () => {
+              clearHistorySearch.hidden = !historySearch.value;
+            };
+            historySearch.addEventListener("input", updateHistorySearchClearButton);
+            clearHistorySearch.addEventListener("click", () => {
+              historySearch.value = "";
+              updateHistorySearchClearButton();
+              historySearch.focus();
+            });
+            updateHistorySearchClearButton();
                   <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
                   <td>{{ $way->shop?->name ?? 'N/A' }}</td>
                   <td>{{ $way->date->format('d-m-Y') }}</td>
