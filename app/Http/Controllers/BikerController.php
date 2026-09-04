@@ -19,11 +19,12 @@ class BikerController extends Controller
             'bikers' => Biker::query()->orderBy('name')->get(),
             'unassignedWays' => Way::query()
                 ->whereNull('biker_id')
+                ->where('status', '!=', Way::STATUS_DELIVERED)
                 ->orderBy('id')
                 ->get(),
             'assignedWays' => Way::query()
                 ->whereNotNull('biker_id')
-                ->where('status', '!=', 'delivered')
+                ->where('status', '!=', Way::STATUS_DELIVERED)
                 ->get()
                 ->groupBy('biker_id'),
         ]);
