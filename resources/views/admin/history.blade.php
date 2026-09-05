@@ -147,10 +147,10 @@
           </a>
         </div>
       </form>
-      <div class="badge-group history-badges">
+      {{-- <div class="badge-group history-badges">
         <span class="ui-badge badge-navy">{{ today()->format('d-m-Y') }}</span
         ><span class="ui-badge badge-lime">Total Ways · {{ $totalWays }}</span>
-      </div>
+      </div> --}}
       <section class="ui-card-white history-list-card">
         <div class="history-card-heading">
           <div>
