@@ -70,7 +70,7 @@
       @if (session('way_status'))
         <p role="status">{{ session('way_status') }}</p>
       @endif
-      <form class="ui-card-white form-card" method="POST" action="{{ route('admin.way-check.store') }}" enctype="multipart/form-data">
+      {{-- <form class="ui-card-white form-card" method="POST" action="{{ route('admin.way-check.store') }}" enctype="multipart/form-data">
         @csrf
         <h3 class="form-title">New way</h3>
         <div class="input-field-group">
@@ -136,7 +136,7 @@
           </div>
         </div>
         <button class="ui-btn btn-navy-blue" type="submit">Add way</button>
-      </form>
+      </form> --}}
     </main>
 
     <script>
