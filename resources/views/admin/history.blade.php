@@ -123,7 +123,7 @@
               </button>
               <div class="custom-calendar"></div>
             </div>
-            <label for="historyDeliveryDate">DELI DATE</label>
+            <label for="historyDeliveryDate">STATUS DATE</label>
             <div class="custom-date-picker">
               <input id="historyDeliveryDate" name="delivery_date" type="date" value="{{ $filters['delivery_date'] ?? '' }}" /><button
                 class="custom-date-trigger"

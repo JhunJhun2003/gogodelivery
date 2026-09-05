@@ -43,7 +43,7 @@
             </select>
           </div>
           <div class="input-field-group">
-            <label>DELI DATE</label>
+            <label>STATUS DATE</label>
             <div class="custom-date-picker">
               <input id="historyDate" name="date" type="date" value="{{ $filters['date'] ?? '' }}" /><button
                 class="custom-date-trigger"
