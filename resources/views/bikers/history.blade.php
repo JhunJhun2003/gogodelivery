@@ -112,7 +112,7 @@
                   </td>
                   <td>{{ $way->biker?->name ?? $biker->name }}</td>
                   <td><span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span></td>
-                  <td>{{ $way->histories->first()?->created_at?->format('d-m-Y') ?? $way->date->format('d-m-Y') }}</td>
+                  <td>{{ $way->latestHistory?->created_at?->format('d-m-Y') ?? '—' }}</td>
                   <td>{{ $way->remark ?: '—' }}</td>
                   <td><a class="table-action" href="{{ route('bikers.history.detail', $way) }}">View</a></td>
                 </tr>

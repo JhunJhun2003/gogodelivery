@@ -30,7 +30,6 @@
       .search-clear-button:hover { background: #f1f5f9; color: #0f172a; }
       .search-clear-button:focus-visible { outline: 3px solid rgba(14, 165, 233, 0.25); outline-offset: 2px; }
     </style>
-    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
     <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg history-screen">
     <header class="top-app-bar">
@@ -49,15 +48,6 @@
         <p class="page-intro">
           Review all past deliveries. Use the filters below to narrow results.
         </p>
-        <div class="shop-hero-animation" aria-hidden="true">
-          <dotlottie-player
-            src="{{ asset('/animations/food-courier.json') }}"
-            background="transparent"
-            speed="1"
-            loop
-            autoplay
-          ></dotlottie-player>
-        </div>
       </div>
       <form class="ui-card-white history-filter-card" method="GET" action="{{ route('admin.history') }}">
         <h2>Filter orders</h2>
@@ -179,6 +169,7 @@
             </thead>
             <tbody>
               @forelse ($ways as $index => $way)
+                <tr>
                   <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
                   <td>{{ $way->shop?->name ?? 'N/A' }}</td>
                   <td>{{ $way->date->format('d-m-Y') }}</td>
@@ -198,7 +189,7 @@
                   </td>
                   <td>{{ $way->biker?->name ?? 'Unassigned' }}</td>
                   <td><span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span></td>
-                  <td>{{ $way->histories->first()?->created_at?->format('d-m-Y') ?? $way->date->format('d-m-Y') }}</td>
+                  <td>{{ $way->latestHistory?->created_at?->format('d-m-Y') ?? '—' }}</td>
                   <td>{{ $way->remark ?: '—' }}</td>
                   <td>
                     <a class="table-action" href="{{ route('admin.history.detail', $way) }}">View</a>

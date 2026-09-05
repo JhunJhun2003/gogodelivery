@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'shop_id', 'biker_id', 'assigned_at', 'item_image', 'amount', 'delivery_fees', 'recipient_name',
@@ -38,6 +39,11 @@ class Way extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(WayStatusHistory::class)->orderByDesc('created_at');
+    }
+
+    public function latestHistory(): HasOne
+    {
+        return $this->hasOne(WayStatusHistory::class)->latestOfMany('created_at');
     }
 
     protected function casts(): array

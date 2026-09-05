@@ -219,7 +219,7 @@ class WayController extends Controller
 
         $ways = Way::query()
             ->where('biker_id', $biker->id)
-            ->with(['shop', 'histories'])
+            ->with(['shop', 'latestHistory'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('recipient_name', 'like', "%{$search}%")
@@ -298,7 +298,7 @@ class WayController extends Controller
                     $way->phone_number,
                     $way->biker?->name ?? 'Unassigned',
                     $way->status === 'onway' ? 'On way' : ucfirst($way->status),
-                    $way->histories->first()?->created_at?->format('d-m-Y') ?? ($way->date?->format('d-m-Y') ?? ''),
+                    $way->latestHistory?->created_at?->format('d-m-Y') ?? '—',
                     $way->remark ?: '—',
                 ]);
             }
@@ -348,7 +348,7 @@ class WayController extends Controller
 
         $ordersQuery = Way::query()
             ->where('shop_id', $shop->id)
-            ->with(['biker', 'histories'])
+            ->with(['biker', 'latestHistory'])
             ->latest('date')
             ->latest('id')
             ->when($search, function ($query) use ($search) {
@@ -392,7 +392,7 @@ class WayController extends Controller
 
     private function applyStatusDateFilter($query, string $date): void
     {
-        $query->whereHas('histories', fn ($historyQuery) => $historyQuery->whereDate('created_at', $date));
+        $query->whereHas('latestHistory', fn ($historyQuery) => $historyQuery->whereDate('created_at', $date));
     }
 
     public function history(Request $request): View
@@ -410,7 +410,7 @@ class WayController extends Controller
             'delivery_date' => ['nullable', 'date'],
         ]));
 
-        $waysQuery = Way::query()->with(['shop', 'biker', 'histories'])->latest('date')->latest('id');
+        $waysQuery = Way::query()->with(['shop', 'biker', 'latestHistory'])->latest('date')->latest('id');
         $hasActiveFilters = collect($filters)->contains(fn ($value) => $value !== null && $value !== '');
 
         if (! $hasActiveFilters) {
@@ -686,7 +686,7 @@ HTML;
             'delivery_date' => ['nullable', 'date'],
         ]));
 
-        $waysQuery = Way::query()->with(['shop', 'biker', 'histories'])->latest('date')->latest('id');
+        $waysQuery = Way::query()->with(['shop', 'biker', 'latestHistory'])->latest('date')->latest('id');
 
         if ($search = $filters['search'] ?? null) {
             $waysQuery->where(function ($query) use ($search) {
@@ -732,7 +732,7 @@ HTML;
                     $way->phone_number,
                     $way->biker?->name ?? 'Unassigned',
                     $way->status === 'onway' ? 'On way' : ucfirst($way->status),
-                    $way->histories->first()?->created_at?->format('d-m-Y') ?? ($way->date?->format('d-m-Y') ?? ''),
+                    $way->latestHistory?->created_at?->format('d-m-Y') ?? '—',
                     $way->remark ?: '—',
                 ]);
             }
@@ -759,7 +759,7 @@ HTML;
             'delivery_date' => ['nullable', 'date'],
         ]));
 
-        $waysQuery = Way::query()->with(['shop', 'biker', 'histories'])->latest('date')->latest('id');
+        $waysQuery = Way::query()->with(['shop', 'biker', 'latestHistory'])->latest('date')->latest('id');
 
         if ($search = $filters['search'] ?? null) {
             $waysQuery->where(function ($query) use ($search) {
@@ -799,7 +799,7 @@ HTML;
                     . '<small style="color:#64748b;">' . e($way->phone_number) . '</small>',
                 'biker' => $way->biker?->name ?? 'Unassigned',
                 'status' => $way->status === 'onway' ? 'On way' : ucfirst($way->status),
-                'deli_date' => $way->histories->first()?->created_at?->format('d-m-Y') ?? $way->date->format('d-m-Y'),
+                'deli_date' => $way->latestHistory?->created_at?->format('d-m-Y') ?? '—',
                 'remark' => $way->remark ?: '—',
             ];
         }
@@ -825,7 +825,7 @@ HTML;
 
         $ordersQuery = Way::query()
             ->where('shop_id', $shop->id)
-            ->with(['shop', 'biker', 'histories'])
+            ->with(['shop', 'biker', 'latestHistory'])
             ->latest('date')
             ->latest('id');
 
@@ -864,7 +864,7 @@ HTML;
                     $order->phone_number,
                     $order->biker?->name ?? 'Unassigned',
                     $order->status === 'onway' ? 'On way' : ucfirst($order->status),
-                    $order->histories->first()?->created_at?->format('d-m-Y') ?? ($order->date?->format('d-m-Y') ?? ''),
+                    $order->latestHistory?->created_at?->format('d-m-Y') ?? '—',
                     $order->remark ?: '—',
                 ]);
             }
