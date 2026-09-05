@@ -416,7 +416,7 @@ class WayController extends Controller
             'delivery_date' => ['nullable', 'date'],
         ]));
 
-        $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
+        $waysQuery = Way::query()->with(['shop', 'biker', 'histories'])->latest('date')->latest('id');
         $hasActiveFilters = collect($filters)->contains(fn ($value) => $value !== null && $value !== '');
 
         if (! $hasActiveFilters) {
