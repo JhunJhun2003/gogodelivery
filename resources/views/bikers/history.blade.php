@@ -85,7 +85,7 @@
                 <th>Customer Detail</th>
                 <th>Biker</th>
                 <th>Status</th>
-                <th>Deli Date</th>
+                <th>Status Date</th>
                 <th>Remark</th>
                 <th>Action</th>
               </tr>
@@ -112,7 +112,7 @@
                   </td>
                   <td>{{ $way->biker?->name ?? $biker->name }}</td>
                   <td><span class="status-pill status-{{ $way->status }}">{{ $way->status === 'onway' ? 'On way' : ucfirst($way->status) }}</span></td>
-                  <td>{{ $way->assigned_at ? $way->assigned_at->format('d-m-Y') : ($way->date->format('d-m-Y')) }}</td>
+                  <td>{{ $way->histories->first()?->created_at?->format('d-m-Y') ?? $way->date->format('d-m-Y') }}</td>
                   <td>{{ $way->remark ?: '—' }}</td>
                   <td><a class="table-action" href="{{ route('bikers.history.detail', $way) }}">View</a></td>
                 </tr>

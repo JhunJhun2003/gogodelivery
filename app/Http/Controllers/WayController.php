@@ -219,7 +219,7 @@ class WayController extends Controller
 
         $ways = Way::query()
             ->where('biker_id', $biker->id)
-            ->with('shop')
+            ->with(['shop', 'histories'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('recipient_name', 'like', "%{$search}%")
@@ -281,7 +281,7 @@ class WayController extends Controller
 
         return response()->streamDownload(function () use ($waysQuery) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Deli Date', 'Remark']);
+            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Status Date', 'Remark']);
 
             $ways = $waysQuery->get();
 
@@ -298,7 +298,7 @@ class WayController extends Controller
                     $way->phone_number,
                     $way->biker?->name ?? 'Unassigned',
                     $way->status === 'onway' ? 'On way' : ucfirst($way->status),
-                    $way->assigned_at ? $way->assigned_at->format('d-m-Y') : ($way->date?->format('d-m-Y') ?? ''),
+                    $way->histories->first()?->created_at?->format('d-m-Y') ?? ($way->date?->format('d-m-Y') ?? ''),
                     $way->remark ?: '—',
                 ]);
             }
@@ -348,7 +348,7 @@ class WayController extends Controller
 
         $ordersQuery = Way::query()
             ->where('shop_id', $shop->id)
-            ->with('biker')
+            ->with(['biker', 'histories'])
             ->latest('date')
             ->latest('id')
             ->when($search, function ($query) use ($search) {
@@ -663,7 +663,7 @@ class WayController extends Controller
                 <th>Customer Detail</th>
                 <th>Biker</th>
                 <th>Status</th>
-                <th>Deli Date</th>
+                <th>Status Date</th>
                 <th>Remark</th>
             </tr>
         </thead>
@@ -692,7 +692,7 @@ HTML;
             'delivery_date' => ['nullable', 'date'],
         ]));
 
-        $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
+        $waysQuery = Way::query()->with(['shop', 'biker', 'histories'])->latest('date')->latest('id');
 
         if ($search = $filters['search'] ?? null) {
             $waysQuery->where(function ($query) use ($search) {
@@ -721,7 +721,7 @@ HTML;
 
         return response()->streamDownload(function () use ($waysQuery) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Deli Date', 'Remark']);
+            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Status Date', 'Remark']);
 
             $ways = $waysQuery->get();
 
@@ -738,7 +738,7 @@ HTML;
                     $way->phone_number,
                     $way->biker?->name ?? 'Unassigned',
                     $way->status === 'onway' ? 'On way' : ucfirst($way->status),
-                    $way->assigned_at ? $way->assigned_at->format('d-m-Y') : ($way->date?->format('d-m-Y') ?? ''),
+                    $way->histories->first()?->created_at?->format('d-m-Y') ?? ($way->date?->format('d-m-Y') ?? ''),
                     $way->remark ?: '—',
                 ]);
             }
@@ -765,7 +765,7 @@ HTML;
             'delivery_date' => ['nullable', 'date'],
         ]));
 
-        $waysQuery = Way::query()->with(['shop', 'biker'])->latest('date')->latest('id');
+        $waysQuery = Way::query()->with(['shop', 'biker', 'histories'])->latest('date')->latest('id');
 
         if ($search = $filters['search'] ?? null) {
             $waysQuery->where(function ($query) use ($search) {
@@ -805,7 +805,7 @@ HTML;
                     . '<small style="color:#64748b;">' . e($way->phone_number) . '</small>',
                 'biker' => $way->biker?->name ?? 'Unassigned',
                 'status' => $way->status === 'onway' ? 'On way' : ucfirst($way->status),
-                'deli_date' => $way->assigned_at ? $way->assigned_at->format('d-m-Y') : $way->date->format('d-m-Y'),
+                'deli_date' => $way->histories->first()?->created_at?->format('d-m-Y') ?? $way->date->format('d-m-Y'),
                 'remark' => $way->remark ?: '—',
             ];
         }
@@ -831,7 +831,7 @@ HTML;
 
         $ordersQuery = Way::query()
             ->where('shop_id', $shop->id)
-            ->with(['shop', 'biker'])
+            ->with(['shop', 'biker', 'histories'])
             ->latest('date')
             ->latest('id');
 
@@ -853,7 +853,7 @@ HTML;
 
         return response()->streamDownload(function () use ($ordersQuery) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Deli Date', 'Remark']);
+            fputcsv($handle, ['No', 'Shop', 'Date', 'Image', 'Amount', 'Deli Fees', 'Customer Name', 'Address', 'Phone', 'Biker', 'Status', 'Status Date', 'Remark']);
 
             $orders = $ordersQuery->get();
 
@@ -870,7 +870,7 @@ HTML;
                     $order->phone_number,
                     $order->biker?->name ?? 'Unassigned',
                     $order->status === 'onway' ? 'On way' : ucfirst($order->status),
-                    $order->assigned_at ? $order->assigned_at->format('d-m-Y') : ($order->date?->format('d-m-Y') ?? ''),
+                    $order->histories->first()?->created_at?->format('d-m-Y') ?? ($order->date?->format('d-m-Y') ?? ''),
                     $order->remark ?: '—',
                 ]);
             }

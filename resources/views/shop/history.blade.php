@@ -88,7 +88,7 @@
                 <th>Customer Detail</th>
                 <th>Biker</th>
                 <th>Status</th>
-                <th>Deli Date</th>
+                <th>Status Date</th>
                 <th>Remark</th>
                 <th>Action</th>
               </tr>
@@ -115,7 +115,7 @@
                   </td>
                   <td>{{ $order->biker?->name ?? 'Unassigned' }}</td>
                   <td><span class="status-pill status-{{ $order->status }}">{{ $order->status === 'onway' ? 'On way' : ucfirst($order->status) }}</span></td>
-                  <td>{{ $order->assigned_at ? $order->assigned_at->format('d-m-Y') : ($order->date->format('d-m-Y')) }}</td>
+                  <td>{{ $order->histories->first()?->created_at?->format('d-m-Y') ?? $order->date->format('d-m-Y') }}</td>
                   <td>{{ $order->remark ?: '—' }}</td>
                   <td><a class="table-action" href="{{ route('shop.history.detail', $order) }}">View</a></td>
                 </tr>
