@@ -14,7 +14,7 @@
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right">
-        <span class="user-role">Administrator · ADMI...</span
+          <span class="user-role">{{ auth()->user()->name }} · {{ auth()->user()->username }}</span
         ><button
           class="hamburger-icon-btn"
           id="openMenuBtn"
