@@ -30,7 +30,7 @@
       .search-clear-button:hover { background: #f1f5f9; color: #0f172a; }
       .search-clear-button:focus-visible { outline: 3px solid rgba(14, 165, 233, 0.25); outline-offset: 2px; }
     </style>
-    <script src="/js/sidebar.js?v=1787686291" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
+    <script src="/js/sidebar.js?v=20260907193127" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
   <body data-role="admin" class="app-bg history-screen">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>

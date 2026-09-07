@@ -5,8 +5,14 @@
   const folder = location.pathname.split("/").slice(1, 2)[0] || '';
   const isShop = document.body.dataset.role === "shop" || (!document.body.dataset.role && folder === "shop");
   const isAdmin = document.body.dataset.role === "admin" || (!document.body.dataset.role && folder === "admin");
+  const userRoleEl = document.querySelector(".user-role");
+  const userText = userRoleEl ? userRoleEl.textContent.trim() : '';
+  const userParts = userText.split(/\s*·\s*/);
+  const userTag = userText
+    ? '<div class="sidebar-user-tag"><div class="sidebar-user-avatar">' + (userParts[1]?.[0] || userParts[0]?.[0] || 'U').toUpperCase() + '</div><div><strong>' + (userParts[1] || userParts[0] || 'User') + '</strong><span>' + (userParts[0] || '') + '</span></div></div>'
+    : '';
   const links = isShop
-    ? '<a class="sidebar-row" href="/shop/orders"><strong>Orders</strong><span>Active orders</span></a><a class="sidebar-row" href="/shop/history"><strong>History</strong><span>All orders</span></a>'
+    ? '<a class="sidebar-row" href="/shop/orders"><strong>Orders</strong><span>Active orders</span></a><a class="sidebar-row" href="/shop/users"><strong>Users</strong><span>All users</span></a><a class="sidebar-row" href="/shop/history"><strong>History</strong><span>All orders</span></a>'
     : isAdmin
       ? '<a class="sidebar-row" href="/admin/shops"><strong>Shops</strong><span>Partners</span></a><a class="sidebar-row" href="/admin/bikers"><strong>Bikers</strong><span>Fleet</span></a><a class="sidebar-row" href="/admin/way-check"><strong>Way Check</strong><span>Today</span></a><a class="sidebar-row" href="/admin/history"><strong>History</strong><span>Records</span></a><a class="sidebar-row" href="/admin/users"><strong>Users</strong><span>Access</span></a>'
         : '<a class="sidebar-row" href="/bikers/ways"><strong>Ways</strong><span>Assigned deliveries</span></a><a class="sidebar-row" href="/bikers/history"><strong>History</strong><span>My records</span></a>';
@@ -17,7 +23,7 @@
   const nav = document.createElement("div");
   nav.className = "slide-sidebar";
   nav.id = "appSidebar";
-  nav.innerHTML = links + logout;
+  nav.innerHTML = userTag + links + logout;
   const current = location.pathname;
   nav.querySelectorAll("a").forEach((link) => {
     if (link.getAttribute("href") === current)

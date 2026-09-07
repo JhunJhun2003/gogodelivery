@@ -66,6 +66,7 @@ Route::middleware('auth', 'role:admin,staff')->prefix('admin')->name('admin.')->
 
 Route::middleware('auth', 'role:shop')->prefix('shop')->name('shop.')->group(function () {
     Route::get('/orders', [WayController::class, 'shopOrders'])->name('orders');
+    Route::get('/users', [AuthController::class, 'shopUsers'])->name('users');
     Route::get('/history', [WayController::class, 'shopHistory'])->name('history');
     Route::get('/history/export', [WayController::class, 'exportShopHistory'])->name('history.export');
     Route::get('/history/{way}', [WayController::class, 'shopHistoryDetail'])->name('history.detail');

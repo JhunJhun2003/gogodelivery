@@ -47,6 +47,17 @@ class AuthController extends Controller
         ]);
     }
 
+    public function shopUsers(): View
+    {
+        return view('shop.users', [
+            'users' => User::query()
+                ->whereIn('role', [User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_BIKER])
+                ->with('biker')
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
     public function createUser(Request $request): RedirectResponse
     {
         $data = $request->validateWithBag('user', [
