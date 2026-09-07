@@ -78,6 +78,14 @@
                 <strong>{{ $user->name }}</strong>
                 <span>{{ $user->username }} · {{ ucfirst($user->role) }}{{ $user->biker ? ' · ' . $user->biker->name : '' }}</span>
               </div>
+              <span class="shop-row-actions">
+                <button type="button" class="edit-user-btn" data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-username="{{ $user->username }}" data-phone-number="{{ $user->phone_number }}" data-role="{{ $user->role }}" data-biker-id="{{ $user->biker_id ?? '' }}" aria-label="Edit {{ $user->name }}">⚙</button>
+                <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline-delete-form" onsubmit="return confirm('Delete this user? This action cannot be undone.');">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="delete-user-btn" aria-label="Delete {{ $user->name }}" title="Delete user">🗑</button>
+                </form>
+              </span>
             </div>
           @empty
             <p class="no-data-msg">No users found.</p>
@@ -88,19 +96,45 @@
     <div class="modal-backdrop" id="editBackdrop" hidden>
       <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
         <h2 id="editTitle">Edit user</h2>
-        <div class="input-field-group">
-          <label>NAME</label><input id="editName" />
-        </div>
-        <div class="input-field-group">
-          <label>EMAIL</label><input id="editEmail" type="email" />
-        </div>
-        <div class="input-field-group">
-          <label>PASSWORD</label><input id="editPassword" type="password" placeholder="Leave blank to keep current" />
-        </div>
-        <div class="modal-actions">
-          <button class="back-button" id="cancelEdit" type="button">Cancel</button>
-          <button class="ui-btn btn-navy-blue" id="saveEdit" type="button">Save changes</button>
-        </div>
+        <form id="editUserForm" method="POST">
+          @csrf
+          @method('PUT')
+          <div class="input-field-group">
+            <label for="editName">NAME</label><input id="editName" name="name" required />
+          </div>
+          <div class="input-field-group">
+            <label for="editUsername">USERNAME</label><input id="editUsername" name="username" required />
+          </div>
+          <div class="input-field-group">
+            <label for="editPhoneNumber">PHONE NUMBER</label><input id="editPhoneNumber" name="phone_number" type="tel" required />
+          </div>
+          <div class="input-field-group">
+            <label for="editRole">ROLE</label>
+            <select id="editRole" name="role" required>
+              <option value="admin">Admin</option>
+              <option value="staff">Staff</option>
+              <option value="biker">Biker</option>
+            </select>
+          </div>
+          <div class="input-field-group" id="editBikerField" hidden>
+            <label for="editBikerId">BIKER NAME</label>
+            <select id="editBikerId" name="biker_id" disabled>
+              <option value="">Select a biker</option>
+              @forelse ($bikers as $biker)
+                <option value="{{ $biker->id }}">{{ $biker->name }}</option>
+              @empty
+                <option value="" disabled>No available bikers left</option>
+              @endforelse
+            </select>
+          </div>
+          <div class="input-field-group">
+            <label for="editPassword">PASSWORD</label><input id="editPassword" name="password" type="password" placeholder="Leave blank to keep current" />
+          </div>
+          <div class="modal-actions">
+            <button class="back-button" id="cancelEdit" type="button">Cancel</button>
+            <button class="ui-btn btn-navy-blue" type="submit">Save changes</button>
+          </div>
+        </form>
       </section>
     </div>
     <script>
@@ -186,39 +220,54 @@
       }
 
       const backdrop = document.getElementById("editBackdrop");
-      const nameInput = document.getElementById("editName");
-      const emailInput = document.getElementById("editEmail");
-      document.querySelectorAll(".edit-user").forEach(
-        (button) =>
-          (button.onclick = () => {
-            nameInput.value = button.dataset.name;
-            emailInput.value = button.dataset.email;
-            document.getElementById("editPassword").value = "";
-            backdrop.hidden = false;
-            nameInput.focus();
-          }),
-      );
-      document.getElementById("cancelEdit").onclick = () =>
-        (backdrop.hidden = true);
-      document.getElementById("saveEdit").onclick = () => {
-        const active =
-          [...document.querySelectorAll(".edit-user")].find(
-            (button) => button.dataset.email === emailInput.dataset.original,
-          ) ||
-          document.querySelector(
-            '.edit-user[data-name="' + nameInput.defaultValue + '"]',
-          );
-        if (active) {
-          active.dataset.name = nameInput.value;
-          active.dataset.email = emailInput.value;
-          const item = active.closest(".directory-item");
-          item.querySelector("strong").textContent = nameInput.value;
-          item.querySelector("span").textContent = emailInput.value;
-        }
+      const editUserForm = document.getElementById("editUserForm");
+      const editNameInput = document.getElementById("editName");
+      const editUsernameInput = document.getElementById("editUsername");
+      const editPhoneInput = document.getElementById("editPhoneNumber");
+      const editRoleSelect = document.getElementById("editRole");
+      const editBikerField = document.getElementById("editBikerField");
+      const editBikerSelect = document.getElementById("editBikerId");
+      const editPasswordInput = document.getElementById("editPassword");
+
+      function syncEditBikerField() {
+        const isBiker = editRoleSelect.value === "biker";
+        editBikerField.hidden = !isBiker;
+        editBikerSelect.disabled = !isBiker;
+        editBikerSelect.required = isBiker;
+      }
+
+      editRoleSelect.addEventListener("change", syncEditBikerField);
+
+      document.querySelectorAll(".edit-user-btn").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          editUserForm.action = "/admin/users/" + button.dataset.id;
+          editNameInput.value = button.dataset.name;
+          editUsernameInput.value = button.dataset.username;
+          editPhoneInput.value = button.dataset.phoneNumber;
+          editRoleSelect.value = button.dataset.role || "admin";
+          editPasswordInput.value = "";
+          const bikerId = button.dataset.bikerId || "";
+          editBikerSelect.value = bikerId;
+          syncEditBikerField();
+          backdrop.hidden = false;
+          editNameInput.focus();
+        });
+        button.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+            button.click();
+          }
+        });
+      });
+
+      document.getElementById("cancelEdit").addEventListener("click", () => {
         backdrop.hidden = true;
-      };
-      document.addEventListener("click", (e) => {
-        if (e.target === backdrop) backdrop.hidden = true;
+      });
+
+      document.addEventListener("click", (event) => {
+        if (event.target === backdrop) backdrop.hidden = true;
       });
     </script>
   </body>

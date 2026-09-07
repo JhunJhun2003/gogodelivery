@@ -40,7 +40,7 @@ class AuthController extends Controller
                 ->orderBy('name')
                 ->get(),
             'users' => User::query()
-                ->where('role', User::ROLE_BIKER)
+                ->whereIn('role', [User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_BIKER])
                 ->with('biker')
                 ->orderBy('name')
                 ->get(),
@@ -72,6 +72,46 @@ class AuthController extends Controller
         User::create($data);
 
         return redirect()->route('admin.users')->with('user_status', 'User created successfully.');
+    }
+
+    public function updateUser(Request $request, User $user): RedirectResponse
+    {
+        abort_unless(in_array($user->role, [User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_BIKER], true), 404);
+
+        $data = $request->validateWithBag('user', [
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('users', 'username')->ignore($user)],
+            'phone_number' => ['required', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:8'],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_BIKER])],
+            'biker_id' => [
+                'nullable',
+                'required_if:role,biker',
+                'exists:bikers,id',
+                Rule::unique('users', 'biker_id')->ignore($user),
+            ],
+        ]);
+
+        if (($data['role'] ?? null) !== User::ROLE_BIKER) {
+            $data['biker_id'] = null;
+        }
+
+        if (blank($data['password'] ?? null)) {
+            unset($data['password']);
+        }
+
+        $user->update($data);
+
+        return redirect()->route('admin.users')->with('user_status', 'User updated successfully.');
+    }
+
+    public function deleteUser(User $user): RedirectResponse
+    {
+        abort_unless(in_array($user->role, [User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_BIKER], true), 404);
+
+        $user->delete();
+
+        return redirect()->route('admin.users')->with('user_status', 'User deleted successfully.');
     }
 
     public function login(Request $request): RedirectResponse

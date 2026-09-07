@@ -43,6 +43,8 @@ Route::middleware('auth', 'role:admin,staff')->prefix('admin')->name('admin.')->
     Route::post('/shops/{shop}/ways', [WayController::class, 'store'])->name('shops.ways.store');
     Route::get('/users', [AuthController::class, 'showUsers'])->name('users');
     Route::post('/users', [AuthController::class, 'createUser'])->name('users.create');
+    Route::put('/users/{user}', [AuthController::class, 'updateUser'])->name('users.update');
+    Route::delete('/users/{user}', [AuthController::class, 'deleteUser'])->name('users.destroy');
     Route::get('/bikers', [BikerController::class, 'index'])->name('bikers');
     Route::post('/bikers', [BikerController::class, 'store'])->name('bikers.create');
     Route::put('/bikers/{biker}', [BikerController::class, 'update'])->name('bikers.update');

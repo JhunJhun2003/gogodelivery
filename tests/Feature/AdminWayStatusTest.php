@@ -111,6 +111,52 @@ class AdminWayStatusTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_update_and_delete_a_biker_user(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'admin-user-edit',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $biker = Biker::create(['name' => 'Biker Update']);
+
+        $user = User::factory()->create([
+            'name' => 'Old Name',
+            'username' => 'old-biker-user',
+            'phone_number' => '0911111111',
+            'role' => User::ROLE_BIKER,
+            'biker_id' => $biker->id,
+            'email' => null,
+        ]);
+
+        $this->actingAs($admin)
+            ->put("/admin/users/{$user->id}", [
+                'name' => 'Updated Name',
+                'username' => 'updated-biker-user',
+                'phone_number' => '0999999999',
+                'password' => 'newsecret123',
+                'role' => User::ROLE_BIKER,
+                'biker_id' => $biker->id,
+            ])
+            ->assertRedirect('/admin/users');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'Updated Name',
+            'username' => 'updated-biker-user',
+            'phone_number' => '0999999999',
+            'role' => User::ROLE_BIKER,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete("/admin/users/{$user->id}")
+            ->assertRedirect('/admin/users');
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $user->id,
+        ]);
+    }
+
     public function test_seeded_biker_user_is_linked_to_a_biker_record(): void
     {
         $this->seed(DatabaseSeeder::class);
