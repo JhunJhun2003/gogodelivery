@@ -14,6 +14,11 @@ class Biker extends Model
         return $this->hasMany(Way::class);
     }
 
+    public function user()
+    {
+        return $this->hasOne(User::class);
+    }
+
     protected function casts(): array
     {
         return [];

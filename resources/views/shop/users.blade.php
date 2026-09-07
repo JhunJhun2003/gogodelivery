@@ -19,19 +19,19 @@
       </div>
     </header>
     <main class="workspace-body">
-      <span class="section-tag">ACCESS</span>
-      <h1 class="main-heading">Users</h1>
+      <span class="section-tag">FLEET</span>
+      <h1 class="main-heading">Bikers</h1>
       <section class="ui-card-white">
         <div class="directory-list">
-          @forelse ($users as $user)
+          @forelse ($bikers as $biker)
             <div class="directory-item">
               <div>
-                <strong>{{ $user->name }}</strong>
-                <span>{{ $user->username }} · {{ ucfirst($user->role) }}{{ $user->biker ? ' · ' . $user->biker->name : '' }}</span>
+                <strong>{{ $biker->name }}</strong>
+                <span>{{ $biker->user?->phone_number ?? 'No phone' }} · {{ $biker->ways_count }} deliveries assigned</span>
               </div>
             </div>
           @empty
-            <p class="no-data-msg">No users found.</p>
+            <p class="no-data-msg">No bikers found.</p>
           @endforelse
         </div>
       </section>
