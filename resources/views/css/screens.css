@@ -316,5 +316,4 @@ input[name="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
   .action-modal .modal-actions { flex-direction:row-reverse; gap:8px; }
   .action-modal .modal-actions .ui-btn { flex:1; min-height:42px; font-size:14px; font-weight:700; }
   .action-modal .modal-actions .back-button { flex:0 0 auto; min-height:42px; }
-  .action-modal .input-field-group select { display:block !important; }
 }

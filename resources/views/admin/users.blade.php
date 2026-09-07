@@ -147,8 +147,6 @@
       const bikerSelect = document.getElementById("biker_id");
 
       function initCustomSelect(select) {
-        if (window.matchMedia("(max-width: 600px)").matches && !select.closest(".action-modal")) return;
-
         const wrapper = document.createElement("div");
         wrapper.className = "custom-select";
         select.parentNode.insertBefore(wrapper, select);
@@ -162,15 +160,10 @@
         toggle.textContent = select.options[select.selectedIndex]?.text || "Select";
         wrapper.appendChild(toggle);
 
-        const inModal = !!select.closest(".action-modal, .modal-backdrop, #editBackdrop");
         const optionsList = document.createElement("ul");
         optionsList.className = "custom-select-options";
         optionsList.setAttribute("role", "listbox");
-        if (inModal) {
-          document.body.appendChild(optionsList);
-        } else {
-          wrapper.appendChild(optionsList);
-        }
+        document.body.appendChild(optionsList);
 
         Array.from(select.options).forEach((option, index) => {
           const optionItem = document.createElement("li");
@@ -200,21 +193,27 @@
             optionsList.style.display = "none";
             toggle.setAttribute("aria-expanded", "false");
           } else {
-            const inModal = !!select.closest(".action-modal, .modal-backdrop");
-            if (inModal) {
-              const rect = toggle.getBoundingClientRect();
-              optionsList.style.position = "fixed";
-              optionsList.style.top = (rect.bottom + 4) + "px";
-              optionsList.style.left = rect.left + "px";
-              optionsList.style.width = rect.width + "px";
-            } else {
-              optionsList.style.position = "absolute";
-              optionsList.style.top = "";
-              optionsList.style.left = "";
-              optionsList.style.width = "";
-            }
+            const rect = toggle.getBoundingClientRect();
+            const vh = window.innerHeight;
+            let top = rect.bottom + 4;
+            optionsList.style.position = "fixed";
+            optionsList.style.left = rect.left + "px";
+            optionsList.style.width = rect.width + "px";
+            optionsList.style.maxHeight = "";
+            optionsList.style.top = top + "px";
+            optionsList.style.bottom = "";
             optionsList.style.display = "block";
             toggle.setAttribute("aria-expanded", "true");
+            const listRect = optionsList.getBoundingClientRect();
+            if (listRect.bottom > vh - 8) {
+              const above = rect.top - 4;
+              if (above > listRect.height) {
+                optionsList.style.top = "";
+                optionsList.style.bottom = (vh - rect.top + 4) + "px";
+              } else {
+                optionsList.style.maxHeight = (vh - top - 8) + "px";
+              }
+            }
           }
         });
       }
