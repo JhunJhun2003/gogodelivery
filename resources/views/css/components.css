@@ -140,6 +140,9 @@
     background: #fff;
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
 }
+.custom-select {
+    position: relative;
+}
 
 .custom-select.open .custom-select-options { display: block; }
 

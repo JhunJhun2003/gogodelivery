@@ -79,11 +79,15 @@
                 <span>{{ $user->username }} · {{ ucfirst($user->role) }}{{ $user->biker ? ' · ' . $user->biker->name : '' }}</span>
               </div>
               <span class="shop-row-actions">
-                <button type="button" class="edit-user-btn" data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-username="{{ $user->username }}" data-phone-number="{{ $user->phone_number }}" data-role="{{ $user->role }}" data-biker-id="{{ $user->biker_id ?? '' }}" aria-label="Edit {{ $user->name }}">⚙</button>
+                <button type="button" class="edit-user-btn" data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-username="{{ $user->username }}" data-phone-number="{{ $user->phone_number }}" data-role="{{ $user->role }}" data-biker-id="{{ $user->biker_id ?? '' }}" aria-label="Edit {{ $user->name }}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                </button>
                 <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline-delete-form" onsubmit="return confirm('Delete this user? This action cannot be undone.');">
                   @csrf
                   @method('DELETE')
-                  <button type="submit" class="delete-user-btn" aria-label="Delete {{ $user->name }}" title="Delete user">🗑</button>
+                  <button type="submit" class="delete-user-btn" aria-label="Delete {{ $user->name }}" title="Delete user">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
                 </form>
               </span>
             </div>
@@ -143,6 +147,8 @@
       const bikerSelect = document.getElementById("biker_id");
 
       function initCustomSelect(select) {
+        if (window.matchMedia("(max-width: 600px)").matches && !select.closest(".action-modal")) return;
+
         const wrapper = document.createElement("div");
         wrapper.className = "custom-select";
         select.parentNode.insertBefore(wrapper, select);
@@ -156,10 +162,15 @@
         toggle.textContent = select.options[select.selectedIndex]?.text || "Select";
         wrapper.appendChild(toggle);
 
+        const inModal = !!select.closest(".action-modal, .modal-backdrop, #editBackdrop");
         const optionsList = document.createElement("ul");
         optionsList.className = "custom-select-options";
         optionsList.setAttribute("role", "listbox");
-        document.body.appendChild(optionsList);
+        if (inModal) {
+          document.body.appendChild(optionsList);
+        } else {
+          wrapper.appendChild(optionsList);
+        }
 
         Array.from(select.options).forEach((option, index) => {
           const optionItem = document.createElement("li");
@@ -189,18 +200,27 @@
             optionsList.style.display = "none";
             toggle.setAttribute("aria-expanded", "false");
           } else {
-            const rect = toggle.getBoundingClientRect();
+            const inModal = !!select.closest(".action-modal, .modal-backdrop");
+            if (inModal) {
+              const rect = toggle.getBoundingClientRect();
+              optionsList.style.position = "fixed";
+              optionsList.style.top = (rect.bottom + 4) + "px";
+              optionsList.style.left = rect.left + "px";
+              optionsList.style.width = rect.width + "px";
+            } else {
+              optionsList.style.position = "absolute";
+              optionsList.style.top = "";
+              optionsList.style.left = "";
+              optionsList.style.width = "";
+            }
             optionsList.style.display = "block";
-            optionsList.style.position = "fixed";
-            optionsList.style.top = (rect.bottom + 4) + "px";
-            optionsList.style.left = rect.left + "px";
-            optionsList.style.width = rect.width + "px";
             toggle.setAttribute("aria-expanded", "true");
           }
         });
       }
 
       document.querySelectorAll(".form-card select").forEach(initCustomSelect);
+      document.querySelectorAll("#editBackdrop select").forEach(initCustomSelect);
 
       document.addEventListener("click", (event) => {
         if (!event.target.closest(".custom-select") && !event.target.closest(".custom-select-options")) {
@@ -234,6 +254,8 @@
         editBikerField.hidden = !isBiker;
         editBikerSelect.disabled = !isBiker;
         editBikerSelect.required = isBiker;
+        const roleToggle = editRoleSelect.closest(".custom-select")?.querySelector(".custom-select-toggle");
+        if (roleToggle) roleToggle.childNodes[0].textContent = editRoleSelect.options[editRoleSelect.selectedIndex]?.text || "Select";
       }
 
       editRoleSelect.addEventListener("change", syncEditBikerField);
@@ -250,6 +272,8 @@
           const bikerId = button.dataset.bikerId || "";
           editBikerSelect.value = bikerId;
           syncEditBikerField();
+          const bikerToggle = editBikerSelect.closest(".custom-select")?.querySelector(".custom-select-toggle");
+          if (bikerToggle) bikerToggle.childNodes[0].textContent = editBikerSelect.options[editBikerSelect.selectedIndex]?.text || "Select a biker";
           backdrop.hidden = false;
           editNameInput.focus();
         });
