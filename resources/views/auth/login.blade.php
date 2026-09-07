@@ -139,6 +139,12 @@
 
         <!-- Logo -->
         <img
+          src="/assets/logo-nobg.jpg"
+          alt="DELI Logo"
+          class="maintenance-logo"
+        />
+        <br />
+        <img
           src="/assets/logo-nobg.png"
           alt="DELI Logo"
           class="maintenance-logo"
