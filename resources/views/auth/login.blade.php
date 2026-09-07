@@ -138,12 +138,12 @@
       <div class="maintenance-box">
 
         <!-- Logo -->
-        <img
+        {{-- <img
           src="/assets/logo-nobg.jpg"
           alt="DELI Logo"
           class="maintenance-logo"
         />
-        <br />
+        <br /> --}}
         <img
           src="/assets/logo-nobg.png"
           alt="DELI Logo"
