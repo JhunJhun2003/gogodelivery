@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
-    <link rel="icon" href="/assets/logo-nobg.png?v=1787685826" />
+    <link rel="icon" href="/assets/carlogo.png?v=1787685826" />
 
         @fonts
 

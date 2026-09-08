@@ -94,7 +94,7 @@ Route::get('/js/{file}', function (string $file) {
 });
 
 Route::get('/assets/{file}', function (string $file) {
-    abort_unless(in_array($file, ['logo.jpg', 'logo-nobg.png'], true), 404);
+    abort_unless(in_array($file, ['logo.jpg', 'carlogo.png'], true), 404);
 
     $mime = str_ends_with($file, '.png') ? 'image/png' : 'image/jpeg';
 

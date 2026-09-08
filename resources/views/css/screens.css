@@ -57,7 +57,8 @@
     letter-spacing: 1px;
     color: #0f172a;
 }
-.bar-logo { width:145px; height:36px; display:block; flex:0 0 145px; font-size:0; background:url('../assets/logo-nobg.png') left center/145px 145px no-repeat; transform:none; }
+.bar-logo { width:14px; height:41px; display:block; flex:0 0 145px; font-size:0; background:url('../assets/carlogo.png') left center/145px 50px no-repeat; transform:none; }
+/* .bar-logo { width:145px; height:36px; display:block; flex:0 0 145px; font-size:0; background:url('../assets/carlogo.png') left center/145px 145px no-repeat; transform:none; } */
 .user-role {
     font-size: 11px;
     color: #64748b;

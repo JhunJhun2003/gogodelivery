@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Deli - Way Check</title>
-    <link rel="icon" href="../assets/logo-nobg.png?v=1787685826" />
+    <link rel="icon" href="../assets/carlogo.png?v=1787685826" />
     <link rel="stylesheet" href="../css/global.css?v=1787684056" />
     <link rel="stylesheet" href="../css/components.css?v=1787684056" />
     <link rel="stylesheet" href="../css/screens.css?v=1787689001" />
