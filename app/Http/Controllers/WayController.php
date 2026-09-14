@@ -10,7 +10,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -99,7 +98,17 @@ class WayController extends Controller
         abort_unless(is_string($signatureBinary) && strlen($signatureBinary) <= 2_000_000 && is_array($imageInfo) && $imageInfo['mime'] === 'image/png', 422, 'The signature is invalid.');
 
         $signaturePath = 'signatures/ways/'.$way->id.'.png';
-        abort_unless(Storage::disk('public')->put($signaturePath, $signatureBinary), 500, 'The signature could not be saved.');
+        $signatureDirectory = rtrim(config('filesystems.signature_path'), DIRECTORY_SEPARATOR)
+            . DIRECTORY_SEPARATOR . 'ways';
+
+        File::ensureDirectoryExists($signatureDirectory);
+        abort_unless(
+            is_dir($signatureDirectory)
+            && is_writable($signatureDirectory)
+            && File::put($signatureDirectory . DIRECTORY_SEPARATOR . $way->id . '.png', $signatureBinary) !== false,
+            500,
+            'The signature could not be saved.'
+        );
 
         return $signaturePath;
     }

@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Way;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminWayStatusTest extends TestCase
@@ -16,8 +15,6 @@ class AdminWayStatusTest extends TestCase
 
     public function test_biker_must_submit_a_signature_to_mark_a_way_delivered(): void
     {
-        Storage::fake('public');
-
         $biker = Biker::create(['name' => 'Signature Rider']);
         $bikerUser = User::factory()->create([
             'username' => 'signature-biker',
@@ -52,7 +49,9 @@ class AdminWayStatusTest extends TestCase
         $way->refresh();
         $this->assertSame(Way::STATUS_DELIVERED, $way->status);
         $this->assertSame('signatures/ways/'.$way->id.'.png', $way->signature_path);
-        Storage::disk('public')->assertExists($way->signature_path);
+        $signatureFile = public_path($way->signature_path);
+        $this->assertFileExists($signatureFile);
+        @unlink($signatureFile);
     }
 
     public function test_admin_can_mark_a_way_as_onway(): void
