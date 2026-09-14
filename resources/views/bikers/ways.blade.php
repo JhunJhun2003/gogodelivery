@@ -92,7 +92,20 @@
         <p>Mark this way as delivered (done)?</p>
         <div class="modal-actions">
           <button class="back-button" id="cancelDone" type="button">Cancel</button>
-          <button class="ui-btn btn-navy-blue" id="confirmDone" type="button">Confirm</button>
+          <button class="ui-btn btn-navy-blue" id="confirmDone" type="button">Continue</button>
+        </div>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="signatureBackdrop" hidden>
+      <section class="action-modal signature-modal" role="dialog" aria-modal="true" aria-labelledby="signatureTitle">
+        <h2 id="signatureTitle">Customer signature</h2>
+        <p>Please ask the customer to sign, then press OK to finish this way.</p>
+        <canvas id="signatureCanvas" class="signature-canvas" width="780" height="300" aria-label="Customer signature drawing area"></canvas>
+        <input id="signatureInput" type="hidden" name="signature" />
+        <div class="modal-actions">
+          <button class="back-button" id="backToDone" type="button">Back</button>
+          <button class="back-button" id="clearSignature" type="button">Clear</button>
+          <button class="ui-btn btn-navy-blue" id="confirmSignature" type="button">OK</button>
         </div>
       </section>
     </div>
@@ -121,8 +134,50 @@
       let activeFailForm = null;
       let activeDoneForm = null;
       const doneBackdrop = document.getElementById("doneBackdrop");
+      const signatureBackdrop = document.getElementById("signatureBackdrop");
       const failBackdrop = document.getElementById("failBackdrop");
       const failReason = document.getElementById("failReason");
+      const signatureCanvas = document.getElementById("signatureCanvas");
+      const signatureInput = document.getElementById("signatureInput");
+      const signatureContext = signatureCanvas.getContext("2d");
+      let signatureDrawing = false;
+      let signatureHasInk = false;
+
+      const clearSignatureCanvas = () => {
+        signatureContext.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        signatureContext.beginPath();
+        signatureHasInk = false;
+      };
+
+      const signaturePoint = (event) => {
+        const rect = signatureCanvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * (signatureCanvas.width / rect.width),
+          y: (event.clientY - rect.top) * (signatureCanvas.height / rect.height),
+        };
+      };
+
+      signatureCanvas.addEventListener("pointerdown", (event) => {
+        signatureDrawing = true;
+        signatureCanvas.setPointerCapture(event.pointerId);
+        const point = signaturePoint(event);
+        signatureContext.beginPath();
+        signatureContext.moveTo(point.x, point.y);
+        signatureHasInk = true;
+      });
+      signatureCanvas.addEventListener("pointermove", (event) => {
+        if (!signatureDrawing) return;
+        const point = signaturePoint(event);
+        signatureContext.lineTo(point.x, point.y);
+        signatureContext.stroke();
+      });
+      ["pointerup", "pointercancel"].forEach((eventName) => {
+        signatureCanvas.addEventListener(eventName, () => { signatureDrawing = false; });
+      });
+      signatureContext.lineWidth = 4;
+      signatureContext.lineCap = "round";
+      signatureContext.lineJoin = "round";
+      signatureContext.strokeStyle = "#0f172a";
 
       document.querySelectorAll(".fail-form").forEach((form) => {
         form.addEventListener("submit", (event) => {
@@ -149,7 +204,27 @@
         activeDoneForm = null;
       };
       document.getElementById("confirmDone").onclick = () => {
-        if (activeDoneForm) activeDoneForm.submit();
+        if (!activeDoneForm) return;
+        doneBackdrop.hidden = true;
+        clearSignatureCanvas();
+        signatureBackdrop.hidden = false;
+        signatureCanvas.focus();
+      };
+      document.getElementById("backToDone").onclick = () => {
+        signatureBackdrop.hidden = true;
+        doneBackdrop.hidden = false;
+      };
+      document.getElementById("clearSignature").onclick = clearSignatureCanvas;
+      document.getElementById("confirmSignature").onclick = () => {
+        if (!activeDoneForm || !signatureHasInk) {
+          window.alert("Please add the customer signature before pressing OK.");
+          return;
+        }
+        signatureInput.value = signatureCanvas.toDataURL("image/png");
+        activeDoneForm.appendChild(signatureInput);
+        signatureBackdrop.hidden = true;
+        activeDoneForm.submit();
+        activeDoneForm = null;
       };
       document.getElementById("cancelFail").onclick = () => {
         failBackdrop.hidden = true;
@@ -161,7 +236,7 @@
         activeFailForm.submit();
       };
 
-      [doneBackdrop, failBackdrop].forEach((backdrop) => {
+      [doneBackdrop, signatureBackdrop, failBackdrop].forEach((backdrop) => {
         backdrop.addEventListener("click", (event) => {
           if (event.target === backdrop) backdrop.hidden = true;
         });

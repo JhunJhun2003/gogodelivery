@@ -429,21 +429,64 @@
         const modalBackdrop = document.getElementById("modalBackdrop");
         const doneModal = document.getElementById("doneModal");
         const failModal = document.getElementById("failModal");
+        const signatureModal = document.getElementById("signatureModal");
+        const signatureCanvas = document.getElementById("signatureCanvas");
         const infoModal = document.getElementById("infoModal");
         const reassignModal = document.getElementById("reassignModal");
         const confirmDone = document.getElementById("confirmDone");
+        const backToDone = document.getElementById("backToDone");
+        const clearSignature = document.getElementById("clearSignature");
+        const confirmSignature = document.getElementById("confirmSignature");
         const confirmFail = document.getElementById("confirmFail");
         const failReason = document.getElementById("failReason");
         let pendingStatusButton = null;
 
-        if (!modalBackdrop || !doneModal || !failModal || !confirmDone || !confirmFail || !failReason) {
+        if (!modalBackdrop || !doneModal || !failModal || !signatureModal || !signatureCanvas || !confirmDone || !confirmFail || !failReason) {
           return;
         }
+
+        const signatureContext = signatureCanvas.getContext("2d");
+        let signatureDrawing = false;
+        let signatureHasInk = false;
+        const clearSignatureCanvas = () => {
+          signatureContext.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+          signatureContext.beginPath();
+          signatureHasInk = false;
+        };
+        const signaturePoint = (event) => {
+          const rect = signatureCanvas.getBoundingClientRect();
+          return {
+            x: (event.clientX - rect.left) * (signatureCanvas.width / rect.width),
+            y: (event.clientY - rect.top) * (signatureCanvas.height / rect.height),
+          };
+        };
+        signatureCanvas.addEventListener("pointerdown", (event) => {
+          signatureDrawing = true;
+          signatureCanvas.setPointerCapture(event.pointerId);
+          const point = signaturePoint(event);
+          signatureContext.beginPath();
+          signatureContext.moveTo(point.x, point.y);
+          signatureHasInk = true;
+        });
+        signatureCanvas.addEventListener("pointermove", (event) => {
+          if (!signatureDrawing) return;
+          const point = signaturePoint(event);
+          signatureContext.lineTo(point.x, point.y);
+          signatureContext.stroke();
+        });
+        ["pointerup", "pointercancel"].forEach((eventName) => {
+          signatureCanvas.addEventListener(eventName, () => { signatureDrawing = false; });
+        });
+        signatureContext.lineWidth = 4;
+        signatureContext.lineCap = "round";
+        signatureContext.lineJoin = "round";
+        signatureContext.strokeStyle = "#0f172a";
 
         function closeStatusModal() {
           modalBackdrop.hidden = true;
           doneModal.hidden = true;
           failModal.hidden = true;
+          signatureModal.hidden = true;
           infoModal.hidden = true;
           reassignModal.hidden = true;
           failReason.value = "";
@@ -459,6 +502,7 @@
           if (status === "delivered") {
             doneModal.hidden = false;
             failModal.hidden = true;
+            signatureModal.hidden = true;
           } else if (status === "failed") {
             doneModal.hidden = true;
             failModal.hidden = false;
@@ -509,7 +553,7 @@
           }
         }
 
-        async function updateWayStatus(button, status, remark = "") {
+        async function updateWayStatus(button, status, remark = "", signature = "") {
           const card = button.closest(".delivery-card");
           const wayId = card?.dataset.wayId;
           if (!wayId) return;
@@ -525,7 +569,7 @@
               "X-CSRF-TOKEN": token,
               Accept: "application/json",
             },
-            body: JSON.stringify({ status, remark }),
+            body: JSON.stringify({ status, remark, signature }),
           });
 
           if (!response.ok) {
@@ -579,7 +623,22 @@
 
         confirmDone.addEventListener("click", async () => {
           if (!pendingStatusButton) return;
-          await updateWayStatus(pendingStatusButton, "delivered");
+          doneModal.hidden = true;
+          signatureModal.hidden = false;
+          clearSignatureCanvas();
+        });
+
+        backToDone?.addEventListener("click", () => {
+          signatureModal.hidden = true;
+          doneModal.hidden = false;
+        });
+        clearSignature?.addEventListener("click", clearSignatureCanvas);
+        confirmSignature?.addEventListener("click", async () => {
+          if (!pendingStatusButton || !signatureHasInk) {
+            alert("Please add the customer signature before pressing OK.");
+            return;
+          }
+          await updateWayStatus(pendingStatusButton, "delivered", "", signatureCanvas.toDataURL("image/png"));
           closeStatusModal();
         });
 
@@ -688,8 +747,18 @@
         <div class="modal-actions">
           <button class="back-button" data-close-modal type="button">Cancel</button
           ><button class="ui-btn btn-lime-green" id="confirmDone" type="button">
-            Confirm done
+            Continue
           </button>
+        </div>
+      </div>
+      <div class="action-modal" id="signatureModal" hidden>
+        <h2>Customer signature</h2>
+        <p>Ask the customer to sign, then press OK to finish this way.</p>
+        <canvas id="signatureCanvas" class="signature-canvas" width="780" height="300" aria-label="Customer signature drawing area"></canvas>
+        <div class="modal-actions">
+          <button class="back-button" id="backToDone" type="button">Back</button>
+          <button class="back-button" id="clearSignature" type="button">Clear</button>
+          <button class="ui-btn btn-navy-blue" id="confirmSignature" type="button">OK</button>
         </div>
       </div>
       <div class="action-modal" id="failModal" hidden>

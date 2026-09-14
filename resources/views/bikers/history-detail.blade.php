@@ -7,9 +7,9 @@
     <link rel="icon" href="/assets/carlogo.png?v=1787685826" />
     <link rel="stylesheet" href="/css/global.css?v=1787684056" />
     <link rel="stylesheet" href="/css/components.css?v=1787684056" />
-    <link rel="stylesheet" href="/css/screens.css?v=1787684056" />
+    <link rel="stylesheet" href="/css/screens.css?v=20260914143000" />
   <script src="/js/sidebar.js?v=20260907193127" defer></script><script src="/js/history-controls.js?v=1787684056" defer></script></head>
-  <body data-role="biker" class="app-bg history-screen">
+  <body data-role="biker" class="app-bg history-screen history-detail-screen">
     <header class="top-app-bar">
       <div class="bar-logo">DELI</div>
       <div class="bar-right"><span class="user-role">Biker · {{ $way->biker?->name ?? 'Biker' }}</span><button class="hamburger-icon-btn" type="button">☰</button></div>
@@ -40,6 +40,12 @@
             @if ($way->remark)<div class="detail-wide"><span>Remark</span><strong>{{ $way->remark }}</strong></div>@endif
           </div>
         </div>
+        @if ($way->signature_path)
+          <div class="signature-panel">
+            <span class="signature-label">Customer signature</span>
+            <img src="{{ asset('storage/'.$way->signature_path) }}" alt="Customer signature" />
+          </div>
+        @endif
       </section>
     </main>
     <script>

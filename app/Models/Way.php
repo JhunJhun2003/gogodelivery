@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'shop_id', 'biker_id', 'assigned_at', 'item_image', 'amount', 'delivery_fees', 'recipient_name',
-    'address', 'phone_number', 'date', 'remark', 'status',
+    'address', 'phone_number', 'date', 'remark', 'signature_path', 'status',
 ])]
 class Way extends Model
 {

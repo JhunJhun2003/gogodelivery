@@ -7,11 +7,53 @@ use App\Models\User;
 use App\Models\Way;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminWayStatusTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_biker_must_submit_a_signature_to_mark_a_way_delivered(): void
+    {
+        Storage::fake('public');
+
+        $biker = Biker::create(['name' => 'Signature Rider']);
+        $bikerUser = User::factory()->create([
+            'username' => 'signature-biker',
+            'role' => User::ROLE_BIKER,
+            'biker_id' => $biker->id,
+        ]);
+        $shop = User::factory()->create(['role' => User::ROLE_SHOP]);
+        $way = Way::create([
+            'shop_id' => $shop->id,
+            'biker_id' => $biker->id,
+            'recipient_name' => 'Customer',
+            'address' => 'Somewhere',
+            'phone_number' => '123456',
+            'date' => now()->toDateString(),
+            'status' => Way::STATUS_ONWAY,
+        ]);
+
+        $this->actingAs($bikerUser)
+            ->post("/bikers/ways/{$way->id}/status", ['status' => Way::STATUS_DELIVERED])
+            ->assertSessionHasErrors('signature');
+
+        $this->assertDatabaseHas('ways', ['id' => $way->id, 'status' => Way::STATUS_ONWAY]);
+
+        $signature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+        $this->actingAs($bikerUser)
+            ->post("/bikers/ways/{$way->id}/status", [
+                'status' => Way::STATUS_DELIVERED,
+                'signature' => $signature,
+            ])
+            ->assertRedirect(route('bikers.ways'));
+
+        $way->refresh();
+        $this->assertSame(Way::STATUS_DELIVERED, $way->status);
+        $this->assertSame('signatures/ways/'.$way->id.'.png', $way->signature_path);
+        Storage::disk('public')->assertExists($way->signature_path);
+    }
 
     public function test_admin_can_mark_a_way_as_onway(): void
     {

@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -89,6 +90,20 @@ class WayController extends Controller
         return $biker;
     }
 
+    private function saveDeliverySignature(Way $way, string $signature): string
+    {
+        abort_unless(preg_match('/\Adata:image\/png;base64,(.+)\z/', $signature, $matches) === 1, 422, 'A PNG signature is required.');
+
+        $signatureBinary = base64_decode($matches[1], true);
+        $imageInfo = is_string($signatureBinary) ? @getimagesizefromstring($signatureBinary) : false;
+        abort_unless(is_string($signatureBinary) && strlen($signatureBinary) <= 2_000_000 && is_array($imageInfo) && $imageInfo['mime'] === 'image/png', 422, 'The signature is invalid.');
+
+        $signaturePath = 'signatures/ways/'.$way->id.'.png';
+        abort_unless(Storage::disk('public')->put($signaturePath, $signatureBinary), 500, 'The signature could not be saved.');
+
+        return $signaturePath;
+    }
+
     public function bikerWays(): View
     {
         $biker = $this->resolveAuthenticatedBiker();
@@ -119,11 +134,18 @@ class WayController extends Controller
         $data = $request->validate([
             'status' => ['required', 'in:'.implode(',', [Way::STATUS_ONWAY, Way::STATUS_FAILED, Way::STATUS_DELIVERED])],
             'remark' => ['nullable', 'string', 'max:2000'],
+            'signature' => ['required_if:status,'.Way::STATUS_DELIVERED, 'nullable', 'string', 'max:3000000'],
         ]);
+
+        $signaturePath = $way->signature_path;
+        if ($data['status'] === Way::STATUS_DELIVERED) {
+            $signaturePath = $this->saveDeliverySignature($way, $data['signature']);
+        }
 
         $way->update([
             'status' => $data['status'],
             'remark' => $data['remark'] ?? $way->remark,
+            'signature_path' => $signaturePath,
         ]);
 
         WayStatusHistory::create([
@@ -143,11 +165,18 @@ class WayController extends Controller
         $data = $request->validate([
             'status' => ['required', 'in:'.implode(',', [Way::STATUS_ONWAY, Way::STATUS_FAILED, Way::STATUS_DELIVERED])],
             'remark' => ['nullable', 'string', 'max:2000'],
+            'signature' => ['required_if:status,'.Way::STATUS_DELIVERED, 'nullable', 'string', 'max:3000000'],
         ]);
+
+        $signaturePath = $way->signature_path;
+        if ($data['status'] === Way::STATUS_DELIVERED) {
+            $signaturePath = $this->saveDeliverySignature($way, $data['signature']);
+        }
 
         $way->update([
             'status' => $data['status'],
             'remark' => $data['remark'] ?? $way->remark,
+            'signature_path' => $signaturePath,
         ]);
 
         WayStatusHistory::create([
