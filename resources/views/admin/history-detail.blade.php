@@ -65,7 +65,7 @@
         @if ($way->signature_path)
           <div class="signature-panel">
             <span class="signature-label">Customer signature</span>
-            <img src="{{ asset('storage/'.$way->signature_path) }}" alt="Customer signature" />
+            <img src="{{ asset($way->signature_path) }}" alt="Customer signature" />
           </div>
         @endif
       </section>
